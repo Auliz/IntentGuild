@@ -174,10 +174,11 @@ a:hover{color:var(--legendary-soft)}
 .tier-feature{flex:0 0 46%;max-width:560px;position:relative;z-index:2}
 .tier-feature .tier-card{border-color:var(--legendary);box-shadow:0 0 26px rgba(255,128,0,.18);height:100%}
 .tier-ribbon{position:absolute;top:-11px;left:1.2rem;z-index:3;font-family:var(--font-data);font-size:.62rem;letter-spacing:.25em;padding:.2rem .7rem;border-radius:5px;background:linear-gradient(135deg,var(--legendary),#FF9E2C);color:#1a0d00;font-weight:700}
-.tier-carousel{flex:1;overflow:hidden;position:relative;z-index:1;margin-left:-46px;padding:1rem 0 1rem 66px;align-self:center}
+.tier-carousel{flex:1;overflow:hidden;position:relative;z-index:1;margin-left:-46px;padding:.4rem 0 .4rem 66px;align-self:stretch}
 .tier-carousel::before{content:"";position:absolute;left:0;top:0;bottom:0;width:110px;z-index:2;pointer-events:none;background:linear-gradient(90deg,var(--void) 30%,transparent)}
-.tc-track{display:flex;gap:1rem;transition:transform .7s cubic-bezier(.4,0,.2,1)}
-.tier-past{flex:0 0 240px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:1rem 1.1rem;filter:saturate(.55) brightness(.9)}
+.tier-carousel::after{content:"";position:absolute;inset:0;z-index:2;pointer-events:none;background:linear-gradient(180deg,var(--void),transparent 52px,transparent calc(100% - 52px),var(--void))}
+.tc-track{display:flex;flex-direction:column;gap:1rem;transition:transform .7s cubic-bezier(.4,0,.2,1)}
+.tier-past{flex:0 0 auto;width:100%;max-width:320px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:1rem 1.1rem;filter:saturate(.55) brightness(.9)}
 .tier-past .tier-name{font-family:var(--font-display);font-weight:700;font-size:.92rem}
 .tier-past .archived{font-family:var(--font-data);font-size:.6rem;letter-spacing:.2em;color:var(--muted);margin-top:.15rem}
 .tier-pips{display:flex;gap:4px;margin-top:.7rem;flex-wrap:wrap}
@@ -186,8 +187,9 @@ a:hover{color:var(--legendary-soft)}
 @media (max-width: 991px){
   .tier-stage{flex-direction:column;gap:1.2rem}
   .tier-feature{flex:none;max-width:none}
-  .tier-carousel{margin-left:0;padding:0;align-self:stretch}
+  .tier-carousel{margin-left:0;padding:.4rem 0;align-self:stretch;max-height:380px}
   .tier-carousel::before{display:none}
+  .tier-past{max-width:none}
 }
 
 /* ---------- ACHIEVEMENT LOOT-TOOLTIP CARDS (signature) ---------- */
@@ -918,11 +920,11 @@ function startCarousel(n){
   wrap.addEventListener("mouseleave", ()=>paused = false);
   tcTimer = setInterval(()=>{
     if(paused) return;
-    const step = (track.children[0]?.offsetWidth || 240) + 16;
-    const visible = Math.max(1, Math.floor(wrap.clientWidth / step));
+    const step = (track.children[0]?.offsetHeight || 150) + 16;
+    const visible = Math.max(1, Math.floor(wrap.clientHeight / step));
     const maxIdx = Math.max(0, n - visible);
     tcIdx = tcIdx >= maxIdx ? 0 : tcIdx + 1;
-    track.style.transform = `translateX(-${tcIdx * step}px)`;
+    track.style.transform = `translateY(-${tcIdx * step}px)`;
   }, 4500);
 }
 function setNum(id,val){ if(val!=null) document.getElementById(id).textContent = "#"+Number(val).toLocaleString(); }
