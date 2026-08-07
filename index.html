@@ -191,6 +191,7 @@ a:hover{color:var(--legendary-soft)}
   border:2px solid var(--epic);color:var(--epic-soft);
 }
 .leader-card.gm .avatar{border-color:var(--legendary);color:var(--legendary)}
+.leader-card .avatar.has-img{background-size:cover;background-position:center 20%;color:transparent;text-shadow:none}
 .leader-card .role{font-family:var(--font-data);font-size:.7rem;letter-spacing:.25em;text-transform:uppercase;color:var(--legendary)}
 .leader-card h5{font-family:var(--font-display);margin:.2rem 0 .4rem}
 .leader-card p{font-size:.83rem;color:var(--muted);margin:0}
@@ -713,9 +714,9 @@ function renderAll(){
       </div>
     </div>`).join("");
 
-  document.getElementById("leaderGrid").innerHTML = CONFIG.leaders.map(l=>`
+  document.getElementById("leaderGrid").innerHTML = CONFIG.leaders.map((l,i)=>`
     <div class="col-lg-3 col-md-6">
-      <div class="leader-card ${l.gm?"gm":""}">
+      <div class="leader-card ${l.gm?"gm":""}" data-leader="${i}">
         <div class="avatar">${esc((l.name||"?")[0])}</div>
         <div class="role">${esc(l.role)}</div>
         <h5>${esc(l.name)}</h5>
@@ -759,6 +760,31 @@ function renderAll(){
         </div>
       </a>
     </div>`).join("");
+  loadLeaderPortraits();
+}
+
+/* ================= LEADER PORTRAITS ================= */
+function setLeaderImg(i, url){
+  const av = document.querySelector(`#leaderGrid [data-leader="${i}"] .avatar`);
+  if(!av) return;
+  av.classList.add("has-img");
+  av.style.backgroundImage = `url('${url}')`;
+}
+function loadLeaderPortraits(){
+  const R = CONFIG.rio;
+  CONFIG.leaders.forEach(async (l, i)=>{
+    if(l.img){ setLeaderImg(i, l.img); return; }          // manual image wins
+    if(!l.character) return;                               // no lookup requested
+    const parts = l.character.split("-");
+    const name = parts[0].trim();
+    const realm = (parts[1] || R.realm).trim().toLowerCase().replace(/ /g,"-");
+    try{
+      const res = await fetch(`https://raider.io/api/v1/characters/profile?region=${R.region}&realm=${realm}&name=${encodeURIComponent(name)}`);
+      if(!res.ok) return;                                  // silently keep the letter
+      const c = await res.json();
+      if(c.thumbnail_url) setLeaderImg(i, c.thumbnail_url);
+    }catch(e){ /* keep the letter fallback */ }
+  });
 }
 
 /* ================= REMOTE CONFIG ================= */
