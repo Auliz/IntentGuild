@@ -59,6 +59,9 @@ a:hover{color:var(--legendary-soft)}
 .navbar-brand{font-family:var(--font-display);font-weight:900;font-size:1.05rem;color:var(--text)}
 .navbar-brand .wai-w{color:var(--legendary)}
 .navbar-brand small{display:block;font-family:var(--font-data);font-weight:400;font-size:.62rem;color:var(--muted);letter-spacing:.25em;text-transform:uppercase}
+.brand-icon{height:34px;width:34px;border-radius:50%;vertical-align:middle;margin-right:.45rem;border:1px solid var(--line);background:#000}
+.hero-banner{display:block;width:min(880px,100%);margin:0 auto;border-radius:14px;border:1px solid var(--line);filter:drop-shadow(0 10px 44px rgba(163,53,238,.35)) drop-shadow(0 2px 14px rgba(255,128,0,.25))}
+.gate-crest{width:96px;height:96px;border-radius:50%;margin:0 auto .9rem;display:block;box-shadow:0 0 26px rgba(255,128,0,.35)}
 .nav-link{color:var(--muted);font-weight:600;font-size:.9rem;letter-spacing:.03em}
 .nav-link:hover{color:var(--text)}
 .nav-link.active{color:var(--legendary)!important}
@@ -700,13 +703,28 @@ showPage(location.hash.replace("#","")||"home");
 function renderAll(){
   const S = CONFIG.site;
   document.title = `${S.name} — ${S.navSub} | Raiding Guild`;
-  document.getElementById("navName").innerHTML = `<span class="wai-w">${esc(S.name[0])}</span>${esc(S.name.slice(1))}`;
+  // Favicon from the crest icon
+  if(S.iconUrl){
+    let fav = document.querySelector("link[rel='icon']");
+    if(!fav){ fav = document.createElement("link"); fav.rel = "icon"; document.head.appendChild(fav); }
+    fav.href = S.iconUrl;
+  }
+  const crest = S.iconUrl ? `<img src="${esc(S.iconUrl)}" alt="" class="brand-icon">` : "";
+  document.getElementById("navName").innerHTML = crest + `<span class="wai-w">${esc(S.name[0])}</span>${esc(S.name.slice(1))}`;
   document.getElementById("navSub").textContent = S.navSub;
   document.getElementById("heroEyebrow").textContent = S.eyebrow;
-  document.getElementById("heroName").textContent = S.name.toUpperCase();
+  // Hero: banner art replaces the typographic title when set
+  const h1 = document.getElementById("heroName");
+  if(S.bannerUrl){ h1.innerHTML = `<img src="${esc(S.bannerUrl)}" alt="${esc(S.name)}" class="hero-banner">`; }
+  else { h1.textContent = S.name.toUpperCase(); }
   document.getElementById("heroRealm").textContent = S.realmLine;
-  document.getElementById("footName").innerHTML = `<span class="text-legendary">${esc(S.name[0])}</span>${esc(S.name.slice(1))}`;
+  document.getElementById("footName").innerHTML = crest + `<span class="text-legendary">${esc(S.name[0])}</span>${esc(S.name.slice(1))}`;
   document.getElementById("footSub").textContent = S.realmLine;
+  // Crest above the forum login gate
+  const gateTitle = document.querySelector("#forumLogin .display-font");
+  if(gateTitle && S.iconUrl && !document.getElementById("gateCrest")){
+    gateTitle.insertAdjacentHTML("beforebegin", `<img id="gateCrest" src="${esc(S.iconUrl)}" alt="" class="gate-crest">`);
+  }
 
   document.getElementById("aboutParas").innerHTML = CONFIG.about.paragraphs.map(p=>`<p style="color:#CFC6E4">${esc(p)}</p>`).join("");
   document.getElementById("glanceList").innerHTML = CONFIG.about.glance.map((g,i,a)=>`<li class="${i===a.length-1?"mb-0":"mb-2"}">${esc(g)}</li>`).join("");
