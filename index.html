@@ -509,10 +509,23 @@ footer{border-top:1px solid var(--line);padding:2.5rem 0;color:var(--muted);font
       <p class="mb-0" style="font-size:.78rem;color:var(--muted)">No account? Accounts are issued by officers once your trial begins — ask on Discord.</p>
     </div>
 
+    <div id="pwGate" class="forum-gate d-none">
+      <div class="display-font mb-1" style="font-size:1.2rem">Set Your Password</div>
+      <p style="font-size:.85rem;color:var(--muted)" id="pwGateMsg"></p>
+      <input class="form-control mb-2" id="pwNew" type="password" placeholder="New password (6+ characters)" autocomplete="new-password">
+      <input class="form-control mb-3" id="pwNew2" type="password" placeholder="Confirm new password" autocomplete="new-password">
+      <button class="btn btn-apply w-100 mb-2" id="pwSave">Save Password</button>
+      <button class="btn btn-outline-epic w-100" id="pwAlt">Cancel</button>
+      <div class="data-font mt-2" id="pwStatus" style="font-size:.75rem;color:var(--muted)"></div>
+    </div>
+
     <div id="forumHome" class="d-none">
       <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
         <span class="data-font" style="color:var(--muted);font-size:.85rem">Logged in as <b id="forumWho" class="text-legendary"></b></span>
-        <button class="btn btn-outline-epic btn-sm" id="logoutBtn">Log Out</button>
+        <div class="d-flex gap-2">
+          <button class="btn btn-outline-epic btn-sm" id="pwChangeBtn">Change Password</button>
+          <button class="btn btn-outline-epic btn-sm" id="logoutBtn">Log Out</button>
+        </div>
       </div>
 
       <!-- category list -->
@@ -1018,18 +1031,57 @@ document.getElementById("replyPost").addEventListener("click", async ()=>{
 
 /* ---- forum auth ---- */
 function toEmail(u){ return u.includes("@") ? u : `${u.toLowerCase()}@${MEMBER_EMAIL_DOMAIN}`; }
+let pwForced = false;
+const el = id => document.getElementById(id);
+
 async function enterForums(user){
   const { data: prof, error } = await sb.from("profiles").select("username, active").eq("id", user.id).single();
   if(error || !prof || !prof.active){
-    document.getElementById("loginStatus").textContent = "⛔ This account isn't active yet — poke an officer on Discord.";
+    el("loginStatus").textContent = "⛔ This account isn't active yet — poke an officer on Discord.";
     await sb.auth.signOut(); return;
   }
   me = { id: user.id, username: prof.username };
-  document.getElementById("forumWho").textContent = prof.username;
-  document.getElementById("forumLogin").classList.add("d-none");
-  document.getElementById("forumHome").classList.remove("d-none");
+  el("forumWho").textContent = prof.username;
+  // First login on an officer-issued temp password? Force a change before entering.
+  if(user.user_metadata?.must_change){ showPwGate(true); return; }
+  openForumHome();
+}
+function openForumHome(){
+  el("forumLogin").classList.add("d-none");
+  el("pwGate").classList.add("d-none");
+  el("forumHome").classList.remove("d-none");
   renderCats(); fShow("cats");
 }
+function showPwGate(forced){
+  pwForced = forced;
+  el("forumLogin").classList.add("d-none");
+  el("forumHome").classList.add("d-none");
+  el("pwGate").classList.remove("d-none");
+  el("pwGateMsg").textContent = forced
+    ? "First login detected — replace your temp password with one only you know before entering the forums."
+    : "Choose a new password for your guild account.";
+  el("pwAlt").textContent = forced ? "Log Out" : "Cancel";
+  el("pwNew").value = ""; el("pwNew2").value = ""; el("pwStatus").textContent = "";
+}
+el("pwSave").addEventListener("click", async ()=>{
+  const p1 = el("pwNew").value, p2 = el("pwNew2").value, st = el("pwStatus");
+  if(p1.length < 6) return st.textContent = "⚠ Password must be at least 6 characters.";
+  if(p1 !== p2)     return st.textContent = "⚠ Passwords don't match.";
+  st.textContent = "Saving…";
+  const { error } = await sb.auth.updateUser({ password: p1, data: { must_change: false } });
+  if(error) return st.textContent = "❌ " + error.message;
+  st.textContent = "✅ Password updated.";
+  setTimeout(openForumHome, 600);
+});
+el("pwAlt").addEventListener("click", async ()=>{
+  if(pwForced){
+    await sb.auth.signOut(); me = null;
+    el("pwGate").classList.add("d-none");
+    el("forumLogin").classList.remove("d-none");
+    el("loginStatus").textContent = "";
+  } else openForumHome();
+});
+el("pwChangeBtn").addEventListener("click", ()=>showPwGate(false));
 document.getElementById("loginBtn").addEventListener("click", async ()=>{
   const u = document.getElementById("loginUser").value.trim();
   const p = document.getElementById("loginPass").value;
@@ -1045,6 +1097,7 @@ document.getElementById("logoutBtn").addEventListener("click", async ()=>{
   if(sb) await sb.auth.signOut();
   me = null;
   document.getElementById("forumHome").classList.add("d-none");
+  document.getElementById("pwGate").classList.add("d-none");
   document.getElementById("forumLogin").classList.remove("d-none");
   document.getElementById("loginStatus").textContent = "";
 });
