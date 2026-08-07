@@ -832,10 +832,12 @@ async function loadGuild(){
     const g = await res.json();
     const rr = g.raid_rankings || {};
     const keys = Object.keys(rr);
-    if(keys.length){
-      const latest = rr[keys[keys.length-1]];
-      const best = latest.mythic?.world ? latest.mythic : latest.heroic;
-      if(best){ setNum("rankRealm", best.realm); setNum("rankRegion", best.region); setNum("rankWorld", best.world); }
+    for(let i = keys.length - 1; i >= 0; i--){
+      const r = rr[keys[i]];
+      const best = (r.mythic?.world > 0) ? r.mythic
+                 : (r.heroic?.world > 0) ? r.heroic
+                 : (r.normal?.world > 0) ? r.normal : null;
+      if(best){ setNum("rankRealm", best.realm); setNum("rankRegion", best.region); setNum("rankWorld", best.world); break; }
     }
     if(g.members) setNum("memberCount", g.members.length);
     const rp = g.raid_progression || {};
@@ -849,7 +851,8 @@ async function loadGuild(){
         const known = CONFIG.fallbackTiers.find(f=>t.name.toLowerCase().includes(f.name.toLowerCase())||f.name.toLowerCase().includes(t.name.toLowerCase()));
         if(known && known.bosses.length === t.bosses.length) t.bosses = known.bosses;
       });
-      renderTiers(live.slice(0,3));
+      const started = live.filter(t => (t.mythicKilled + t.heroicKilled) > 0);
+      renderTiers((started.length ? started : live).slice(0,3));
     }
     document.getElementById("dataSource").textContent = "Live data · Raider.io · updated just now";
     if(g.members) renderRoster(g.members);
