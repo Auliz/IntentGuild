@@ -154,6 +154,19 @@ a:hover{color:var(--legendary-soft)}
 }
 .boss-row.dead .kill-tag{opacity:1}
 .pull-count{font-family:var(--font-data);font-size:.7rem;color:var(--muted)}
+.boss-banner{position:relative;height:58px;border-radius:8px;overflow:hidden;margin-bottom:.55rem;border:1px solid var(--line);background:linear-gradient(120deg,var(--panel-2),#0d0818);background-size:cover;background-position:center 25%;display:flex;align-items:center;padding:0 1rem;transition:filter .6s ease,opacity .6s ease}
+.boss-banner::before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(10,6,20,.88),rgba(10,6,20,.3) 55%,rgba(10,6,20,.05))}
+.boss-banner .bname{position:relative;font-family:var(--font-display);font-weight:700;font-size:.95rem;text-shadow:0 1px 3px #000;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.boss-banner .bstate{position:relative;margin-left:auto;padding-left:.8rem;font-family:var(--font-data);font-size:.62rem;letter-spacing:.2em;flex-shrink:0}
+.boss-banner.upcoming{opacity:.7}
+.boss-banner.upcoming .bstate{color:var(--muted)}
+.boss-banner.current{border-color:var(--legendary);box-shadow:0 0 14px rgba(255,128,0,.35);animation:progPulse 2.4s infinite}
+.boss-banner.current .bstate{color:var(--legendary)}
+.boss-banner.killed{filter:grayscale(1) brightness(.5)}
+.boss-banner.killed .bname{color:var(--muted)}
+.boss-banner.killed .bstate{color:var(--kill)}
+@keyframes progPulse{50%{box-shadow:0 0 26px rgba(255,128,0,.6)}}
+@media (prefers-reduced-motion:reduce){.boss-banner.current{animation:none}}
 
 /* ---------- ACHIEVEMENT LOOT-TOOLTIP CARDS (signature) ---------- */
 .loot-card{
@@ -651,11 +664,11 @@ const CONFIG = {
     { name: "Zero Roster Collapses", legendary: false, desc: "Core roster retained across every tier since founding.", flavor: "\"People stay where they're valued.\"", date: "Since founding" },
     { name: "Ahead of the Curve: Every Tier", legendary: false, desc: "AOTC secured within the opening weeks of every raid since founding.", flavor: "\"Heroic is the warm-up.\"", date: "Every tier" }
   ],
-  fallbackTiers: [
-    { name: "March on Quel'Danas", bosses: ["Belo'ren, Child of Al'ar", "Midnight Falls"], mythicKilled: 2, heroicKilled: 2 },
-    { name: "The Dreamrift", bosses: ["Boss 1","Boss 2","Boss 3","Boss 4","Boss 5","Boss 6"], mythicKilled: 6, heroicKilled: 6 },
-    { name: "The Voidspire", bosses: ["Boss 1","Boss 2","Boss 3","Boss 4","Boss 5","Boss 6","Boss 7","Boss 8"], mythicKilled: 8, heroicKilled: 8 }
-  ]
+  tiers: [
+    { slug: "tier-mn-1", name: "Voidspire · Dreamrift · Quel'Danas", meta: "MIDNIGHT · SEASON 1",
+      mythicKilled: 8, heroicKilled: 9,
+      bosses: "Boss 1\nBoss 2\nBoss 3\nBoss 4\nBoss 5\nBoss 6\nBoss 7\nBoss 8\nBoss 9" }
+  ],
 };
 
 /* ================= SUPABASE CLIENT ================= */
@@ -797,23 +810,35 @@ async function loadRemoteConfig(){
 }
 
 /* ================= RAIDER.IO LIVE DATA ================= */
+function parseBosses(t){
+  const raw = Array.isArray(t.bosses) ? t.bosses.map(String) : String(t.bosses||"").split("\n");
+  return raw.map(s=>s.trim()).filter(Boolean).map(line=>{
+    const bits = line.split("|").map(x=>(x||"").trim());
+    return { name: bits[0], img: bits[1] || "" };
+  });
+}
 function renderTier(t){
-  const total = t.bosses.length;
-  const rows = t.bosses.map((b,i)=>`
-    <div class="boss-row ${i < t.mythicKilled ? "dead":""}">
-      <span class="boss-name">${esc(b)}</span>
-      <div class="hpbar"><div class="fill"></div></div>
-      <span class="kill-tag">KILL</span>
-    </div>`).join("");
+  const bosses = parseBosses(t);
+  const mk = +t.mythicKilled || 0, hk = +t.heroicKilled || 0;
+  const total = t.totalBosses || bosses.length;
+  const rows = bosses.map((b,i)=>{
+    const cls = i < mk ? "killed" : i === mk ? "current" : "upcoming";
+    const label = cls === "killed" ? "DEFEATED" : cls === "current" ? "PROGRESSING" : "";
+    return `
+    <div class="boss-banner ${cls}"${b.img ? ` style="background-image:url('${esc(b.img)}')"` : ""}>
+      <span class="bname">${esc(b.name)}</span>
+      <span class="bstate">${label}</span>
+    </div>`;
+  }).join("");
   return `
   <div class="col-lg-4 col-md-6">
     <div class="tier-card">
       <div class="d-flex justify-content-between align-items-start mb-1">
-        <div><div class="tier-name">${esc(t.name)}</div><div class="tier-meta">MIDNIGHT · SEASON 1</div></div>
-        <span class="prog-badge mythic">${t.mythicKilled}/${total} M</span>
+        <div><div class="tier-name">${esc(t.name)}</div><div class="tier-meta">${esc(t.meta || "")}</div></div>
+        <span class="prog-badge mythic">${mk}/${total} M</span>
       </div>
-      <div class="tier-meta mb-1">Heroic ${t.heroicKilled}/${total} · Mythic ${t.mythicKilled}/${total}</div>
-      <div class="bossbar">${rows}</div>
+      <div class="tier-meta mb-2">Heroic ${hk}/${total} · Mythic ${mk}/${total}</div>
+      ${rows}
     </div>
   </div>`;
 }
@@ -823,18 +848,19 @@ function renderTiers(tiers){
 function setNum(id,val){ if(val!=null) document.getElementById(id).textContent = "#"+Number(val).toLocaleString(); }
 
 async function loadGuild(){
-  renderTiers(CONFIG.fallbackTiers);
+  renderTiers(CONFIG.tiers || CONFIG.fallbackTiers);
   const R = CONFIG.rio;
   const RIO = `https://raider.io/api/v1/guilds/profile?region=${R.region}&realm=${R.realm}&name=${encodeURIComponent(R.guildName)}`;
   try{
     const res = await fetch(RIO + "&fields=raid_progression,raid_rankings,members");
     if(!res.ok) throw new Error(res.status);
     const g = await res.json();
-    // Only look at the current-tier raids listed in CONFIG.fallbackTiers
-    const norm = s => s.toLowerCase().replace(/[^a-z0-9]/g, "");
-    const currentRaids = CONFIG.fallbackTiers.map(f => norm(f.name));
+    // Your Command-Deck tier list is the source of truth for what displays
+    const norm = s => String(s).toLowerCase().replace(/[^a-z0-9]/g, "");
+    const tiers = CONFIG.tiers || CONFIG.fallbackTiers;
+    const tierKeys = tiers.flatMap(t => [t.slug ? norm(t.slug) : null, norm(t.name)]).filter(Boolean);
     const rr = g.raid_rankings || {};
-    const keys = Object.keys(rr).filter(k => currentRaids.includes(norm(k)));
+    const keys = Object.keys(rr).filter(k => tierKeys.includes(norm(k)));
     for(let i = keys.length - 1; i >= 0; i--){
       const r = rr[keys[i]];
       const best = (r.mythic?.world > 0) ? r.mythic
@@ -844,20 +870,15 @@ async function loadGuild(){
     }
     if(g.members) setNum("memberCount", g.members.length);
     const rp = g.raid_progression || {};
-    const live = Object.entries(rp).map(([slug, d])=>({
-      name: slug.replace(/-/g," ").replace(/\b\w/g,c=>c.toUpperCase()),
-      bosses: Array.from({length:d.total_bosses}, (_,i)=>`Boss ${i+1}`),
-      mythicKilled: d.mythic_bosses_killed, heroicKilled: d.heroic_bosses_killed
-    })).reverse();
-    if(live.length){
-      live.forEach(t=>{
-        const known = CONFIG.fallbackTiers.find(f=>t.name.toLowerCase().includes(f.name.toLowerCase())||f.name.toLowerCase().includes(t.name.toLowerCase()));
-        if(known && known.bosses.length === t.bosses.length) t.bosses = known.bosses;
-      });
-      const currentLive = live.filter(t => currentRaids.includes(norm(t.name)));
-      const started = currentLive.filter(t => (t.mythicKilled + t.heroicKilled) > 0);
-      renderTiers((started.length ? started : currentLive.length ? currentLive : live).slice(0,3));
-    }
+    const shown = tiers.map(t=>{
+      const key = Object.keys(rp).find(k => (t.slug && norm(k) === norm(t.slug)) || norm(k) === norm(t.name));
+      if(key){
+        const d = rp[key];
+        return { ...t, mythicKilled: d.mythic_bosses_killed, heroicKilled: d.heroic_bosses_killed, totalBosses: d.total_bosses };
+      }
+      return t;   // no API match: manual counts only
+    });
+    renderTiers(shown);
     document.getElementById("dataSource").textContent = "Live data · Raider.io · updated just now";
     if(g.members) renderRoster(g.members);
   }catch(err){
