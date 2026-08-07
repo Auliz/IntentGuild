@@ -149,7 +149,7 @@ td,th{background:transparent!important;border-color:rgba(44,33,69,.5)!important;
         </div>
         <div class="col-md-3"><button class="btn btn-apply w-100" id="nuBtn">Create &amp; Activate</button></div>
       </div>
-      <div class="note mt-2" id="nuStatus">New accounts log into the forums with their username + password.</div>
+      <div class="note mt-2" id="nuStatus">New accounts log in with their username + temp password, then are forced to set their own password on first login.</div>
     </div>
     <div class="panel">
       <div class="d-flex justify-content-between align-items-center mb-3">
@@ -484,7 +484,7 @@ $("nuBtn").addEventListener("click", async ()=>{
   const st = $("nuStatus");
   if(!u || p.length < 6) return st.textContent = "⚠ Username required; password must be 6+ characters.";
   st.textContent = "Creating…";
-  const { data, error } = await sbProvision.auth.signUp({ email: toEmail(u), password: p, options:{ data:{ username: u } } });
+  const { data, error } = await sbProvision.auth.signUp({ email: toEmail(u), password: p, options:{ data:{ username: u, must_change: true } } });
   if(error) return st.textContent = "❌ " + error.message;
   // activate + set role using the admin session
   const uid = data.user?.id;
@@ -492,7 +492,7 @@ $("nuBtn").addEventListener("click", async ()=>{
     const { error: e2 } = await sb.from("profiles").update({ active:true, role }).eq("id", uid);
     if(e2) return st.textContent = "Account created, but activation failed: " + e2.message;
   }
-  st.textContent = `✅ ${u} created and activated. Send them their username + password over Discord DM.`;
+  st.textContent = `✅ ${u} created and activated. DM them the temp password — they will be required to replace it on first login.`;
   $("nuUser").value = ""; $("nuPass").value = "";
   loadMembers();
 });
