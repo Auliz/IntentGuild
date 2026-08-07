@@ -34,7 +34,11 @@ h1,h2,h3,h5,.display-font{font-family:'Cinzel',serif}
 .deck-tabs .nav-link{color:var(--muted);font-weight:600;border:none;border-bottom:2px solid transparent;border-radius:0}
 .deck-tabs .nav-link.active{color:var(--legendary);background:none;border-bottom-color:var(--legendary)}
 .item-card{background:var(--void-2);border:1px solid var(--line);border-radius:10px;padding:1rem;margin-bottom:.8rem;position:relative}
-.item-card .rm{position:absolute;top:.5rem;right:.5rem}
+.item-card .tools{position:absolute;top:.5rem;right:.5rem;display:flex;gap:.3rem}
+.item-card .tools .btn{padding:.15rem .5rem;font-size:.8rem;line-height:1.2}
+.item-card .tools .mv{border:1px solid var(--line);color:var(--muted);background:none}
+.item-card .tools .mv:hover{border-color:var(--epic);color:var(--epic-soft)}
+.item-card .tools .mv:disabled{opacity:.3}
 .pill{font-family:'Chakra Petch',monospace;font-size:.65rem;padding:.15rem .5rem;border-radius:5px;letter-spacing:.1em}
 .pill-new{background:rgba(255,128,0,.18);color:var(--legendary)}
 .pill-reviewing{background:rgba(163,53,238,.18);color:var(--epic-soft)}
@@ -372,8 +376,12 @@ function renderList(key){
   const host = $("list_"+key);
   host.innerHTML = (cfg[key]||[]).map((item,i)=>`
     <div class="item-card" data-list="${key}" data-i="${i}">
-      <button class="btn btn-ghost-danger btn-sm rm" data-rm="${key}:${i}">✕</button>
-      <div class="row g-2 pe-5">
+      <div class="tools">
+        <button class="btn mv" data-mv="${key}:${i}:u" title="Move up" ${i===0?"disabled":""}>▲</button>
+        <button class="btn mv" data-mv="${key}:${i}:d" title="Move down" ${i===(cfg[key].length-1)?"disabled":""}>▼</button>
+        <button class="btn btn-ghost-danger" data-rm="${key}:${i}">✕</button>
+      </div>
+      <div class="row g-2" style="padding-right:120px">
         ${SCHEMAS[key].map(f=>{
           if(f.t==="check") return `<div class="col-md-${f.w} d-flex align-items-end pb-1"><div class="form-check"><input class="form-check-input" type="checkbox" data-f="${f.k}" ${item[f.k]?"checked":""}><label class="form-check-label note">${f.l}</label></div></div>`;
           if(f.t==="text") return `<div class="col-md-${f.w}"><label class="form-label">${f.l}</label><textarea class="form-control form-control-sm" rows="2" data-f="${f.k}">${esc(item[f.k])}</textarea></div>`;
@@ -383,6 +391,16 @@ function renderList(key){
     </div>`).join("");
 }
 document.addEventListener("click", e=>{
+  const mv = e.target.dataset.mv;
+  if(mv){
+    const [key, i, dir] = mv.split(":");
+    const a = +i, b = a + (dir === "u" ? -1 : 1);
+    if(b >= 0 && b < cfg[key].length){
+      harvest();
+      [cfg[key][a], cfg[key][b]] = [cfg[key][b], cfg[key][a]];
+      renderList(key);
+    }
+  }
   const rm = e.target.dataset.rm;
   if(rm){ const [key,i] = rm.split(":"); harvest(); cfg[key].splice(+i,1); renderList(key); }
   const add = e.target.dataset.add;
