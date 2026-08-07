@@ -170,6 +170,25 @@ a:hover{color:var(--legendary-soft)}
 .boss-banner.killed .bstate{color:var(--kill)}
 @keyframes progPulse{50%{box-shadow:0 0 26px rgba(255,128,0,.6)}}
 @media (prefers-reduced-motion:reduce){.boss-banner.current{animation:none}}
+.tier-stage{display:flex;align-items:stretch;gap:0}
+.tier-feature{flex:0 0 46%;max-width:560px;position:relative;z-index:2}
+.tier-feature .tier-card{border-color:var(--legendary);box-shadow:0 0 26px rgba(255,128,0,.18);height:100%}
+.tier-ribbon{position:absolute;top:-11px;left:1.2rem;z-index:3;font-family:var(--font-data);font-size:.62rem;letter-spacing:.25em;padding:.2rem .7rem;border-radius:5px;background:linear-gradient(135deg,var(--legendary),#FF9E2C);color:#1a0d00;font-weight:700}
+.tier-carousel{flex:1;overflow:hidden;position:relative;z-index:1;margin-left:-46px;padding:1rem 0 1rem 66px;align-self:center}
+.tier-carousel::before{content:"";position:absolute;left:0;top:0;bottom:0;width:110px;z-index:2;pointer-events:none;background:linear-gradient(90deg,var(--void) 30%,transparent)}
+.tc-track{display:flex;gap:1rem;transition:transform .7s cubic-bezier(.4,0,.2,1)}
+.tier-past{flex:0 0 240px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:1rem 1.1rem;filter:saturate(.55) brightness(.9)}
+.tier-past .tier-name{font-family:var(--font-display);font-weight:700;font-size:.92rem}
+.tier-past .archived{font-family:var(--font-data);font-size:.6rem;letter-spacing:.2em;color:var(--muted);margin-top:.15rem}
+.tier-pips{display:flex;gap:4px;margin-top:.7rem;flex-wrap:wrap}
+.tier-pips .pip{width:14px;height:14px;border-radius:3px;background:var(--void-2);border:1px solid var(--line)}
+.tier-pips .pip.dead{background:linear-gradient(135deg,var(--epic),#7a1fb8);border-color:var(--epic)}
+@media (max-width: 991px){
+  .tier-stage{flex-direction:column;gap:1.2rem}
+  .tier-feature{flex:none;max-width:none}
+  .tier-carousel{margin-left:0;padding:0;align-self:stretch}
+  .tier-carousel::before{display:none}
+}
 
 /* ---------- ACHIEVEMENT LOOT-TOOLTIP CARDS (signature) ---------- */
 .loot-card{
@@ -849,7 +868,7 @@ function renderTier(t){
     </div>`;
   }).join("");
   return `
-  <div class="col-lg-4 col-md-6">
+    <div class="tier-ribbon">CURRENT TIER</div>
     <div class="tier-card">
       <div class="d-flex justify-content-between align-items-start mb-1">
         <div><div class="tier-name">${esc(t.name)}</div><div class="tier-meta">${esc(t.meta || "")}</div></div>
@@ -857,11 +876,54 @@ function renderTier(t){
       </div>
       <div class="tier-meta mb-2">Heroic ${hk}/${total} · Mythic ${mk}/${total}</div>
       ${rows}
+    </div>`;
+}
+function renderPastCard(t){
+  const bosses = parseBosses(t);
+  const mk = +t.mythicKilled || 0, hk = +t.heroicKilled || 0;
+  const total = t.totalBosses || bosses.length;
+  const pips = Array.from({length: total}, (_,i)=>`<span class="pip ${i < mk ? "dead":""}"></span>`).join("");
+  return `
+  <div class="tier-past">
+    <div class="d-flex justify-content-between align-items-start gap-2">
+      <div class="tier-name">${esc(t.name)}</div>
+      <span class="prog-badge mythic" style="flex-shrink:0">${mk}/${total} M</span>
     </div>
+    <div class="archived">${esc(t.meta || "")} · SEASON ARCHIVED</div>
+    <div class="tier-pips">${pips}</div>
+    <div class="tier-meta mt-2">Heroic ${hk}/${total} · Mythic ${mk}/${total}</div>
   </div>`;
 }
+let tcIdx = 0, tcTimer = null;
 function renderTiers(tiers){
-  document.getElementById("tierGrid").innerHTML = tiers.map(renderTier).join("");
+  if(!tiers || !tiers.length) return;
+  const cur = tiers.find(t => t.current) || tiers[0];
+  const past = tiers.filter(t => t !== cur);
+  document.getElementById("tierGrid").innerHTML = `
+    <div class="tier-stage">
+      <div class="tier-feature">${renderTier(cur)}</div>
+      ${past.length ? `<div class="tier-carousel"><div class="tc-track">${past.map(renderPastCard).join("")}</div></div>` : ""}
+    </div>`;
+  startCarousel(past.length);
+}
+function startCarousel(n){
+  clearInterval(tcTimer); tcIdx = 0;
+  if(n < 2) return;
+  if(window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const wrap = document.querySelector(".tier-carousel");
+  const track = document.querySelector(".tc-track");
+  if(!wrap || !track) return;
+  let paused = false;
+  wrap.addEventListener("mouseenter", ()=>paused = true);
+  wrap.addEventListener("mouseleave", ()=>paused = false);
+  tcTimer = setInterval(()=>{
+    if(paused) return;
+    const step = (track.children[0]?.offsetWidth || 240) + 16;
+    const visible = Math.max(1, Math.floor(wrap.clientWidth / step));
+    const maxIdx = Math.max(0, n - visible);
+    tcIdx = tcIdx >= maxIdx ? 0 : tcIdx + 1;
+    track.style.transform = `translateX(-${tcIdx * step}px)`;
+  }, 4500);
 }
 function setNum(id,val){ if(val!=null) document.getElementById(id).textContent = "#"+Number(val).toLocaleString(); }
 
