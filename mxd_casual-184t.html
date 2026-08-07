@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Command Deck</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/css/bootstrap.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Inter:wght@400;500;600;700&family=Chakra+Petch:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --void:#0A0614;--void-2:#110A20;--panel:#171028;--panel-2:#1E1533;--line:#2C2145;
+  --epic:#A335EE;--epic-soft:#C77DFF;--legendary:#FF8000;--legendary-soft:#FFB25E;
+  --text:#F2ECFA;--muted:#9B8FB8;--kill:#3DDC84;--danger:#E74C3C;
+}
+body{background:var(--void);color:var(--text);font-family:'Inter',system-ui,sans-serif}
+body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;
+  background:radial-gradient(60vw 40vh at 90% -5%,rgba(163,53,238,.15),transparent 60%),var(--void)}
+h1,h2,h3,h5,.display-font{font-family:'Cinzel',serif}
+.data-font{font-family:'Chakra Petch',monospace}
+.text-epic{color:var(--epic-soft)!important}.text-legendary{color:var(--legendary)!important}
+.btn-apply{background:linear-gradient(135deg,var(--legendary),#FF9E2C);border:none;color:#1a0d00;font-weight:700}
+.btn-apply:hover{filter:brightness(1.1);color:#1a0d00}
+.btn-outline-epic{border:1px solid var(--epic);color:var(--epic-soft);font-weight:600}
+.btn-outline-epic:hover{background:rgba(163,53,238,.15);color:#fff;border-color:var(--epic-soft)}
+.btn-ghost-danger{border:1px solid rgba(231,76,60,.4);color:#e88;background:none}
+.btn-ghost-danger:hover{background:rgba(231,76,60,.15);color:#fbb}
+.form-label{font-family:'Chakra Petch',monospace;font-size:.7rem;letter-spacing:.2em;text-transform:uppercase;color:var(--muted)}
+.form-control,.form-select{background:var(--void-2);border:1px solid var(--line);color:var(--text)}
+.form-control:focus,.form-select:focus{background:var(--void-2);border-color:var(--epic);color:var(--text);box-shadow:0 0 0 .2rem rgba(163,53,238,.2)}
+.form-check-input:checked{background-color:var(--epic);border-color:var(--epic)}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:1.5rem}
+.gate{max-width:400px;margin:14vh auto 0}
+.deck-tabs .nav-link{color:var(--muted);font-weight:600;border:none;border-bottom:2px solid transparent;border-radius:0}
+.deck-tabs .nav-link.active{color:var(--legendary);background:none;border-bottom-color:var(--legendary)}
+.item-card{background:var(--void-2);border:1px solid var(--line);border-radius:10px;padding:1rem;margin-bottom:.8rem;position:relative}
+.item-card .rm{position:absolute;top:.5rem;right:.5rem}
+.pill{font-family:'Chakra Petch',monospace;font-size:.65rem;padding:.15rem .5rem;border-radius:5px;letter-spacing:.1em}
+.pill-new{background:rgba(255,128,0,.18);color:var(--legendary)}
+.pill-reviewing{background:rgba(163,53,238,.18);color:var(--epic-soft)}
+.pill-accepted{background:rgba(61,220,132,.15);color:var(--kill)}
+.pill-declined{background:rgba(231,76,60,.15);color:#e88}
+.pill-admin{background:rgba(255,128,0,.18);color:var(--legendary)}
+.pill-officer{background:rgba(163,53,238,.18);color:var(--epic-soft)}
+.pill-member{background:rgba(155,143,184,.12);color:var(--muted)}
+.pill-inactive{background:rgba(231,76,60,.12);color:#e88}
+.app-row{cursor:pointer}
+.app-detail{background:var(--void-2);border:1px solid var(--line);border-radius:10px;padding:1rem;font-size:.88rem}
+.app-detail dt{font-family:'Chakra Petch',monospace;font-size:.65rem;letter-spacing:.15em;color:var(--muted);text-transform:uppercase}
+.app-detail dd{margin-bottom:.6rem;color:#CFC6E4;white-space:pre-wrap}
+.savebar{position:sticky;bottom:0;background:rgba(10,6,20,.92);backdrop-filter:blur(10px);border-top:1px solid var(--line);padding:.8rem 0;z-index:50}
+table{font-size:.9rem}
+th{font-family:'Chakra Petch',monospace;font-size:.68rem;letter-spacing:.2em;text-transform:uppercase;color:var(--muted)!important}
+td,th{background:transparent!important;border-color:rgba(44,33,69,.5)!important;color:var(--text)!important;vertical-align:middle}
+.note{font-size:.78rem;color:var(--muted)}
+.toastbox{position:fixed;top:1rem;right:1rem;z-index:1000}
+</style>
+</head>
+<body>
+
+<!-- ============ LOGIN GATE ============ -->
+<div id="gate" class="gate panel text-center">
+  <h1 style="font-size:1.4rem"><span class="text-legendary">W</span>AI Command Deck</h1>
+  <p class="note mb-3">Admin access only. All actions are enforced server-side.</p>
+  <input class="form-control mb-2" id="gUser" placeholder="Username or email" autocomplete="username">
+  <input class="form-control mb-3" id="gPass" type="password" placeholder="Password" autocomplete="current-password">
+  <button class="btn btn-apply w-100" id="gBtn">Log In</button>
+  <div class="data-font mt-2 note" id="gStatus"></div>
+</div>
+
+<!-- ============ DECK ============ -->
+<div id="deck" class="container py-4 d-none" style="max-width:1000px">
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+    <h1 style="font-size:1.4rem;margin:0"><span class="text-legendary">W</span>AI Command Deck</h1>
+    <div class="d-flex align-items-center gap-2">
+      <span class="note data-font">Signed in as <b class="text-legendary" id="whoAmI"></b></span>
+      <button class="btn btn-outline-epic btn-sm" id="outBtn">Log Out</button>
+    </div>
+  </div>
+
+  <ul class="nav deck-tabs mb-4 flex-wrap" role="tablist">
+    <li class="nav-item"><button class="nav-link active" data-tab="site">Site</button></li>
+    <li class="nav-item"><button class="nav-link" data-tab="content">Content</button></li>
+    <li class="nav-item"><button class="nav-link" data-tab="apps">Applications <span class="pill pill-new d-none" id="appCount"></span></button></li>
+    <li class="nav-item"><button class="nav-link" data-tab="members">Members</button></li>
+    <li class="nav-item"><button class="nav-link" data-tab="integrations">Integrations</button></li>
+  </ul>
+
+  <!-- ---- SITE TAB ---- -->
+  <div class="tabpane" id="tab-site">
+    <div class="panel mb-3">
+      <h5 class="mb-3">Identity</h5>
+      <div class="row g-3">
+        <div class="col-md-6"><label class="form-label">Guild Name</label><input class="form-control" id="cfg_name"></div>
+        <div class="col-md-6"><label class="form-label">Realm Line (hero)</label><input class="form-control" id="cfg_realmLine"></div>
+        <div class="col-md-6"><label class="form-label">Nav Subtitle</label><input class="form-control" id="cfg_navSub"></div>
+        <div class="col-md-6"><label class="form-label">Hero Eyebrow</label><input class="form-control" id="cfg_eyebrow"></div>
+      </div>
+    </div>
+    <div class="panel mb-3">
+      <h5 class="mb-3">About / Bio</h5>
+      <label class="form-label">Paragraphs (separate with a blank line)</label>
+      <textarea class="form-control mb-3" id="cfg_about" rows="7"></textarea>
+      <label class="form-label">"At a Glance" items (one per line, emoji included)</label>
+      <textarea class="form-control" id="cfg_glance" rows="5"></textarea>
+    </div>
+    <div class="panel mb-3">
+      <h5 class="mb-3">Raid Schedule</h5>
+      <div id="list_schedule"></div>
+      <button class="btn btn-outline-epic btn-sm" data-add="schedule">+ Add Row</button>
+      <div class="mt-3"><label class="form-label">Schedule Footnote</label><input class="form-control" id="cfg_schedNote"></div>
+    </div>
+    <div class="panel mb-3">
+      <h5 class="mb-3">Raider Expectations (Rules)</h5>
+      <div id="list_rules"></div>
+      <button class="btn btn-outline-epic btn-sm" data-add="rules">+ Add Rule</button>
+    </div>
+  </div>
+
+  <!-- ---- CONTENT TAB ---- -->
+  <div class="tabpane d-none" id="tab-content">
+    <div class="panel mb-3"><h5 class="mb-3">Trophy Case</h5><div id="list_trophies"></div><button class="btn btn-outline-epic btn-sm" data-add="trophies">+ Add Trophy</button></div>
+    <div class="panel mb-3"><h5 class="mb-3">Leadership</h5><div id="list_leaders"></div><button class="btn btn-outline-epic btn-sm" data-add="leaders">+ Add Leader</button></div>
+    <div class="panel mb-3"><h5 class="mb-3">Streamers</h5><div id="list_streamers"></div><button class="btn btn-outline-epic btn-sm" data-add="streamers">+ Add Streamer</button></div>
+    <div class="panel mb-3"><h5 class="mb-3">Kill VODs</h5><div id="list_vods"></div><button class="btn btn-outline-epic btn-sm" data-add="vods">+ Add VOD</button></div>
+    <div class="panel mb-3"><h5 class="mb-3">Recruitment Needs</h5><div id="list_needs"></div><button class="btn btn-outline-epic btn-sm" data-add="needs">+ Add Need</button></div>
+  </div>
+
+  <!-- ---- APPLICATIONS TAB ---- -->
+  <div class="tabpane d-none" id="tab-apps">
+    <div class="panel">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="m-0">Application Inbox</h5>
+        <button class="btn btn-outline-epic btn-sm" id="appRefresh">Refresh</button>
+      </div>
+      <div id="appList"><p class="note">Loading…</p></div>
+    </div>
+  </div>
+
+  <!-- ---- MEMBERS TAB ---- -->
+  <div class="tabpane d-none" id="tab-members">
+    <div class="panel mb-3">
+      <h5 class="mb-3">Create Member Account</h5>
+      <div class="row g-3 align-items-end">
+        <div class="col-md-3"><label class="form-label">Username</label><input class="form-control" id="nuUser" placeholder="e.g. Voidbrand"></div>
+        <div class="col-md-3"><label class="form-label">Password</label><input class="form-control" id="nuPass" placeholder="Temp password"></div>
+        <div class="col-md-3"><label class="form-label">Role</label>
+          <select class="form-select" id="nuRole"><option value="member">Member</option><option value="officer">Officer</option><option value="admin">Admin</option></select>
+        </div>
+        <div class="col-md-3"><button class="btn btn-apply w-100" id="nuBtn">Create &amp; Activate</button></div>
+      </div>
+      <div class="note mt-2" id="nuStatus">New accounts log into the forums with their username + password.</div>
+    </div>
+    <div class="panel">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="m-0">Member Accounts</h5>
+        <button class="btn btn-outline-epic btn-sm" id="memRefresh">Refresh</button>
+      </div>
+      <div class="table-responsive"><table class="table m-0">
+        <thead><tr><th>Username</th><th>Role</th><th>Status</th><th>Created</th><th></th></tr></thead>
+        <tbody id="memBody"></tbody>
+      </table></div>
+      <p class="note mt-2 mb-0">Deactivating an account instantly locks it out of the forums (enforced by the database, not the page). Full deletion is done in the Supabase dashboard → Authentication.</p>
+    </div>
+  </div>
+
+  <!-- ---- INTEGRATIONS TAB ---- -->
+  <div class="tabpane d-none" id="tab-integrations">
+    <div class="panel mb-3">
+      <h5 class="mb-3">Application Delivery</h5>
+      <label class="form-label">Discord Webhook URL</label>
+      <input class="form-control mb-1" id="cfg_discordWebhook" placeholder="https://discord.com/api/webhooks/…">
+      <p class="note mb-3">Applications always land in the inbox above regardless. The webhook additionally pings your officer channel. ⚠ Because the public site sends this ping from the visitor's browser, the URL is technically extractable from the site config — if it ever gets spammed, just regenerate the webhook in Discord and paste the new one here.</p>
+      <label class="form-label">Google Apps Script URL (Sheet logging)</label>
+      <input class="form-control" id="cfg_googleScriptUrl" placeholder="https://script.google.com/macros/s/…/exec">
+    </div>
+    <div class="panel">
+      <h5 class="mb-3">Data Sources</h5>
+      <div class="row g-3">
+        <div class="col-md-4"><label class="form-label">Raider.io Region</label><input class="form-control" id="cfg_region"></div>
+        <div class="col-md-4"><label class="form-label">Realm (slug)</label><input class="form-control" id="cfg_realm"></div>
+        <div class="col-md-4"><label class="form-label">Guild Name (exact)</label><input class="form-control" id="cfg_rioGuild"></div>
+      </div>
+      <p class="note mt-2 mb-0">Used for live progression, rankings, and the roster. The Raider.io API is public — no key required.</p>
+    </div>
+  </div>
+
+  <div class="savebar mt-4">
+    <div class="container d-flex justify-content-between align-items-center flex-wrap gap-2" style="max-width:1000px">
+      <span class="note" id="saveStatus">Changes publish to the live site the moment you save.</span>
+      <button class="btn btn-apply px-4" id="saveBtn">💾 Save &amp; Publish</button>
+    </div>
+  </div>
+</div>
+
+<div class="toastbox" id="toastbox"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+/* ============================================================
+   SUPABASE KEYS — paste the same two values into both this file
+   and the main site (Project Settings → API in Supabase).
+   The anon key is safe to publish; the database rules (RLS)
+   are what actually protect your data.
+   ============================================================ */
+const SB = {
+  url: "https://nuwvesmpjxekdmtqcuui.supabase.co/rest/v1/",        // e.g. https://abcd1234.supabase.co
+  anonKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im51d3Zlc21wanhla2RtdHFjdXVpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYwNTQ4MDEsImV4cCI6MjEwMTYzMDgwMX0.1M4jBv6SNm-XEACcugx8VUYTzQp2uH47zyL23edwIKA"     // the "anon public" key
+};
+
+const MEMBER_EMAIL_DOMAIN = "members.wai.gg"; // usernames become username@this — never actually emailed
+
+/* ---------------- defaults (used until first save) ---------------- */
+const DEFAULTS = {
+  site: { name:"Working as Intended", realmLine:"ILLIDAN · US · HORDE", navSub:"Illidan · US · Mythic", eyebrow:"Mythic Raiding Guild" },
+  about: {
+    paragraphs: [
+      "Working as Intended is a Mythic progression guild on Illidan-US. We formed around a simple idea: serious progression doesn't require a toxic environment or a 4-night schedule — it requires preparation, consistency, and a roster that trusts each other.",
+      "We raid two nights a week and aim for Cutting Edge every tier. Outside raid, the guild runs nightly Mythic+ groups, weekly sales/alt runs, and a Discord that never sleeps. Whether you're a hardcore parse-chaser or a keystone enjoyer, there's a seat at the table.",
+      "The name? Every wipe is a feature, not a bug — until it's a kill."
+    ],
+    glance: ["⚔️ Faction: Horde · Illidan (US)","🗓️ Raid nights: Tue / Thu","🎯 Goal: Cutting Edge every tier","🔑 M+: Nightly key groups, KSM+ push teams","🎙️ Comms: Discord (required on raid nights)"]
+  },
+  schedule: [
+    {day:"Tuesday", time:"8:00 – 11:00 PM CT", what:"Mythic Progression"},
+    {day:"Thursday", time:"8:00 – 11:00 PM CT", what:"Mythic Progression"},
+    {day:"Sunday", time:"7:00 – 9:00 PM CT", what:"Optional Heroic / Alt / Sales"},
+    {day:"Nightly", time:"Evenings", what:"Mythic+ Key Groups"}
+  ],
+  schedNote: "Invites go out 15 minutes before start. First pull is on time.",
+  rules: [
+    {title:"Come prepared.", body:"Know the fights, bring full consumables (bank covers feasts/cauldrons), gear enchanted and gemmed before pull one."},
+    {title:"95% attendance.", body:"Life happens — post absences in Discord ahead of time. No-shows without notice cost your spot."},
+    {title:"Own your mistakes.", body:"We review logs, not to shame, but to fix. \"My bad, adjusting\" beats excuses every time."},
+    {title:"Sitting happens.", body:"Roster is 24–26 deep for a reason. Benched raiders stay on Discord and stay ready."},
+    {title:"Loot is council-lite.", body:"RCLootCouncil, prioritizing throughput upgrades for progression. No drama, no exceptions."},
+    {title:"Be someone people want to raid with.", body:"Banter yes, toxicity no. This one is non-negotiable."}
+  ],
+  trophies: [
+    { name:"Cutting Edge: Midnight Falls", legendary:true, desc:"Defeated Midnight Falls on Mythic difficulty before the season's end.", flavor:"\"The Sunwell holds. Barely.\"", date:"Season 1 · Midnight" },
+    { name:"Realm-Competitive Progression", legendary:false, desc:"Consistent top-bracket finishes on one of the most competitive servers in NA.", flavor:"\"Illidan is not a casual address.\"", date:"Ongoing" },
+    { name:"Two Nights, Full Clear", legendary:true, desc:"Achieved full Mythic clears on a 6-hour weekly schedule.", flavor:"\"Efficiency is a raid buff.\"", date:"Guild philosophy" },
+    { name:"Keystone Hero Squad", legendary:false, desc:"Multiple in-guild title-range Mythic+ teams pushing every season.", flavor:"\"The route is contested.\"", date:"Every season" },
+    { name:"Zero Roster Collapses", legendary:false, desc:"Core roster retained across every tier since founding.", flavor:"\"People stay where they're valued.\"", date:"Since founding" },
+    { name:"Ahead of the Curve: Every Tier", legendary:false, desc:"AOTC secured within the opening weeks of every raid since founding.", flavor:"\"Heroic is the warm-up.\"", date:"Every tier" }
+  ],
+  leaders: [
+    { name:"YourGM", role:"Guild Master · Founder", gm:true, blurb:"Founded WAI to prove CE is possible on two nights. Handles vision, roster, and the checkbook." },
+    { name:"RaidLead", role:"Raid Leader", gm:false, blurb:"Voice on comms. Turns 300 pulls of chaos into one clean kill. Reviews every log so you don't have to." },
+    { name:"RecruitO", role:"Recruitment Officer", gm:false, blurb:"First person you'll talk to. Runs trials, tracks the bench, and answers apps within 48 hours." },
+    { name:"KeyLead", role:"M+ Officer", gm:false, blurb:"Organizes nightly keys and the title push team. Knows every route, contests every route." }
+  ],
+  streamers: [
+    { twitch:"yourgm", name:"GM", bio:"Guild Master. Streams every raid night from the tank seat. Expect calm calls and loud deaths.", schedule:"Tue/Thu raid + weekend keys" },
+    { twitch:"yourhealer", name:"Heals", bio:"Healing officer. Educational healer POV, log reviews, and unhinged M+ pug stories.", schedule:"Most weeknights" },
+    { twitch:"yourdps", name:"Parselord", bio:"Resident parse gremlin. If it can be padded, it will be padded.", schedule:"Weekends" }
+  ],
+  vods: [
+    { title:"Midnight Falls — Mythic First Kill", url:"#", note:"March on Quel'Danas" },
+    { title:"Belo'ren, Child of Al'ar — Mythic", url:"#", note:"March on Quel'Danas" },
+    { title:"The Dreamrift — Full Mythic Clear", url:"#", note:"Season 1" }
+  ],
+  needs: [
+    { cls:"Demonology Warlock", role:"Ranged DPS", demand:"HIGH", hot:true },
+    { cls:"Elemental Shaman", role:"Ranged DPS", demand:"HIGH", hot:true },
+    { cls:"Holy Paladin", role:"Healer", demand:"MEDIUM", hot:false },
+    { cls:"Augmentation Evoker", role:"Ranged DPS", demand:"MEDIUM", hot:false },
+    { cls:"All exceptional players", role:"Any", demand:"ALWAYS", hot:false }
+  ],
+  rio: { region:"us", realm:"illidan", guildName:"Working as Intended" },
+  integrations: { discordWebhook:"", googleScriptUrl:"" }
+};
+
+/* ---------------- list editor schemas ---------------- */
+const SCHEMAS = {
+  schedule:  [{k:"day",l:"Day",w:3},{k:"time",l:"Time",w:4},{k:"what",l:"Activity",w:5}],
+  rules:     [{k:"title",l:"Rule",w:4},{k:"body",l:"Details",w:8,t:"text"}],
+  trophies:  [{k:"name",l:"Title",w:6},{k:"legendary",l:"Legendary",w:2,t:"check"},{k:"date",l:"Date/Tier",w:4},{k:"desc",l:"Description",w:12,t:"text"},{k:"flavor",l:"Flavor line",w:12}],
+  leaders:   [{k:"name",l:"Name",w:4},{k:"role",l:"Role",w:6},{k:"gm",l:"GM style",w:2,t:"check"},{k:"blurb",l:"Blurb",w:12,t:"text"}],
+  streamers: [{k:"name",l:"Display name",w:4},{k:"twitch",l:"Twitch channel",w:4},{k:"schedule",l:"Schedule",w:4},{k:"bio",l:"Bio",w:12,t:"text"}],
+  vods:      [{k:"title",l:"Title",w:6},{k:"url",l:"Link",w:4},{k:"note",l:"Note",w:2}],
+  needs:     [{k:"cls",l:"Class/Spec",w:4},{k:"role",l:"Role",w:3},{k:"demand",l:"Demand",w:3},{k:"hot",l:"Highlight",w:2,t:"check"}]
+};
+
+let cfg = null, sb = null, sbProvision = null, configVersionExists = true;
+
+function toast(msg, ok=true){
+  const t = document.createElement("div");
+  t.className = "panel mb-2"; t.style.borderColor = ok ? "var(--kill)" : "var(--danger)";
+  t.style.padding = ".6rem 1rem"; t.style.fontSize = ".85rem"; t.textContent = msg;
+  document.getElementById("toastbox").appendChild(t);
+  setTimeout(()=>t.remove(), 4000);
+}
+const $ = id => document.getElementById(id);
+const esc = s => String(s??"").replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
+/* ---------------- auth ---------------- */
+function initClients(){
+  if(!SB.url || !SB.anonKey){ $("gStatus").textContent = "⚠ Supabase keys not set — open this file and fill in the SB block at the top."; return false; }
+  let canStore = true; try{ window.localStorage.getItem("x"); }catch(e){ canStore = false; }
+  sb = window.supabase.createClient(SB.url, SB.anonKey, { auth:{ persistSession: canStore } });
+  sbProvision = window.supabase.createClient(SB.url, SB.anonKey, { auth:{ persistSession:false, autoRefreshToken:false } });
+  return true;
+}
+function toEmail(u){ return u.includes("@") ? u : `${u.toLowerCase()}@${MEMBER_EMAIL_DOMAIN}`; }
+
+async function tryResume(){
+  const { data } = await sb.auth.getSession();
+  if(data?.session) await enterDeck();
+}
+$("gBtn").addEventListener("click", async ()=>{
+  const u = $("gUser").value.trim(), p = $("gPass").value;
+  if(!u || !p) return $("gStatus").textContent = "Enter username and password.";
+  $("gStatus").textContent = "Checking…";
+  const { error } = await sb.auth.signInWithPassword({ email: toEmail(u), password: p });
+  if(error) return $("gStatus").textContent = "❌ " + error.message;
+  await enterDeck();
+});
+async function enterDeck(){
+  const { data:{ user } } = await sb.auth.getUser();
+  const { data: prof, error } = await sb.from("profiles").select("username, role, active").eq("id", user.id).single();
+  if(error || !prof || prof.role !== "admin" || !prof.active){
+    $("gStatus").textContent = "⛔ This account does not have admin access.";
+    await sb.auth.signOut(); return;
+  }
+  $("whoAmI").textContent = prof.username;
+  $("gate").classList.add("d-none"); $("deck").classList.remove("d-none");
+  await loadConfig(); loadApplications(); loadMembers();
+}
+$("outBtn").addEventListener("click", async ()=>{ await sb.auth.signOut(); location.reload(); });
+
+/* ---------------- tabs ---------------- */
+document.querySelectorAll("[data-tab]").forEach(b=>b.addEventListener("click", ()=>{
+  document.querySelectorAll("[data-tab]").forEach(x=>x.classList.toggle("active", x===b));
+  document.querySelectorAll(".tabpane").forEach(p=>p.classList.add("d-none"));
+  $("tab-"+b.dataset.tab).classList.remove("d-none");
+}));
+
+/* ---------------- config load / render ---------------- */
+async function loadConfig(){
+  const { data, error } = await sb.from("site_config").select("data").eq("id", 1).single();
+  configVersionExists = !error;
+  const remote = data?.data || {};
+  cfg = structuredClone(DEFAULTS);
+  for(const k in remote) cfg[k] = remote[k];
+  renderForms();
+}
+function renderForms(){
+  $("cfg_name").value = cfg.site.name; $("cfg_realmLine").value = cfg.site.realmLine;
+  $("cfg_navSub").value = cfg.site.navSub; $("cfg_eyebrow").value = cfg.site.eyebrow;
+  $("cfg_about").value = cfg.about.paragraphs.join("\n\n");
+  $("cfg_glance").value = cfg.about.glance.join("\n");
+  $("cfg_schedNote").value = cfg.schedNote;
+  $("cfg_discordWebhook").value = cfg.integrations.discordWebhook || "";
+  $("cfg_googleScriptUrl").value = cfg.integrations.googleScriptUrl || "";
+  $("cfg_region").value = cfg.rio.region; $("cfg_realm").value = cfg.rio.realm; $("cfg_rioGuild").value = cfg.rio.guildName;
+  for(const key of Object.keys(SCHEMAS)) renderList(key);
+}
+function renderList(key){
+  const host = $("list_"+key);
+  host.innerHTML = (cfg[key]||[]).map((item,i)=>`
+    <div class="item-card" data-list="${key}" data-i="${i}">
+      <button class="btn btn-ghost-danger btn-sm rm" data-rm="${key}:${i}">✕</button>
+      <div class="row g-2 pe-5">
+        ${SCHEMAS[key].map(f=>{
+          if(f.t==="check") return `<div class="col-md-${f.w} d-flex align-items-end pb-1"><div class="form-check"><input class="form-check-input" type="checkbox" data-f="${f.k}" ${item[f.k]?"checked":""}><label class="form-check-label note">${f.l}</label></div></div>`;
+          if(f.t==="text") return `<div class="col-md-${f.w}"><label class="form-label">${f.l}</label><textarea class="form-control form-control-sm" rows="2" data-f="${f.k}">${esc(item[f.k])}</textarea></div>`;
+          return `<div class="col-md-${f.w}"><label class="form-label">${f.l}</label><input class="form-control form-control-sm" data-f="${f.k}" value="${esc(item[f.k])}"></div>`;
+        }).join("")}
+      </div>
+    </div>`).join("");
+}
+document.addEventListener("click", e=>{
+  const rm = e.target.dataset.rm;
+  if(rm){ const [key,i] = rm.split(":"); harvest(); cfg[key].splice(+i,1); renderList(key); }
+  const add = e.target.dataset.add;
+  if(add){ harvest(); const blank = {}; SCHEMAS[add].forEach(f=>blank[f.k] = f.t==="check" ? false : ""); cfg[add].push(blank); renderList(add); }
+});
+function harvest(){
+  cfg.site = { name:$("cfg_name").value, realmLine:$("cfg_realmLine").value, navSub:$("cfg_navSub").value, eyebrow:$("cfg_eyebrow").value };
+  cfg.about = {
+    paragraphs: $("cfg_about").value.split(/\n\s*\n/).map(s=>s.trim()).filter(Boolean),
+    glance: $("cfg_glance").value.split("\n").map(s=>s.trim()).filter(Boolean)
+  };
+  cfg.schedNote = $("cfg_schedNote").value;
+  cfg.integrations = { discordWebhook:$("cfg_discordWebhook").value.trim(), googleScriptUrl:$("cfg_googleScriptUrl").value.trim() };
+  cfg.rio = { region:$("cfg_region").value.trim()||"us", realm:$("cfg_realm").value.trim(), guildName:$("cfg_rioGuild").value.trim() };
+  for(const key of Object.keys(SCHEMAS)){
+    cfg[key] = [...document.querySelectorAll(`.item-card[data-list="${key}"]`)].map(card=>{
+      const o = {};
+      card.querySelectorAll("[data-f]").forEach(el=>{ o[el.dataset.f] = el.type==="checkbox" ? el.checked : el.value; });
+      return o;
+    });
+  }
+}
+$("saveBtn").addEventListener("click", async ()=>{
+  harvest();
+  $("saveStatus").textContent = "Publishing…";
+  const { error } = await sb.from("site_config").upsert({ id:1, data: cfg, updated_at: new Date().toISOString() });
+  if(error){ $("saveStatus").textContent = "❌ " + error.message; toast("Save failed: "+error.message, false); }
+  else { $("saveStatus").textContent = "✅ Published — the live site now serves these values."; toast("Published"); }
+});
+
+/* ---------------- applications ---------------- */
+async function loadApplications(){
+  const { data, error } = await sb.from("applications").select("*").order("created_at",{ascending:false});
+  const host = $("appList");
+  if(error) return host.innerHTML = `<p class="note">❌ ${esc(error.message)}</p>`;
+  const fresh = data.filter(a=>a.status==="new").length;
+  $("appCount").textContent = fresh; $("appCount").classList.toggle("d-none", !fresh);
+  if(!data.length) return host.innerHTML = `<p class="note">No applications yet. The inbox fills automatically when someone applies on the site.</p>`;
+  host.innerHTML = data.map(a=>{
+    const d = a.data||{};
+    return `<div class="item-card">
+      <div class="d-flex justify-content-between align-items-center app-row" data-toggle="${a.id}">
+        <div><b>${esc(d.character)}</b> <span class="note">— ${esc(d.spec)} ${esc(d.cls)} · ${esc(d.role)}</span></div>
+        <div class="d-flex gap-2 align-items-center"><span class="pill pill-${a.status}">${a.status.toUpperCase()}</span><span class="note data-font">${new Date(a.created_at).toLocaleDateString()}</span></div>
+      </div>
+      <div class="app-detail mt-2 d-none" id="appd-${a.id}">
+        <dl class="m-0">
+          <dt>Discord</dt><dd>${esc(d.discord)}</dd>
+          <dt>Battle.net</dt><dd>${esc(d.bnet)||"—"}</dd>
+          <dt>Logs</dt><dd>${esc(d.logs)}</dd>
+          <dt>Schedule OK</dt><dd>${esc(d.schedule_ok)}</dd>
+          <dt>Experience</dt><dd>${esc(d.experience)||"—"}</dd>
+          <dt>Why WAI</dt><dd>${esc(d.why)||"—"}</dd>
+        </dl>
+        <div class="d-flex gap-2 flex-wrap mt-2">
+          ${["reviewing","accepted","declined"].map(s=>`<button class="btn btn-outline-epic btn-sm" data-status="${a.id}:${s}">Mark ${s}</button>`).join("")}
+          <button class="btn btn-ghost-danger btn-sm" data-appdel="${a.id}">Delete</button>
+        </div>
+      </div>
+    </div>`;
+  }).join("");
+}
+$("appRefresh").addEventListener("click", loadApplications);
+document.addEventListener("click", async e=>{
+  const t = e.target.closest("[data-toggle]");
+  if(t) $("appd-"+t.dataset.toggle).classList.toggle("d-none");
+  if(e.target.dataset.status){
+    const [id, s] = e.target.dataset.status.split(":");
+    const { error } = await sb.from("applications").update({ status:s }).eq("id", id);
+    if(error) toast(error.message,false); else { toast("Marked "+s); loadApplications(); }
+  }
+  if(e.target.dataset.appdel){
+    if(!confirm("Delete this application permanently?")) return;
+    const { error } = await sb.from("applications").delete().eq("id", e.target.dataset.appdel);
+    if(error) toast(error.message,false); else { toast("Deleted"); loadApplications(); }
+  }
+});
+
+/* ---------------- members ---------------- */
+async function loadMembers(){
+  const { data, error } = await sb.from("profiles").select("*").order("created_at");
+  const body = $("memBody");
+  if(error) return body.innerHTML = `<tr><td colspan="5" class="note">❌ ${esc(error.message)}</td></tr>`;
+  body.innerHTML = data.map(m=>`
+    <tr>
+      <td><b>${esc(m.username)}</b></td>
+      <td><select class="form-select form-select-sm" style="max-width:130px" data-role="${m.id}">
+        ${["member","officer","admin"].map(r=>`<option ${m.role===r?"selected":""}>${r}</option>`).join("")}
+      </select></td>
+      <td><span class="pill ${m.active?"pill-member":"pill-inactive"}">${m.active?"ACTIVE":"INACTIVE"}</span></td>
+      <td class="note data-font">${new Date(m.created_at).toLocaleDateString()}</td>
+      <td><button class="btn btn-outline-epic btn-sm" data-flip="${m.id}:${m.active?0:1}">${m.active?"Deactivate":"Activate"}</button></td>
+    </tr>`).join("");
+}
+$("memRefresh").addEventListener("click", loadMembers);
+document.addEventListener("click", async e=>{
+  if(e.target.dataset.flip){
+    const [id, to] = e.target.dataset.flip.split(":");
+    const { error } = await sb.from("profiles").update({ active: to==="1" }).eq("id", id);
+    if(error) toast(error.message,false); else { toast("Updated"); loadMembers(); }
+  }
+});
+document.addEventListener("change", async e=>{
+  if(e.target.dataset.role){
+    const { error } = await sb.from("profiles").update({ role: e.target.value }).eq("id", e.target.dataset.role);
+    if(error) toast(error.message,false); else toast("Role updated");
+  }
+});
+$("nuBtn").addEventListener("click", async ()=>{
+  const u = $("nuUser").value.trim(), p = $("nuPass").value, role = $("nuRole").value;
+  const st = $("nuStatus");
+  if(!u || p.length < 6) return st.textContent = "⚠ Username required; password must be 6+ characters.";
+  st.textContent = "Creating…";
+  const { data, error } = await sbProvision.auth.signUp({ email: toEmail(u), password: p, options:{ data:{ username: u } } });
+  if(error) return st.textContent = "❌ " + error.message;
+  // activate + set role using the admin session
+  const uid = data.user?.id;
+  if(uid){
+    const { error: e2 } = await sb.from("profiles").update({ active:true, role }).eq("id", uid);
+    if(e2) return st.textContent = "Account created, but activation failed: " + e2.message;
+  }
+  st.textContent = `✅ ${u} created and activated. Send them their username + password over Discord DM.`;
+  $("nuUser").value = ""; $("nuPass").value = "";
+  loadMembers();
+});
+
+/* ---------------- boot ---------------- */
+if(typeof window.supabase === "undefined"){
+  $("gStatus").textContent = "⚠ Could not load the Supabase library — check your internet connection.";
+} else if(initClients()){
+  tryResume();
+}
+</script>
+</body>
+</html>
