@@ -273,7 +273,7 @@ const DEFAULTS = {
     { cls:"All exceptional players", role:"Any", demand:"ALWAYS", hot:false }
   ],
   tiers: [
-    { slug: "tier-mn-1", name: "Voidspire · Dreamrift · Quel'Danas", meta: "MIDNIGHT · SEASON 1",
+    { slug: "tier-mn-1", name: "Voidspire · Dreamrift · Quel'Danas", meta: "MIDNIGHT · SEASON 1", current: true,
       mythicKilled: "8", heroicKilled: "9",
       bosses: "Boss 1\nBoss 2\nBoss 3\nBoss 4\nBoss 5\nBoss 6\nBoss 7\nBoss 8\nBoss 9" }
   ],
@@ -284,7 +284,7 @@ const DEFAULTS = {
 /* ---------------- list editor schemas ---------------- */
 const SCHEMAS = {
   schedule:  [{k:"day",l:"Day",w:3},{k:"time",l:"Time",w:4},{k:"what",l:"Activity",w:5}],
-  tiers:     [{k:"name",l:"Display name",w:5},{k:"slug",l:"Raider.io slug",w:3},{k:"meta",l:"Small label",w:4},{k:"mythicKilled",l:"Mythic kills (offline fallback)",w:3},{k:"heroicKilled",l:"Heroic kills (offline fallback)",w:3},{k:"bosses",l:"Bosses — one per line: Name | image URL",w:12,t:"text"}],
+  tiers:     [{k:"name",l:"Display name",w:5},{k:"slug",l:"Raider.io slug",w:3},{k:"current",l:"Current tier",w:2,t:"check"},{k:"meta",l:"Small label",w:2},{k:"mythicKilled",l:"Mythic kills (offline fallback)",w:3},{k:"heroicKilled",l:"Heroic kills (offline fallback)",w:3},{k:"bosses",l:"Bosses — one per line: Name | image URL",w:12,t:"text"}],
   rules:     [{k:"title",l:"Rule",w:4},{k:"body",l:"Details",w:8,t:"text"}],
   trophies:  [{k:"name",l:"Title",w:6},{k:"legendary",l:"Legendary",w:2,t:"check"},{k:"date",l:"Date/Tier",w:4},{k:"desc",l:"Description",w:12,t:"text"},{k:"flavor",l:"Flavor line",w:12}],
   leaders:   [{k:"name",l:"Name",w:3},{k:"role",l:"Role",w:4},{k:"character",l:"WoW character (portrait)",w:3},{k:"gm",l:"GM style",w:2,t:"check"},{k:"img",l:"Custom image URL (optional, overrides)",w:12},{k:"blurb",l:"Blurb",w:12,t:"text"}],
