@@ -180,7 +180,11 @@ td,th{background:transparent!important;border-color:rgba(44,33,69,.5)!important;
       <label class="form-label">Discord Webhook URL</label>
       <input class="form-control mb-1" id="cfg_discordWebhook" placeholder="https://discord.com/api/webhooks/…">
       <p class="note mb-3">Applications always land in the inbox above regardless. The webhook additionally pings your officer channel. ⚠ Because the public site sends this ping from the visitor's browser, the URL is technically extractable from the site config — if it ever gets spammed, just regenerate the webhook in Discord and paste the new one here.</p>
-      el">Google Apps
+      <label class="form-label">Google Apps Script URL (Sheet logging)</label>
+      <input class="form-control mb-3" id="cfg_googleScriptUrl" placeholder="https://script.google.com/macros/s/…/exec">
+      <label class="form-label">Discord Server ID (live online widget)</label>
+      <input class="form-control" id="cfg_discordServerId" placeholder="e.g. 1535182760023564381">
+      <p class="note mb-0 mt-1">Requires Server Settings → Widget → Enable Server Widget in Discord (with an Invite Channel picked so the Join button works). This is the Server ID from that same page — safe to publish; it only exposes what the widget setting shares.</p>
     </div>
     <div class="panel">
       <h5 class="mb-3">Data Sources</h5>
