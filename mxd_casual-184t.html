@@ -180,8 +180,7 @@ td,th{background:transparent!important;border-color:rgba(44,33,69,.5)!important;
       <label class="form-label">Discord Webhook URL</label>
       <input class="form-control mb-1" id="cfg_discordWebhook" placeholder="https://discord.com/api/webhooks/…">
       <p class="note mb-3">Applications always land in the inbox above regardless. The webhook additionally pings your officer channel. ⚠ Because the public site sends this ping from the visitor's browser, the URL is technically extractable from the site config — if it ever gets spammed, just regenerate the webhook in Discord and paste the new one here.</p>
-      <label class="form-label">Google Apps Script URL (Sheet logging)</label>
-      <input class="form-control" id="cfg_googleScriptUrl" placeholder="https://script.google.com/macros/s/…/exec">
+      el">Google Apps
     </div>
     <div class="panel">
       <h5 class="mb-3">Data Sources</h5>
@@ -369,6 +368,7 @@ function renderForms(){
   $("cfg_schedNote").value = cfg.schedNote;
   $("cfg_discordWebhook").value = cfg.integrations.discordWebhook || "";
   $("cfg_googleScriptUrl").value = cfg.integrations.googleScriptUrl || "";
+  $("cfg_discordServerId").value = cfg.integrations.discordServerId || "";
   $("cfg_region").value = cfg.rio.region; $("cfg_realm").value = cfg.rio.realm; $("cfg_rioGuild").value = cfg.rio.guildName;
   for(const key of Object.keys(SCHEMAS)) renderList(key);
 }
@@ -413,7 +413,7 @@ function harvest(){
     glance: $("cfg_glance").value.split("\n").map(s=>s.trim()).filter(Boolean)
   };
   cfg.schedNote = $("cfg_schedNote").value;
-  cfg.integrations = { discordWebhook:$("cfg_discordWebhook").value.trim(), googleScriptUrl:$("cfg_googleScriptUrl").value.trim() };
+  cfg.integrations = { discordWebhook:$("cfg_discordWebhook").value.trim(), googleScriptUrl:$("cfg_googleScriptUrl").value.trim(), discordServerId:$("cfg_discordServerId").value.trim() };
   cfg.rio = { region:$("cfg_region").value.trim()||"us", realm:$("cfg_realm").value.trim(), guildName:$("cfg_rioGuild").value.trim() };
   for(const key of Object.keys(SCHEMAS)){
     cfg[key] = [...document.querySelectorAll(`.item-card[data-list="${key}"]`)].map(card=>{
