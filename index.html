@@ -62,6 +62,12 @@ a:hover{color:var(--legendary-soft)}
 .brand-icon{height:34px;width:34px;border-radius:50%;vertical-align:middle;margin-right:.45rem;border:1px solid var(--line);background:#000}
 .hero-banner{display:block;width:min(880px,100%);margin:0 auto;border-radius:14px;border:1px solid var(--line);filter:drop-shadow(0 10px 44px rgba(163,53,238,.35)) drop-shadow(0 2px 14px rgba(255,128,0,.25))}
 .gate-crest{width:96px;height:96px;border-radius:50%;margin:0 auto .9rem;display:block;box-shadow:0 0 26px rgba(255,128,0,.35)}
+.disc-card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:1.2rem 1.3rem}
+.disc-name{font-family:var(--font-display);font-weight:700;font-size:1rem}
+.disc-online{font-family:var(--font-data);font-size:.75rem;color:var(--kill);letter-spacing:.1em;flex-shrink:0}
+.disc-avatars{display:flex;margin-top:.8rem;flex-wrap:wrap}
+.disc-avatars img{width:34px;height:34px;border-radius:50%;border:2px solid var(--panel);margin-right:-9px;margin-bottom:4px;background:#000}
+.disc-more{width:34px;height:34px;border-radius:50%;border:2px solid var(--panel);background:var(--void-2);color:var(--muted);font-family:var(--font-data);font-size:.62rem;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .nav-link{color:var(--muted);font-weight:600;font-size:.9rem;letter-spacing:.03em}
 .nav-link:hover{color:var(--text)}
 .nav-link.active{color:var(--legendary)!important}
@@ -397,6 +403,7 @@ footer{border-top:1px solid var(--line);padding:2.5rem 0;color:var(--muted);font
           <div class="tier-name mb-2">Guild at a Glance</div>
           <ul class="list-unstyled mb-0" style="font-size:.9rem;color:#CFC6E4" id="glanceList"></ul>
         </div>
+        <div id="discordWidget" class="mt-4"></div>
       </div>
     </div>
   </div>
@@ -839,6 +846,32 @@ function loadLeaderPortraits(){
   });
 }
 
+/* ================= DISCORD WIDGET ================= */
+async function loadDiscordWidget(){
+  const id = (CONFIG.integrations || {}).discordServerId;
+  const host = document.getElementById("discordWidget");
+  if(!id || !host) return;
+  try{
+    const res = await fetch(`https://discord.com/api/guilds/${encodeURIComponent(id)}/widget.json`);
+    if(!res.ok) return;
+    const d = await res.json();
+    const members = d.members || [];
+    const shown = members.slice(0, 11);
+    const extra = Math.max(0, (d.presence_count || members.length) - shown.length);
+    const avatars = shown.map(m => `<img src="${esc(m.avatar_url)}" title="${esc(m.username)}" alt="" loading="lazy">`).join("")
+      + (extra ? `<span class="disc-more">+${extra}</span>` : "");
+    host.innerHTML = `
+      <div class="disc-card">
+        <div class="d-flex justify-content-between align-items-center gap-2">
+          <div class="disc-name">${esc(d.name)}</div>
+          <div class="disc-online"><span class="live-dot" style="background:var(--kill);box-shadow:0 0 8px var(--kill)"></span>${d.presence_count || 0} ONLINE</div>
+        </div>
+        <div class="disc-avatars">${avatars}</div>
+        ${d.instant_invite ? `<a class="btn btn-apply w-100 mt-3" href="${esc(d.instant_invite)}" target="_blank" rel="noopener">Join the Discord</a>` : ""}
+      </div>`;
+  }catch(e){ /* widget disabled or unreachable — section stays hidden */ }
+}
+
 /* ================= REMOTE CONFIG ================= */
 async function loadRemoteConfig(){
   if(!sb) return;
@@ -1243,6 +1276,7 @@ document.getElementById("logoutBtn").addEventListener("click", async ()=>{
   await loadRemoteConfig();  // DB values override defaults
   renderAll();
   loadGuild();
+  loadDiscordWidget();
   if(sb){
     const { data } = await sb.auth.getSession();
     if(data?.session) enterForums(data.session.user);
