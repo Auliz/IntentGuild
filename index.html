@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Working as Intended — Illidan (US) | Mythic Raiding Guild</title>
-<meta name="description" content="Working as Intended is a Mythic raiding guild on Illidan-US. View our progression, meet the team, watch our streamers, and apply today.">
+<title>Intent — Mythic Raiding Guild | Vek'Nilash US</title>
+<meta name="description" content="Intent is a Mythic raiding guild on Vek'Nilash (US). View our progression, meet the team, watch our streamers, and apply today.">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/css/bootstrap.min.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -43,6 +43,8 @@ body::before{
     var(--void);
 }
 h1,h2,h3,.display-font{font-family:var(--font-display);letter-spacing:.02em}
+.navbar-brand,.hero{transition:opacity .3s ease}
+.booting .navbar-brand,.booting .hero{opacity:0}
 .data-font{font-family:var(--font-data)}
 a{color:var(--epic-soft)}
 a:hover{color:var(--legendary-soft)}
@@ -343,7 +345,7 @@ footer{border-top:1px solid var(--line);padding:2.5rem 0;color:var(--muted);font
 .badge-note{background:rgba(41,196,104,.12);border:1px solid rgba(41,196,104,.4);color:var(--epic-soft);font-weight:500}
 </style>
 </head>
-<body>
+<body class="booting">
 
 <!-- ============ SPLASH ============ -->
 <div id="splash" class="d-none">
@@ -355,8 +357,8 @@ footer{border-top:1px solid var(--line);padding:2.5rem 0;color:var(--muted);font
 <nav class="navbar navbar-expand-lg fixed-top">
   <div class="container">
     <a class="navbar-brand" href="#home" data-page="home">
-      <span id="navName"><span class="wai-w">W</span>orking as Intended</span>
-      <small id="navSub">Illidan · US · Mythic</small>
+      <span id="navName"><span class="wordmark">Intent</span></span>
+      <small id="navSub">Mythic Raiding Guild</small>
     </a>
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
@@ -383,11 +385,11 @@ footer{border-top:1px solid var(--line);padding:2.5rem 0;color:var(--muted);font
 <main>
 <section class="page" id="page-home">
   <div class="hero container">
-    <div class="eyebrow mb-2" id="heroEyebrow">Mythic Raiding Guild</div>
-    <h1 id="heroName">WORKING AS INTENDED</h1>
+    <div class="eyebrow mb-2" id="heroEyebrow">Intent on Pushing Limits</div>
+    <h1 id="heroName">INTENT</h1>
     <div class="stat-bar" id="rankStrip">
       <div class="stat-ident">
-        <span class="realm-name" id="heroRealm">ILLIDAN · US · HORDE</span>
+        <span class="realm-name" id="heroRealm">VEK'NILASH · US · CROSS-FACTION</span>
         <span class="realm-sub">Guild Standing</span>
       </div>
       <div class="stat-cell"><div class="num" id="rankRealm">—</div><div class="lbl">Realm</div></div>
@@ -520,7 +522,7 @@ footer{border-top:1px solid var(--line);padding:2.5rem 0;color:var(--muted);font
     <div class="section-title"><h2>Recruitment Needs</h2></div>
     <div class="row g-3 mb-5" id="needsGrid"></div>
 
-    <div class="section-title"><h2>Apply to Working as Intended</h2></div>
+    <div class="section-title"><h2>Apply to Intent</h2></div>
     <p class="section-sub" style="text-align:left;margin-left:0">Applications go straight to the officer channel. We respond within 48 hours — usually faster.</p>
     <div class="row justify-content-center">
       <div class="col-lg-9">
@@ -571,7 +573,7 @@ footer{border-top:1px solid var(--line);padding:2.5rem 0;color:var(--muted);font
               <textarea class="form-control" id="appExp" rows="3" placeholder="Recent tiers, CE history, notable prog moments…"></textarea>
             </div>
             <div class="col-12">
-              <label class="form-label">Why Working as Intended?</label>
+              <label class="form-label">Why Intent?</label>
               <textarea class="form-control" id="appWhy" rows="3" placeholder="What are you looking for in a guild, and what do you bring?"></textarea>
             </div>
             <div class="col-12">
@@ -801,8 +803,8 @@ footer{border-top:1px solid var(--line);padding:2.5rem 0;color:var(--muted);font
 <footer>
   <div class="container d-flex justify-content-between flex-wrap gap-3">
     <div>
-      <div class="footer-mark" id="footName"><span class="text-legendary">W</span>orking as Intended</div>
-      <div class="data-font" style="font-size:.72rem;letter-spacing:.2em" id="footSub">ILLIDAN · US</div>
+      <div class="footer-mark" id="footName"><span class="wordmark">Intent</span></div>
+      <div class="data-font" style="font-size:.72rem;letter-spacing:.2em" id="footSub">VEK'NILASH · US</div>
     </div>
     <div style="font-size:.8rem">
       Progression &amp; roster data via <a href="https://raider.io" target="_blank" rel="noopener">Raider.io</a> ·
@@ -828,7 +830,7 @@ const MEMBER_EMAIL_DOMAIN = "members.wai.gg"; // must match admin.html
    the database override everything in this block automatically.
    ===================================================================== */
 const CONFIG = {
-  site: { name:"Working as Intended", realmLine:"ILLIDAN · US · HORDE", navSub:"Illidan · US · Mythic", eyebrow:"Mythic Raiding Guild" },
+  site: { name:"Intent", realmLine:"VEK'NILASH · US · CROSS-FACTION", navSub:"Mythic Raiding Guild", eyebrow:"Intent on Pushing Limits" },
   about: {
     paragraphs: [
       "Working as Intended is a Mythic progression guild on Illidan-US. We formed around a simple idea: serious progression doesn't require a toxic environment or a 4-night schedule — it requires preparation, consistency, and a roster that trusts each other.",
@@ -852,7 +854,7 @@ const CONFIG = {
     {title:"Loot is council-lite.", body:"RCLootCouncil, prioritizing throughput upgrades for progression. No drama, no exceptions."},
     {title:"Be someone people want to raid with.", body:"Banter yes, toxicity no. This one is non-negotiable."}
   ],
-  rio: { region:"us", realm:"illidan", guildName:"Working as Intended" },
+  rio: { region:"us", realm:"veknilash", guildName:"Intent" },
   integrations: { discordWebhook:"", googleScriptUrl:"" },
   streamers: [
     { twitch: "yourgm",     name: "GM",        bio: "Guild Master. Streams every raid night from the tank seat. Expect calm calls and loud deaths.", schedule: "Tue/Thu raid + weekend keys" },
@@ -1957,6 +1959,7 @@ function maybeSplash(){
 (async function(){
   await loadRemoteConfig();  // DB values override defaults
   renderAll();
+  document.body.classList.remove("booting");   // reveal identity only once real config is painted
   maybeSplash();
   loadGuild();
   loadDiscordWidget();
