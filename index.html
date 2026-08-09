@@ -283,7 +283,10 @@ a:hover{color:var(--legendary-soft)}
 
 /* ---------- SCHEDULE ---------- */
 .sched-table{border:1px solid var(--line);border-radius:12px;overflow:hidden}
-.sched-table .row-i{display:flex;justify-content:space-between;align-items:center;padding: .85rem 1.2rem;background:var(--panel)}
+.sched-table .row-i{display:grid;grid-template-columns:1.1fr 1.3fr 1.1fr;align-items:center;padding: .85rem 1.2rem;background:var(--panel)}
+.sched-table .row-i .time{text-align:center}
+.sched-table .row-i .what{text-align:right}
+@media (max-width:575px){.sched-table .row-i{grid-template-columns:1fr auto}.sched-table .row-i .time{text-align:right}}
 .sched-table .row-i:nth-child(even){background:var(--panel-2)}
 .sched-table .day{font-family:var(--font-display);font-weight:700}
 .sched-table .time{font-family:var(--font-data);color:var(--legendary)}
