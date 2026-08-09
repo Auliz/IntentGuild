@@ -1323,6 +1323,7 @@ document.getElementById("appSubmit").addEventListener("click", async ()=>{
   // → optional Discord ping
   const I = CONFIG.integrations || {};
   if(I.discordWebhook){
+    const clip = s => (s && s.length > 1000) ? s.slice(0, 1000) + "…" : (s || "—");
     try{
       await fetch(I.discordWebhook, {
         method:"POST", headers:{"Content-Type":"application/json"},
@@ -1339,9 +1340,9 @@ document.getElementById("appSubmit").addEventListener("click", async ()=>{
               { name:"Schedule OK", value:data.schedule_ok, inline:true },
               { name:"Bench OK", value:data.bench_ok, inline:true },
               { name:"Found via", value:data.found_us||"—", inline:true },
-              { name:"Logs", value:data.logs },
-              { name:"Experience", value:data.experience||"—" },
-              { name:"Why WAI", value:data.why||"—" }
+              { name:"Logs", value:clip(data.logs) },
+              { name:"Experience", value:clip(data.experience) },
+              { name:"Why Intent", value:clip(data.why) }
             ],
             timestamp: data.submitted
           }]
