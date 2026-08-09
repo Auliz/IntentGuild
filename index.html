@@ -71,6 +71,13 @@ a:hover{color:var(--legendary-soft)}
 .rb-chip input{accent-color:var(--epic)}
 .rb-chip.on{border-color:var(--epic);color:var(--text);background:rgba(41,196,104,.08)}
 .rb-tag{display:inline-block;border:1px solid var(--line);border-radius:5px;padding:.1rem .5rem;margin:0 .3rem .3rem 0;font-size:.75rem;color:#D5D2C6;background:var(--void-2)}
+.role-row{display:flex;align-items:center;gap:.3rem;margin-bottom:.3rem}
+.role-name{font-size:.82rem;min-width:120px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.role-btn{border:1px solid var(--line);background:var(--void-2);border-radius:6px;font-size:.8rem;padding:.1rem .45rem;line-height:1.4;opacity:.45}
+.role-btn.on{border-color:var(--legendary);opacity:1;box-shadow:0 0 8px rgba(240,194,75,.25)}
+.sg-line{margin:.6rem 0 .2rem;padding-top:.6rem;border-top:1px solid var(--line);font-size:.8rem}
+.sg-group{margin-right:1rem}
+.sg-names{color:var(--muted)}
 .raid-event{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:1.1rem 1.3rem;margin-bottom:.9rem}
 .raid-event.past{opacity:.55}
 .re-title{font-family:var(--font-display);font-weight:700;font-size:1.05rem}
@@ -575,12 +582,18 @@ footer{border-top:1px solid var(--line);padding:2.5rem 0;color:var(--muted);font
           <div class="col-md-3"><label class="form-label">Note</label><input class="form-control form-control-sm" id="reNote" placeholder="Flask up. Vaelgor dies tonight."></div>
         </div>
         <label class="form-label">Roster — tick from the live guild roster</label>
-        <input class="form-control form-control-sm mb-2" id="rbFilter" style="max-width:240px" placeholder="Filter names…">
+        <div class="d-flex gap-2 mb-2 flex-wrap">
+          <input class="form-control form-control-sm" id="rbFilter" style="max-width:220px" placeholder="Filter names…">
+          <select class="form-select form-select-sm" id="rbRank" style="max-width:180px"><option value="">All ranks</option></select>
+        </div>
         <div id="rbList" class="mb-2"></div>
         <label class="form-label">Manual additions (comma separated)</label>
-        <input class="form-control form-control-sm mb-3" id="rbManual" placeholder="PuggerOne, TrialTwo">
+        <input class="form-control form-control-sm mb-2" id="rbManual" placeholder="PuggerOne, TrialTwo">
+        <label class="form-label">Roles — pre-guessed from class; tap to correct</label>
+        <div id="rbAssign" class="mb-3"></div>
         <div class="d-flex align-items-center gap-2 flex-wrap">
           <button class="btn btn-apply btn-sm px-3" id="reCreate">Create Event</button>
+          <button class="btn btn-outline-epic btn-sm d-none" id="reCancel">Cancel Edit</button>
           <span class="data-font" id="reStatus" style="font-size:.75rem;color:var(--muted)"></span>
         </div>
         <p class="mt-2 mb-0" style="font-size:.75rem;color:var(--muted)">After posting to Discord, tap ✅ ❌ ❓ 🕐 on the message once to seed the reactions — webhooks can post but can't react.</p>
@@ -1609,6 +1622,14 @@ initLootUI();
 
 
 /* ================= RAID SIGNUPS ================= */
+const RAID_ROLES = { T: "🛡️ Tank", H: "💚 Heal", M: "⚔️ Melee", R: "🏹 Ranged" };
+let rbChecked = new Set(), rbRoles = {}, editEventId = null;
+
+function guessRole(name){
+  const hit = rosterCache.find(x => x.character.name.toLowerCase() === name.toLowerCase());
+  const c = (hit?.character?.class || "").toLowerCase();
+  return ["hunter","mage","warlock","evoker","shaman","druid","priest"].includes(c) ? "R" : "M";
+}
 async function raidsRefresh(){
   const gate = el("raidGate"), home = el("raidHome");
   if(!gate) return;
@@ -1617,28 +1638,64 @@ async function raidsRefresh(){
   gate.classList.add("d-none"); home.classList.remove("d-none");
   const officer = ["officer","admin"].includes(me.role);
   el("raidBuilder").classList.toggle("d-none", !officer);
-  if(officer) buildRosterPicker();
+  if(officer){ buildRosterPicker(); renderAssign(); }
   loadRaidEvents();
+}
+function populateRankFilter(){
+  const sel = el("rbRank");
+  if(sel.options.length > 1 || !rosterCache.length) return;
+  const ranks = [...new Set(rosterCache.map(m => m.rank))].sort((a,b)=>a-b);
+  sel.innerHTML = `<option value="">All ranks</option>` + ranks.map(r =>
+    `<option value="${r}">${r === 0 ? "Guild Master" : r === 1 ? "Officers" : "Rank " + r}</option>`).join("");
 }
 function buildRosterPicker(){
   const host = el("rbList");
+  populateRankFilter();
   const q = (el("rbFilter").value || "").toLowerCase();
+  const rf = el("rbRank").value;
   if(!rosterCache.length){
     host.innerHTML = `<p style="font-size:.8rem;color:var(--muted)">Live roster unavailable — add names manually below.</p>`;
     return;
   }
-  const checked = new Set([...host.querySelectorAll("input:checked")].map(i=>i.value));
   host.innerHTML = rosterCache
-    .filter(m => m.character.name.toLowerCase().includes(q))
-    .map(m => `<label class="rb-chip${checked.has(m.character.name) ? " on" : ""}">
-      <input type="checkbox" value="${esc(m.character.name)}" ${checked.has(m.character.name) ? "checked" : ""}>${esc(m.character.name)}</label>`).join("");
+    .filter(m => m.character.name.toLowerCase().includes(q) && (rf === "" || String(m.rank) === rf))
+    .map(m => `<label class="rb-chip${rbChecked.has(m.character.name) ? " on" : ""}">
+      <input type="checkbox" value="${esc(m.character.name)}" ${rbChecked.has(m.character.name) ? "checked" : ""}>${esc(m.character.name)}</label>`).join("");
+}
+function manualNames(){
+  return el("rbManual").value.split(",").map(s => s.trim()).filter(Boolean);
+}
+function currentPicked(){
+  return [...new Set([...rbChecked, ...manualNames()])];
+}
+function renderAssign(){
+  const picked = currentPicked();
+  const host = el("rbAssign");
+  if(!picked.length){ host.innerHTML = ""; return; }
+  host.innerHTML = picked.map(n=>{
+    const r = rbRoles[n] || (rbRoles[n] = guessRole(n));
+    return `<div class="role-row"><span class="role-name">${esc(n)}</span>
+      ${Object.keys(RAID_ROLES).map(k=>`<button class="role-btn${r===k?" on":""}" data-role="${esc(n)}::${k}">${RAID_ROLES[k].split(" ")[0]}</button>`).join("")}
+    </div>`;
+  }).join("");
 }
 function pickedRoster(){
-  const boxes = [...el("rbList").querySelectorAll("input:checked")].map(i=>i.value);
-  const manual = el("rbManual").value.split(",").map(s=>s.trim()).filter(Boolean);
-  return [...new Set([...boxes, ...manual])];
+  return currentPicked().map(n => `${n}|${rbRoles[n] || guessRole(n)}`);
 }
-async function createRaidEvent(){
+function parseEntry(s){
+  const i = s.lastIndexOf("|");
+  if(i === -1) return { name: s, role: null };
+  const r = s.slice(i+1);
+  return RAID_ROLES[r] ? { name: s.slice(0,i), role: r } : { name: s, role: null };
+}
+function resetBuilder(){
+  editEventId = null; rbChecked = new Set(); rbRoles = {};
+  el("reTitle").value = ""; el("reDate").value = ""; el("reTime").value = ""; el("reNote").value = ""; el("rbManual").value = "";
+  el("reCreate").textContent = "Create Event";
+  el("reCancel").classList.add("d-none");
+  buildRosterPicker(); renderAssign();
+}
+async function saveRaidEvent(){
   const st = el("reStatus");
   const ev = {
     title: el("reTitle").value.trim(),
@@ -1650,17 +1707,51 @@ async function createRaidEvent(){
   };
   if(!ev.title || !ev.event_date){ st.textContent = "⚠ Title and date are required."; return; }
   st.textContent = "Saving…";
-  const { error } = await sb.from("raid_events").insert(ev);
+  if(editEventId && botMode()){
+    const existing = raidEvents.find(e => e.id === editEventId);
+    if(existing?.discord_message_id) ev.post_requested = true;   // bot refreshes the live post
+  }
+  const q = editEventId
+    ? sb.from("raid_events").update(ev).eq("id", editEventId)
+    : sb.from("raid_events").insert(ev);
+  const { error } = await q;
   if(error){ st.textContent = "❌ " + error.message; return; }
-  st.textContent = "✅ Event created — post it to Discord from the list below.";
-  el("reTitle").value = ""; el("reNote").value = ""; el("rbManual").value = "";
-  loadRaidEvents();
+  st.textContent = editEventId
+    ? "✅ Event updated — use Post/Update on the card to refresh the Discord message."
+    : "✅ Event created — post it to Discord from the list below.";
+  resetBuilder(); loadRaidEvents();
 }
-let raidEvents = [];
+function loadEventIntoBuilder(id){
+  const ev = raidEvents.find(e => e.id === +id);
+  if(!ev) return;
+  editEventId = ev.id;
+  el("reTitle").value = ev.title; el("reDate").value = ev.event_date;
+  el("reTime").value = ev.event_time || ""; el("reNote").value = ev.note || "";
+  rbChecked = new Set(); rbRoles = {};
+  const manual = [];
+  (ev.roster || []).forEach(s=>{
+    const { name, role } = parseEntry(s);
+    if(role) rbRoles[name] = role;
+    if(rosterCache.some(m => m.character.name === name)) rbChecked.add(name);
+    else manual.push(name);
+  });
+  el("rbManual").value = manual.join(", ");
+  el("reCreate").textContent = "Update Event";
+  el("reCancel").classList.remove("d-none");
+  buildRosterPicker(); renderAssign();
+  el("raidBuilder").scrollIntoView({ behavior: "smooth", block: "start" });
+}
+let raidEvents = [], raidSignups = {};
 async function loadRaidEvents(){
   try{
     const { data } = await sb.from("raid_events").select("*").order("event_date", {ascending:true}).limit(50);
     raidEvents = data || [];
+    raidSignups = {};
+    const ids = raidEvents.map(e => e.id);
+    if(ids.length){
+      const { data: sg } = await sb.from("raid_signups").select("*").in("event_id", ids);
+      (sg || []).forEach(s => { (raidSignups[s.event_id] = raidSignups[s.event_id] || []).push(s); });
+    }
     drawRaidEvents();
   }catch(e){ console.warn("raid events", e); }
 }
@@ -1669,7 +1760,12 @@ function drawRaidEvents(){
   const today = new Date().toISOString().slice(0,10);
   const upcoming = raidEvents.filter(ev => ev.event_date >= today);
   const past = raidEvents.filter(ev => ev.event_date < today).slice(-3);
-  const card = ev => `
+  const card = ev => {
+    const tags = (ev.roster || []).map(s=>{
+      const { name, role } = parseEntry(s);
+      return `<span class="rb-tag">${role ? RAID_ROLES[role].split(" ")[0] + " " : ""}${esc(name)}</span>`;
+    }).join("");
+    return `
     <div class="raid-event${ev.event_date < today ? " past" : ""}">
       <div class="d-flex justify-content-between align-items-start gap-2 flex-wrap">
         <div>
@@ -1677,55 +1773,96 @@ function drawRaidEvents(){
           <div class="re-when data-font">${esc(ev.event_date)}${ev.event_time ? " · " + esc(ev.event_time) : ""}</div>
         </div>
         <div class="d-flex gap-2 align-items-center flex-shrink-0">
-          ${ev.posted_at ? `<span class="re-posted data-font">POSTED</span>` : ""}
-          ${officer ? `<button class="btn btn-apply btn-sm" data-repost="${ev.id}">${ev.posted_at ? "Re-post" : "Post to Discord"}</button>
+          ${ev.post_requested ? `<span class="re-posted data-font" style="color:var(--legendary);border-color:rgba(240,194,75,.4)">QUEUED</span>` : ev.posted_at ? `<span class="re-posted data-font">POSTED</span>` : ""}
+          ${officer ? `<button class="btn btn-outline-epic btn-sm" data-reedit="${ev.id}">Edit</button>
+          <button class="btn btn-apply btn-sm" data-repost="${ev.id}">${botMode() ? (ev.discord_message_id ? "Update via Bot" : "Post via Bot") : (ev.discord_message_id ? "Update Discord Post" : "Post to Discord")}</button>
           <button class="award-x" data-redel="${ev.id}">✕</button>` : ""}
         </div>
       </div>
       ${ev.note ? `<p class="re-note">${esc(ev.note)}</p>` : ""}
-      <div class="re-roster">${(ev.roster||[]).map(n=>`<span class="rb-tag">${esc(n)}</span>`).join("") || `<span style="color:var(--muted);font-size:.8rem">Open signups — no set roster</span>`}</div>
+      ${(()=>{ const sgs = raidSignups[ev.id] || []; const SS = { A:"✅", X:"❌", T:"❓", L:"🕐" };
+        const line = Object.keys(SS).map(k=>{ const ns = sgs.filter(s=>s.status===k).map(s=>esc(s.discord_name));
+          return ns.length ? `<span class="sg-group">${SS[k]} <b>${ns.length}</b> <span class="sg-names">${ns.join(", ")}</span></span>` : ""; }).filter(Boolean).join("");
+        return line ? `<div class="sg-line">${line}</div>` : ""; })()}
+      <div class="re-roster">${tags || `<span style="color:var(--muted);font-size:.8rem">Open signups — no set roster</span>`}</div>
     </div>`;
+  };
   el("raidUpcoming").innerHTML = upcoming.map(card).join("") || `<p style="color:var(--muted)">No upcoming raids scheduled.</p>`;
   el("raidPast").innerHTML = past.map(card).join("");
   el("raidPastWrap").classList.toggle("d-none", !past.length);
 }
+function buildSignupEmbed(ev){
+  const groups = { T: [], H: [], M: [], R: [], X: [] };
+  (ev.roster || []).forEach(s=>{ const { name, role } = parseEntry(s); groups[role || "X"].push(name); });
+  const fields = [];
+  for(const k of ["T","H","M","R"]){
+    if(groups[k].length) fields.push({ name: `${RAID_ROLES[k]} (${groups[k].length})`, value: groups[k].join("\n"), inline: true });
+  }
+  if(groups.X.length) fields.push({ name: `Roster (${groups.X.length})`, value: groups.X.join("\n"), inline: true });
+  const total = (ev.roster || []).length;
+  return {
+    username: "Raid Signups",
+    embeds: [{
+      title: `⚔️ ${ev.title}`,
+      color: 0xF0C24B,
+      description: `**${ev.event_date}**${ev.event_time ? ` · ${ev.event_time}` : ""}${ev.note ? "\n" + ev.note : ""}`,
+      fields: fields.length ? fields : [{ name: "Roster", value: "Open signups — all welcome" }],
+      footer: { text: `${total} expected · React: ✅ Attending · ❌ Absent · ❓ Tentative · 🕐 Late` }
+    }]
+  };
+}
+function botMode(){ return !(CONFIG.integrations || {}).signupWebhook; }
 async function postEventToDiscord(id){
   const ev = raidEvents.find(e => e.id === +id);
-  const hook = (CONFIG.integrations || {}).signupWebhook;
-  if(!hook){ alert("No signup webhook configured — add one in the Command Deck → Integrations (create the webhook inside your signups channel)."); return; }
   if(!ev) return;
+  if(botMode()){
+    const { error } = await sb.from("raid_events").update({ post_requested: true }).eq("id", ev.id);
+    if(error) alert(error.message); else loadRaidEvents();
+    return;
+  }
+  const hook = CONFIG.integrations.signupWebhook;
+  const payload = JSON.stringify(buildSignupEmbed(ev));
   try{
-    const res = await fetch(hook, {
-      method: "POST", headers: {"Content-Type":"application/json"},
-      body: JSON.stringify({
-        username: "Raid Signups",
-        embeds: [{
-          title: `⚔️ ${ev.title}`,
-          color: 0xF0C24B,
-          description: `**${ev.event_date}**${ev.event_time ? ` · ${ev.event_time}` : ""}${ev.note ? "\n" + ev.note : ""}`,
-          fields: [{ name: `Expected Roster (${(ev.roster||[]).length})`, value: (ev.roster||[]).join(", ") || "Open signups — all welcome" }],
-          footer: { text: "React below: ✅ Attending · ❌ Absent · ❓ Tentative · 🕐 Late" }
-        }]
-      })
-    });
-    if(!res.ok) throw new Error("HTTP " + res.status);
-    await sb.from("raid_events").update({ posted_at: new Date().toISOString() }).eq("id", ev.id);
+    let messageId = ev.discord_message_id;
+    if(messageId){
+      const res = await fetch(`${hook}/messages/${messageId}`, { method: "PATCH", headers: {"Content-Type":"application/json"}, body: payload });
+      if(!res.ok) messageId = null;   // original deleted or unreachable — fall through to fresh post
+    }
+    if(!messageId){
+      const res = await fetch(hook + "?wait=true", { method: "POST", headers: {"Content-Type":"application/json"}, body: payload });
+      if(!res.ok) throw new Error("HTTP " + res.status);
+      const msg = await res.json();
+      messageId = msg.id;
+    }
+    await sb.from("raid_events").update({ posted_at: new Date().toISOString(), discord_message_id: messageId }).eq("id", ev.id);
     loadRaidEvents();
   }catch(e){ alert("Discord post failed: " + e.message); }
 }
 document.addEventListener("click", async e=>{
   if(e.target.dataset.repost) postEventToDiscord(e.target.dataset.repost);
+  if(e.target.dataset.reedit) loadEventIntoBuilder(e.target.dataset.reedit);
+  if(e.target.id === "reCancel") resetBuilder();
+  if(e.target.dataset.role){
+    const [name, k] = e.target.dataset.role.split("::");
+    rbRoles[name] = k; renderAssign();
+  }
   if(e.target.dataset.redel){
     if(!confirm("Delete this raid event? (The Discord post, if any, stays.)")) return;
     const { error } = await sb.from("raid_events").delete().eq("id", e.target.dataset.redel);
-    if(!error) loadRaidEvents(); else alert(error.message);
+    if(!error){ if(editEventId === +e.target.dataset.redel) resetBuilder(); loadRaidEvents(); } else alert(error.message);
   }
 });
 document.addEventListener("change", e=>{
-  if(e.target.closest && e.target.closest("#rbList")) e.target.closest(".rb-chip")?.classList.toggle("on", e.target.checked);
+  if(e.target.closest && e.target.closest("#rbList")){
+    e.target.checked ? rbChecked.add(e.target.value) : rbChecked.delete(e.target.value);
+    e.target.closest(".rb-chip")?.classList.toggle("on", e.target.checked);
+    renderAssign();
+  }
 });
+el("rbManual").addEventListener("input", renderAssign);
 el("rbFilter").addEventListener("input", buildRosterPicker);
-el("reCreate").addEventListener("click", createRaidEvent);
+el("rbRank").addEventListener("change", buildRosterPicker);
+el("reCreate").addEventListener("click", saveRaidEvent);
 
 /* ================= BOOT ================= */
 (async function(){
