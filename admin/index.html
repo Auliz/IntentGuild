@@ -58,6 +58,10 @@ table{font-size:.9rem}
 th{font-family:'Chakra Petch',monospace;font-size:.68rem;letter-spacing:.2em;text-transform:uppercase;color:var(--muted)!important}
 td,th{background:transparent!important;border-color:rgba(38,50,41,.5)!important;color:var(--text)!important;vertical-align:middle}
 .note{font-size:.78rem;color:var(--muted)}
+.pw-wrap{position:relative}
+.pw-wrap input{padding-right:3.6rem;width:100%}
+.pw-toggle{position:absolute;right:.6rem;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--muted);font-family:var(--font-data);font-size:.6rem;letter-spacing:.15em;padding:.2rem .25rem;cursor:pointer}
+.pw-toggle:hover{color:var(--legendary)}
 .coll-head{cursor:pointer;user-select:none;display:flex;align-items:center;gap:.55rem;margin:0!important}
 .coll-head:hover{color:var(--legendary)}
 .coll-chev{font-size:.75rem;color:var(--legendary);width:.9rem;flex-shrink:0}
@@ -583,6 +587,31 @@ if(typeof window.supabase === "undefined"){
 } else if(initClients()){
   tryResume();
 }
+
+function addPwToggles(ids){
+  ids.forEach(id=>{
+    const inp = document.getElementById(id);
+    if(!inp || inp.dataset.pwt) return;
+    inp.dataset.pwt = "1";
+    const wrap = document.createElement("div");
+    wrap.className = "pw-wrap";
+    ["mb-2","mb-3"].forEach(m=>{ if(inp.classList.contains(m)){ wrap.classList.add(m); inp.classList.remove(m); } });
+    inp.parentNode.insertBefore(wrap, inp);
+    wrap.appendChild(inp);
+    const btn = document.createElement("button");
+    btn.type = "button"; btn.className = "pw-toggle"; btn.textContent = "SHOW";
+    btn.setAttribute("aria-label", "Show password");
+    btn.addEventListener("click", ()=>{
+      const show = inp.type === "password";
+      inp.type = show ? "text" : "password";
+      btn.textContent = show ? "HIDE" : "SHOW";
+      btn.setAttribute("aria-label", show ? "Hide password" : "Show password");
+      inp.focus();
+    });
+    wrap.appendChild(btn);
+  });
+}
+addPwToggles(["gPass"]);
 </script>
 </body>
 </html>
