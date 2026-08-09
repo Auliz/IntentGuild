@@ -1367,6 +1367,7 @@ async function lootRefresh(){
   const officer = ["officer","admin"].includes(me.role);
   lootEl("awardFormWrap").classList.toggle("d-none", !officer);
   lootEl("wlSeason").textContent = currentSeasonName() || "current season";
+  lootEl("awSeason").value = currentSeasonName();
   await Promise.all([loadMyWishlist(), loadLootData()]);
 }
 
@@ -1431,7 +1432,8 @@ function drawAwards(){
 }
 function drawOverview(){
   const season = currentSeasonName();
-  const inSeason = lootAwards.filter(a => !season || !a.season || a.season === season);
+  const seasonKey = (season||"").trim();
+  const inSeason = lootAwards.filter(a => !seasonKey || !(a.season||"").trim() || (a.season||"").trim() === seasonKey);
   const byMember = {};
   inSeason.forEach(a=>{
     const k = a.member.toLowerCase();
@@ -1484,7 +1486,6 @@ document.addEventListener("click", async e=>{
 function initLootUI(){
   lootEl("awSlot").innerHTML = `<option value="">Slot…</option>` + LOOT_SLOTS.map(s=>`<option>${s}</option>`).join("");
   lootEl("wlOff").innerHTML = TIER_OFF.map(s=>`<option value="${s}">${s || "No off-piece"}</option>`).join("");
-  lootEl("awSeason").value = currentSeasonName();
   lootEl("wlSave").addEventListener("click", saveMyWishlist);
   lootEl("awSave").addEventListener("click", recordAward);
   lootEl("awardFilter").addEventListener("input", drawAwards);
