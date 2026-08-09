@@ -75,6 +75,8 @@ a:hover{color:var(--legendary-soft)}
 .navbar-brand small{display:block;font-family:var(--font-data);font-weight:400;font-size:.62rem;color:var(--muted);letter-spacing:.25em;text-transform:uppercase}
 .brand-icon{height:38px;width:38px;vertical-align:middle;margin-right:.6rem;filter:drop-shadow(0 1px 4px rgba(0,0,0,.6))}
 .wordmark{color:var(--legendary);letter-spacing:.07em}
+.deck-link{font-size:.68rem;letter-spacing:.16em;text-transform:uppercase;color:var(--legendary-soft);border:1px solid rgba(240,194,75,.35);border-radius:6px;padding:.3rem .65rem;text-decoration:none;margin-right:.55rem}
+.deck-link:hover{background:rgba(240,194,75,.12);color:var(--legendary)}
 .hero-banner{display:block;width:min(880px,100%);margin:0 auto;border-radius:14px;border:1px solid var(--line);filter:drop-shadow(0 10px 44px rgba(41,196,104,.35)) drop-shadow(0 2px 14px rgba(240,194,75,.25))}
 .gate-crest{width:96px;height:96px;border-radius:50%;margin:0 auto .9rem;display:block;box-shadow:0 0 26px rgba(240,194,75,.35)}
 .disc-card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:1.2rem 1.3rem}
@@ -1439,6 +1441,7 @@ async function establishSession(user, statusEl){
     await sb.auth.signOut(); return false;
   }
   me = { id: user.id, username: prof.username, role: prof.role };
+  if(me.role === "admin") loadDeckLink();
   if(loginModalObj) loginModalObj.hide();
   if(user.user_metadata?.must_change){
     refreshAuthUI(true);   // skip forum-home render; the pw gate takes over
@@ -1449,10 +1452,20 @@ async function establishSession(user, statusEl){
   refreshAuthUI();
   return true;
 }
+let deckUrl = null;
+async function loadDeckLink(){
+  if(deckUrl !== null){ refreshAuthUI(); return; }
+  try{
+    const { data } = await sb.from("private_links").select("url").eq("key", "command_deck").maybeSingle();
+    deckUrl = data?.url || "";
+  }catch(e){ deckUrl = ""; }
+  refreshAuthUI();
+}
 function refreshAuthUI(skipForum){
   const nav = el("navAuth");
+  const deck = (me?.role === "admin" && deckUrl) ? `<a class="deck-link data-font" href="${esc(deckUrl)}">Deck</a>` : "";
   if(nav) nav.innerHTML = me
-    ? `<span class="data-font me-2" style="font-size:.7rem;letter-spacing:.1em;color:var(--legendary)">${esc(me.username).toUpperCase()}</span><button class="btn btn-outline-epic btn-sm" id="navLogoutBtn">Log Out</button>`
+    ? `${deck}<span class="data-font me-2" style="font-size:.7rem;letter-spacing:.1em;color:var(--legendary)">${esc(me.username).toUpperCase()}</span><button class="btn btn-outline-epic btn-sm" id="navLogoutBtn">Log Out</button>`
     : `<button class="btn btn-outline-epic btn-sm px-3" id="navLoginBtn">Log In</button>`;
   if(!skipForum){
     if(me){
