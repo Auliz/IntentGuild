@@ -188,7 +188,9 @@ td,th{background:transparent!important;border-color:rgba(38,50,41,.5)!important;
       <label class="form-label">Google Apps Script URL (Sheet logging)</label>
       <input class="form-control mb-3" id="cfg_googleScriptUrl" placeholder="https://script.google.com/macros/s/…/exec">
       <label class="form-label">Discord Server ID (live online widget)</label>
-      <input class="form-control" id="cfg_discordServerId" placeholder="e.g. 1535182760023564381">
+      <input class="form-control mb-3" id="cfg_discordServerId" placeholder="e.g. 1535182760023564381">
+      <label class="form-label">Raid Signups Webhook URL</label>
+      <input class="form-control" id="cfg_signupWebhook" placeholder="Create a webhook inside your #raid-signups channel and paste it here">
       <p class="note mb-0 mt-1">Requires Server Settings → Widget → Enable Server Widget in Discord (with an Invite Channel picked so the Join button works). This is the Server ID from that same page — safe to publish; it only exposes what the widget setting shares.</p>
     </div>
     <div class="panel">
@@ -411,6 +413,7 @@ function renderForms(){
   $("cfg_discordWebhook").value = cfg.integrations.discordWebhook || "";
   $("cfg_googleScriptUrl").value = cfg.integrations.googleScriptUrl || "";
   $("cfg_discordServerId").value = cfg.integrations.discordServerId || "";
+  $("cfg_signupWebhook").value = cfg.integrations.signupWebhook || "";
   $("cfg_region").value = cfg.rio.region; $("cfg_realm").value = cfg.rio.realm; $("cfg_rioGuild").value = cfg.rio.guildName;
   for(const key of Object.keys(SCHEMAS)) renderList(key);
 }
@@ -456,7 +459,7 @@ function harvest(){
     glance: $("cfg_glance").value.split("\n").map(s=>s.trim()).filter(Boolean)
   };
   cfg.schedNote = $("cfg_schedNote").value;
-  cfg.integrations = { discordWebhook:$("cfg_discordWebhook").value.trim(), googleScriptUrl:$("cfg_googleScriptUrl").value.trim(), discordServerId:$("cfg_discordServerId").value.trim() };
+  cfg.integrations = { discordWebhook:$("cfg_discordWebhook").value.trim(), googleScriptUrl:$("cfg_googleScriptUrl").value.trim(), discordServerId:$("cfg_discordServerId").value.trim(), signupWebhook:$("cfg_signupWebhook").value.trim() };
   cfg.rio = { region:$("cfg_region").value.trim()||"us", realm:$("cfg_realm").value.trim(), guildName:$("cfg_rioGuild").value.trim() };
   for(const key of Object.keys(SCHEMAS)){
     cfg[key] = [...document.querySelectorAll(`.item-card[data-list="${key}"]`)].map(card=>{
