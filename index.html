@@ -67,6 +67,17 @@ a:hover{color:var(--legendary-soft)}
 .disc-online{font-family:var(--font-data);font-size:.75rem;color:var(--kill);letter-spacing:.1em;flex-shrink:0}
 .disc-avatars{display:flex;margin-top:.8rem;flex-wrap:wrap}
 .disc-avatars img{width:34px;height:34px;border-radius:50%;border:2px solid var(--panel);margin-right:-9px;margin-bottom:4px;background:#000}
+.rb-chip{display:inline-flex;align-items:center;gap:.35rem;border:1px solid var(--line);border-radius:20px;padding:.25rem .7rem;margin:0 .35rem .35rem 0;font-size:.8rem;cursor:pointer;color:var(--muted);user-select:none}
+.rb-chip input{accent-color:var(--epic)}
+.rb-chip.on{border-color:var(--epic);color:var(--text);background:rgba(41,196,104,.08)}
+.rb-tag{display:inline-block;border:1px solid var(--line);border-radius:5px;padding:.1rem .5rem;margin:0 .3rem .3rem 0;font-size:.75rem;color:#D5D2C6;background:var(--void-2)}
+.raid-event{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:1.1rem 1.3rem;margin-bottom:.9rem}
+.raid-event.past{opacity:.55}
+.re-title{font-family:var(--font-display);font-weight:700;font-size:1.05rem}
+.re-when{font-size:.75rem;color:var(--legendary);letter-spacing:.1em}
+.re-posted{font-size:.62rem;letter-spacing:.2em;color:var(--kill);border:1px solid rgba(61,220,132,.4);border-radius:5px;padding:.15rem .5rem}
+.re-note{font-size:.85rem;color:#D5D2C6;margin:.5rem 0 0}
+.re-roster{margin-top:.7rem}
 .award-x{border:1px solid rgba(231,76,60,.4);color:#e88;background:none;border-radius:6px;font-size:.72rem;padding:.1rem .45rem;line-height:1.3}
 .award-x:hover{background:rgba(231,76,60,.15);color:#fbb}
 .disc-more{width:34px;height:34px;border-radius:50%;border:2px solid var(--panel);background:var(--void-2);color:var(--muted);font-family:var(--font-data);font-size:.62rem;display:flex;align-items:center;justify-content:center;flex-shrink:0}
@@ -323,6 +334,7 @@ footer{border-top:1px solid var(--line);padding:2.5rem 0;color:var(--muted);font
         <li class="nav-item"><a class="nav-link" href="#about" data-page="about">About</a></li>
         <li class="nav-item"><a class="nav-link" href="#roster" data-page="roster">Roster</a></li>
         <li class="nav-item"><a class="nav-link" href="#streams" data-page="streams">Streams</a></li>
+        <li class="nav-item"><a class="nav-link" href="#raids" data-page="raids">Raids</a></li>
         <li class="nav-item"><a class="nav-link" href="#loot" data-page="loot">Loot</a></li>
         <li class="nav-item"><a class="nav-link" href="#forums" data-page="forums">Forums</a></li>
         <li class="nav-item ms-lg-2 mt-2 mt-lg-0">
@@ -538,6 +550,47 @@ footer{border-top:1px solid var(--line);padding:2.5rem 0;color:var(--muted);font
             </div>
           </div>
         </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ PAGE: RAIDS ============ -->
+<section class="page" id="page-raids">
+  <div class="container section" style="padding-top:6.5rem">
+    <div class="section-title"><h2>Raid Signups</h2></div>
+    <div id="raidGate" class="forum-gate">
+      <div class="display-font mb-1" style="font-size:1.2rem">Members Only</div>
+      <p style="font-size:.85rem;color:var(--muted)">Log in with your guild account to see upcoming raids and rosters.</p>
+      <button class="btn btn-apply w-100" id="raidLoginBtn">Log In</button>
+    </div>
+    <div id="raidHome" class="d-none">
+
+      <div id="raidBuilder" class="app-panel mb-4 d-none" style="padding:1.4rem">
+        <h5 class="display-font mb-1" style="font-size:1.05rem">Build a Raid Event <span class="data-font" style="font-size:.65rem;color:var(--muted);letter-spacing:.15em">OFFICERS</span></h5>
+        <div class="row g-2 mb-2">
+          <div class="col-md-4"><label class="form-label">Title *</label><input class="form-control form-control-sm" id="reTitle" placeholder="e.g. Mythic Prog — Week 4"></div>
+          <div class="col-md-3"><label class="form-label">Date *</label><input class="form-control form-control-sm" id="reDate" type="date"></div>
+          <div class="col-md-2"><label class="form-label">Time</label><input class="form-control form-control-sm" id="reTime" placeholder="8:00 PM CT"></div>
+          <div class="col-md-3"><label class="form-label">Note</label><input class="form-control form-control-sm" id="reNote" placeholder="Flask up. Vaelgor dies tonight."></div>
+        </div>
+        <label class="form-label">Roster — tick from the live guild roster</label>
+        <input class="form-control form-control-sm mb-2" id="rbFilter" style="max-width:240px" placeholder="Filter names…">
+        <div id="rbList" class="mb-2"></div>
+        <label class="form-label">Manual additions (comma separated)</label>
+        <input class="form-control form-control-sm mb-3" id="rbManual" placeholder="PuggerOne, TrialTwo">
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+          <button class="btn btn-apply btn-sm px-3" id="reCreate">Create Event</button>
+          <span class="data-font" id="reStatus" style="font-size:.75rem;color:var(--muted)"></span>
+        </div>
+        <p class="mt-2 mb-0" style="font-size:.75rem;color:var(--muted)">After posting to Discord, tap ✅ ❌ ❓ 🕐 on the message once to seed the reactions — webhooks can post but can't react.</p>
+      </div>
+
+      <h5 class="display-font mb-2" style="font-size:1.05rem">Upcoming Raids</h5>
+      <div id="raidUpcoming"></div>
+      <div id="raidPastWrap" class="d-none">
+        <h5 class="display-font mb-2 mt-4" style="font-size:.95rem;color:var(--muted)">Recent</h5>
+        <div id="raidPast"></div>
       </div>
     </div>
   </div>
@@ -805,13 +858,14 @@ if (SB.url && SB.anonKey && typeof window.supabase !== "undefined") {
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 
 /* ================= PAGE ROUTER ================= */
-const pages = ["home","about","roster","streams","apply","loot","forums"];
+const pages = ["home","about","roster","streams","apply","raids","loot","forums"];
 function showPage(id){
   if(!pages.includes(id)) id = "home";
   document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
   document.getElementById("page-"+id).classList.add("active");
   document.querySelectorAll(".nav-link").forEach(l=>l.classList.toggle("active", l.dataset.page===id));
   if(id === "loot" && typeof lootRefresh === "function") lootRefresh();
+  if(id === "raids" && typeof raidsRefresh === "function") raidsRefresh();
   window.scrollTo({top:0, behavior:"instant"});
   const nav = document.getElementById("mainNav");
   if(nav.classList.contains("show")) bootstrap.Collapse.getInstance(nav)?.hide();
@@ -1344,6 +1398,7 @@ function refreshAuthUI(skipForum){
     }
   }
   if(typeof lootRefresh === "function") lootRefresh();
+  if(typeof raidsRefresh === "function") raidsRefresh();
 }
 async function logoutAll(){
   if(sb) await sb.auth.signOut();
@@ -1359,7 +1414,7 @@ function openLoginModal(){
 el("mLoginBtn").addEventListener("click", ()=>doLogin(el("mUser").value.trim(), el("mPass").value, el("mStatus")));
 el("mPass").addEventListener("keydown", e=>{ if(e.key === "Enter") doLogin(el("mUser").value.trim(), el("mPass").value, el("mStatus")); });
 document.addEventListener("click", e=>{
-  if(e.target.id === "navLoginBtn" || e.target.id === "lootLoginBtn") openLoginModal();
+  if(e.target.id === "navLoginBtn" || e.target.id === "lootLoginBtn" || e.target.id === "raidLoginBtn") openLoginModal();
   if(e.target.id === "navLogoutBtn") logoutAll();
 });
 
@@ -1551,6 +1606,126 @@ function initLootUI(){
   lootEl("awardFilter").addEventListener("input", drawAwards);
 }
 initLootUI();
+
+
+/* ================= RAID SIGNUPS ================= */
+async function raidsRefresh(){
+  const gate = el("raidGate"), home = el("raidHome");
+  if(!gate) return;
+  if(!sb){ gate.querySelector("p").textContent = "Raid signups come online once Supabase is connected."; return; }
+  if(!me){ gate.classList.remove("d-none"); home.classList.add("d-none"); return; }
+  gate.classList.add("d-none"); home.classList.remove("d-none");
+  const officer = ["officer","admin"].includes(me.role);
+  el("raidBuilder").classList.toggle("d-none", !officer);
+  if(officer) buildRosterPicker();
+  loadRaidEvents();
+}
+function buildRosterPicker(){
+  const host = el("rbList");
+  const q = (el("rbFilter").value || "").toLowerCase();
+  if(!rosterCache.length){
+    host.innerHTML = `<p style="font-size:.8rem;color:var(--muted)">Live roster unavailable — add names manually below.</p>`;
+    return;
+  }
+  const checked = new Set([...host.querySelectorAll("input:checked")].map(i=>i.value));
+  host.innerHTML = rosterCache
+    .filter(m => m.character.name.toLowerCase().includes(q))
+    .map(m => `<label class="rb-chip${checked.has(m.character.name) ? " on" : ""}">
+      <input type="checkbox" value="${esc(m.character.name)}" ${checked.has(m.character.name) ? "checked" : ""}>${esc(m.character.name)}</label>`).join("");
+}
+function pickedRoster(){
+  const boxes = [...el("rbList").querySelectorAll("input:checked")].map(i=>i.value);
+  const manual = el("rbManual").value.split(",").map(s=>s.trim()).filter(Boolean);
+  return [...new Set([...boxes, ...manual])];
+}
+async function createRaidEvent(){
+  const st = el("reStatus");
+  const ev = {
+    title: el("reTitle").value.trim(),
+    event_date: el("reDate").value,
+    event_time: el("reTime").value.trim(),
+    note: el("reNote").value.trim(),
+    roster: pickedRoster(),
+    created_by: me.username
+  };
+  if(!ev.title || !ev.event_date){ st.textContent = "⚠ Title and date are required."; return; }
+  st.textContent = "Saving…";
+  const { error } = await sb.from("raid_events").insert(ev);
+  if(error){ st.textContent = "❌ " + error.message; return; }
+  st.textContent = "✅ Event created — post it to Discord from the list below.";
+  el("reTitle").value = ""; el("reNote").value = ""; el("rbManual").value = "";
+  loadRaidEvents();
+}
+let raidEvents = [];
+async function loadRaidEvents(){
+  try{
+    const { data } = await sb.from("raid_events").select("*").order("event_date", {ascending:true}).limit(50);
+    raidEvents = data || [];
+    drawRaidEvents();
+  }catch(e){ console.warn("raid events", e); }
+}
+function drawRaidEvents(){
+  const officer = ["officer","admin"].includes(me?.role);
+  const today = new Date().toISOString().slice(0,10);
+  const upcoming = raidEvents.filter(ev => ev.event_date >= today);
+  const past = raidEvents.filter(ev => ev.event_date < today).slice(-3);
+  const card = ev => `
+    <div class="raid-event${ev.event_date < today ? " past" : ""}">
+      <div class="d-flex justify-content-between align-items-start gap-2 flex-wrap">
+        <div>
+          <div class="re-title">${esc(ev.title)}</div>
+          <div class="re-when data-font">${esc(ev.event_date)}${ev.event_time ? " · " + esc(ev.event_time) : ""}</div>
+        </div>
+        <div class="d-flex gap-2 align-items-center flex-shrink-0">
+          ${ev.posted_at ? `<span class="re-posted data-font">POSTED</span>` : ""}
+          ${officer ? `<button class="btn btn-apply btn-sm" data-repost="${ev.id}">${ev.posted_at ? "Re-post" : "Post to Discord"}</button>
+          <button class="award-x" data-redel="${ev.id}">✕</button>` : ""}
+        </div>
+      </div>
+      ${ev.note ? `<p class="re-note">${esc(ev.note)}</p>` : ""}
+      <div class="re-roster">${(ev.roster||[]).map(n=>`<span class="rb-tag">${esc(n)}</span>`).join("") || `<span style="color:var(--muted);font-size:.8rem">Open signups — no set roster</span>`}</div>
+    </div>`;
+  el("raidUpcoming").innerHTML = upcoming.map(card).join("") || `<p style="color:var(--muted)">No upcoming raids scheduled.</p>`;
+  el("raidPast").innerHTML = past.map(card).join("");
+  el("raidPastWrap").classList.toggle("d-none", !past.length);
+}
+async function postEventToDiscord(id){
+  const ev = raidEvents.find(e => e.id === +id);
+  const hook = (CONFIG.integrations || {}).signupWebhook;
+  if(!hook){ alert("No signup webhook configured — add one in the Command Deck → Integrations (create the webhook inside your signups channel)."); return; }
+  if(!ev) return;
+  try{
+    const res = await fetch(hook, {
+      method: "POST", headers: {"Content-Type":"application/json"},
+      body: JSON.stringify({
+        username: "Raid Signups",
+        embeds: [{
+          title: `⚔️ ${ev.title}`,
+          color: 0xF0C24B,
+          description: `**${ev.event_date}**${ev.event_time ? ` · ${ev.event_time}` : ""}${ev.note ? "\n" + ev.note : ""}`,
+          fields: [{ name: `Expected Roster (${(ev.roster||[]).length})`, value: (ev.roster||[]).join(", ") || "Open signups — all welcome" }],
+          footer: { text: "React below: ✅ Attending · ❌ Absent · ❓ Tentative · 🕐 Late" }
+        }]
+      })
+    });
+    if(!res.ok) throw new Error("HTTP " + res.status);
+    await sb.from("raid_events").update({ posted_at: new Date().toISOString() }).eq("id", ev.id);
+    loadRaidEvents();
+  }catch(e){ alert("Discord post failed: " + e.message); }
+}
+document.addEventListener("click", async e=>{
+  if(e.target.dataset.repost) postEventToDiscord(e.target.dataset.repost);
+  if(e.target.dataset.redel){
+    if(!confirm("Delete this raid event? (The Discord post, if any, stays.)")) return;
+    const { error } = await sb.from("raid_events").delete().eq("id", e.target.dataset.redel);
+    if(!error) loadRaidEvents(); else alert(error.message);
+  }
+});
+document.addEventListener("change", e=>{
+  if(e.target.closest && e.target.closest("#rbList")) e.target.closest(".rb-chip")?.classList.toggle("on", e.target.checked);
+});
+el("rbFilter").addEventListener("input", buildRosterPicker);
+el("reCreate").addEventListener("click", createRaidEvent);
 
 /* ================= BOOT ================= */
 (async function(){
