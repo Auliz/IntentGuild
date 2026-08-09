@@ -958,7 +958,7 @@ function renderAll(){
   }
 
   document.getElementById("aboutParas").innerHTML = CONFIG.about.paragraphs.map(p=>`<p style="color:#D5D2C6">${mdLite(p)}</p>`).join("");
-  document.getElementById("glanceList").innerHTML = CONFIG.about.glance.map((g,i,a)=>`<li class="${i===a.length-1?"mb-0":"mb-2"}">${esc(g)}</li>`).join("");
+  document.getElementById("glanceList").innerHTML = CONFIG.about.glance.map((g,i,a)=>`<li class="${i===a.length-1?"mb-0":"mb-2"}">${mdLite(g)}</li>`).join("");
 
   document.getElementById("schedTable").innerHTML = CONFIG.schedule.map(r=>`
     <div class="row-i"><span class="day">${esc(r.day)}</span><span class="time">${esc(r.time)}</span><span class="what d-none d-sm-inline">${esc(r.what)}</span></div>`).join("");
