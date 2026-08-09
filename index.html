@@ -67,6 +67,8 @@ a:hover{color:var(--legendary-soft)}
 .disc-online{font-family:var(--font-data);font-size:.75rem;color:var(--kill);letter-spacing:.1em;flex-shrink:0}
 .disc-avatars{display:flex;margin-top:.8rem;flex-wrap:wrap}
 .disc-avatars img{width:34px;height:34px;border-radius:50%;border:2px solid var(--panel);margin-right:-9px;margin-bottom:4px;background:#000}
+.award-x{border:1px solid rgba(231,76,60,.4);color:#e88;background:none;border-radius:6px;font-size:.72rem;padding:.1rem .45rem;line-height:1.3}
+.award-x:hover{background:rgba(231,76,60,.15);color:#fbb}
 .disc-more{width:34px;height:34px;border-radius:50%;border:2px solid var(--panel);background:var(--void-2);color:var(--muted);font-family:var(--font-data);font-size:.62rem;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .nav-link{color:var(--muted);font-weight:600;font-size:.9rem;letter-spacing:.03em}
 .nav-link:hover{color:var(--text)}
@@ -321,6 +323,7 @@ footer{border-top:1px solid var(--line);padding:2.5rem 0;color:var(--muted);font
         <li class="nav-item"><a class="nav-link" href="#about" data-page="about">About</a></li>
         <li class="nav-item"><a class="nav-link" href="#roster" data-page="roster">Roster</a></li>
         <li class="nav-item"><a class="nav-link" href="#streams" data-page="streams">Streams</a></li>
+        <li class="nav-item"><a class="nav-link" href="#loot" data-page="loot">Loot</a></li>
         <li class="nav-item"><a class="nav-link" href="#forums" data-page="forums">Forums</a></li>
         <li class="nav-item ms-lg-2 mt-2 mt-lg-0">
           <a class="btn btn-apply btn-sm px-3" href="#apply" data-page="apply">Apply Now</a>
@@ -539,6 +542,79 @@ footer{border-top:1px solid var(--line);padding:2.5rem 0;color:var(--muted);font
   </div>
 </section>
 
+<!-- ============ PAGE: LOOT ============ -->
+<section class="page" id="page-loot">
+  <div class="container section" style="padding-top:6.5rem">
+    <div class="section-title"><h2>Loot Tracker</h2></div>
+    <div id="lootGate" class="forum-gate">
+      <div class="display-font mb-1" style="font-size:1.2rem">Members Only</div>
+      <p style="font-size:.85rem;color:var(--muted)">Log in with your guild account to view the loot tracker and manage your wishlist.</p>
+      <a class="btn btn-apply w-100" href="#forums" data-page="forums">Log In on the Forums Tab</a>
+    </div>
+    <div id="lootHome" class="d-none">
+      <div class="row g-4 mb-4">
+        <div class="col-lg-5">
+          <div class="app-panel" style="padding:1.4rem">
+            <h5 class="display-font mb-1" style="font-size:1.05rem">My Wishlist</h5>
+            <p style="font-size:.78rem;color:var(--muted)">The council sees this at award time — keep it current going into each raid week.</p>
+            <div class="row g-2">
+              <div class="col-6"><label class="form-label">Character *</label><input class="form-control form-control-sm" id="wlChar"></div>
+              <div class="col-6"><label class="form-label">Spec</label><input class="form-control form-control-sm" id="wlSpec" placeholder="e.g. Demonology"></div>
+              <div class="col-12"><label class="form-label">Top 3 Trinkets (best first)</label>
+                <input class="form-control form-control-sm mb-1" id="wlT1" placeholder="Trinket 1">
+                <input class="form-control form-control-sm mb-1" id="wlT2" placeholder="Trinket 2">
+                <input class="form-control form-control-sm" id="wlT3" placeholder="Trinket 3">
+              </div>
+              <div class="col-6"><label class="form-label">Tier Off-piece Slot</label><select class="form-select form-select-sm" id="wlOff"></select></div>
+              <div class="col-6"><label class="form-label">Crafting This Slot</label><input class="form-control form-control-sm" id="wlCraft" placeholder="e.g. Wrist"></div>
+              <div class="col-12"><label class="form-label">Notes for the Council</label><textarea class="form-control form-control-sm" id="wlNotes" rows="2"></textarea></div>
+              <div class="col-12 d-flex align-items-center gap-2">
+                <button class="btn btn-apply btn-sm px-3" id="wlSave">Save Wishlist</button>
+                <span class="data-font" id="wlStatus" style="font-size:.75rem;color:var(--muted)"></span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-7">
+          <h5 class="display-font mb-1" style="font-size:1.05rem">Council Overview</h5>
+          <p style="font-size:.78rem;color:var(--muted)">Awards counted for <b class="text-legendary" id="wlSeason"></b> · sorted fewest-first, so the top of the list is who's due.</p>
+          <div class="table-responsive">
+            <table class="roster-table">
+              <thead><tr><th>Raider</th><th>Awards</th><th>Last</th><th>Top Want</th><th class="d-none d-md-table-cell">Tier Off-piece</th></tr></thead>
+              <tbody id="ovBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div id="awardFormWrap" class="app-panel mb-3 d-none" style="padding:1.2rem">
+        <h5 class="display-font mb-2" style="font-size:1rem">Record an Award <span class="data-font" style="font-size:.65rem;color:var(--muted);letter-spacing:.15em">OFFICERS</span></h5>
+        <div class="row g-2 align-items-end">
+          <div class="col-md-2"><label class="form-label">Raider *</label><input class="form-control form-control-sm" id="awMember"></div>
+          <div class="col-md-3"><label class="form-label">Item *</label><input class="form-control form-control-sm" id="awItem"></div>
+          <div class="col-md-2"><label class="form-label">Slot</label><select class="form-select form-select-sm" id="awSlot"></select></div>
+          <div class="col-md-2"><label class="form-label">Boss</label><input class="form-control form-control-sm" id="awBoss"></div>
+          <div class="col-md-2"><label class="form-label">Season</label><input class="form-control form-control-sm" id="awSeason"></div>
+          <div class="col-md-1"><button class="btn btn-apply btn-sm w-100" id="awSave">Add</button></div>
+          <div class="col-12"><label class="form-label">Note</label><input class="form-control form-control-sm" id="awNote" placeholder="Optional — big upgrade, council decision context…"></div>
+          <div class="col-12"><span class="data-font" id="awStatus" style="font-size:.75rem;color:var(--muted)"></span></div>
+        </div>
+      </div>
+
+      <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
+        <h5 class="display-font m-0" style="font-size:1.05rem">Award Log</h5>
+        <input class="form-control form-control-sm" id="awardFilter" style="max-width:240px" placeholder="Filter by raider or item…">
+      </div>
+      <div class="table-responsive">
+        <table class="roster-table">
+          <thead><tr><th>Date</th><th>Raider</th><th>Item</th><th>Slot</th><th class="d-none d-md-table-cell">Boss</th><th class="d-none d-lg-table-cell">Note</th><th></th></tr></thead>
+          <tbody id="awardBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
 <!-- ============ PAGE: FORUMS ============ -->
 <section class="page" id="page-forums">
   <div class="container section" style="padding-top:6.5rem">
@@ -711,12 +787,13 @@ if (SB.url && SB.anonKey && typeof window.supabase !== "undefined") {
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 
 /* ================= PAGE ROUTER ================= */
-const pages = ["home","about","roster","streams","apply","forums"];
+const pages = ["home","about","roster","streams","apply","loot","forums"];
 function showPage(id){
   if(!pages.includes(id)) id = "home";
   document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
   document.getElementById("page-"+id).classList.add("active");
   document.querySelectorAll(".nav-link").forEach(l=>l.classList.toggle("active", l.dataset.page===id));
+  if(id === "loot" && typeof lootRefresh === "function") lootRefresh();
   window.scrollTo({top:0, behavior:"instant"});
   const nav = document.getElementById("mainNav");
   if(nav.classList.contains("show")) bootstrap.Collapse.getInstance(nav)?.hide();
@@ -1204,12 +1281,12 @@ let pwForced = false;
 const el = id => document.getElementById(id);
 
 async function enterForums(user){
-  const { data: prof, error } = await sb.from("profiles").select("username, active").eq("id", user.id).single();
+  const { data: prof, error } = await sb.from("profiles").select("username, role, active").eq("id", user.id).single();
   if(error || !prof || !prof.active){
     el("loginStatus").textContent = "⛔ This account isn't active yet — poke an officer on Discord.";
     await sb.auth.signOut(); return;
   }
-  me = { id: user.id, username: prof.username };
+  me = { id: user.id, username: prof.username, role: prof.role };
   el("forumWho").textContent = prof.username;
   // First login on an officer-issued temp password? Force a change before entering.
   if(user.user_metadata?.must_change){ showPwGate(true); return; }
@@ -1270,6 +1347,149 @@ document.getElementById("logoutBtn").addEventListener("click", async ()=>{
   document.getElementById("forumLogin").classList.remove("d-none");
   document.getElementById("loginStatus").textContent = "";
 });
+
+
+/* ================= LOOT TRACKER ================= */
+const LOOT_SLOTS = ["Head","Neck","Shoulders","Back","Chest","Wrist","Hands","Waist","Legs","Feet","Ring","Trinket","Weapon","Off-hand","Tier Token","Very Rare"];
+const TIER_OFF = ["","Head","Shoulders","Chest","Hands","Legs"];
+function currentSeasonName(){
+  const t = (CONFIG.tiers || []).find(x=>x.current) || (CONFIG.tiers || [])[0];
+  return t ? t.name : "";
+}
+function lootEl(id){ return document.getElementById(id); }
+
+async function lootRefresh(){
+  const gate = lootEl("lootGate"), home = lootEl("lootHome");
+  if(!gate) return;
+  if(!sb){ gate.querySelector("p").textContent = "The loot tracker comes online once Supabase is connected."; return; }
+  if(!me){ gate.classList.remove("d-none"); home.classList.add("d-none"); return; }
+  gate.classList.add("d-none"); home.classList.remove("d-none");
+  const officer = ["officer","admin"].includes(me.role);
+  lootEl("awardFormWrap").classList.toggle("d-none", !officer);
+  lootEl("wlSeason").textContent = currentSeasonName() || "current season";
+  await Promise.all([loadMyWishlist(), loadLootData()]);
+}
+
+/* ---- my wishlist ---- */
+async function loadMyWishlist(){
+  try{
+    const { data } = await sb.from("loot_wishlists").select("data").eq("user_id", me.id).maybeSingle();
+    const w = data?.data || {};
+    lootEl("wlChar").value = w.character || me.username;
+    lootEl("wlSpec").value = w.spec || "";
+    lootEl("wlT1").value = (w.trinkets||[])[0] || "";
+    lootEl("wlT2").value = (w.trinkets||[])[1] || "";
+    lootEl("wlT3").value = (w.trinkets||[])[2] || "";
+    lootEl("wlOff").value = w.tier_offpiece || "";
+    lootEl("wlCraft").value = w.crafted || "";
+    lootEl("wlNotes").value = w.notes || "";
+  }catch(e){ console.warn("wishlist load", e); }
+}
+async function saveMyWishlist(){
+  const st = lootEl("wlStatus");
+  const payload = {
+    character: lootEl("wlChar").value.trim(),
+    spec: lootEl("wlSpec").value.trim(),
+    trinkets: [lootEl("wlT1").value.trim(), lootEl("wlT2").value.trim(), lootEl("wlT3").value.trim()].filter(Boolean),
+    tier_offpiece: lootEl("wlOff").value,
+    crafted: lootEl("wlCraft").value.trim(),
+    notes: lootEl("wlNotes").value.trim()
+  };
+  if(!payload.character){ st.textContent = "⚠ Character name required."; return; }
+  st.textContent = "Saving…";
+  const { error } = await sb.from("loot_wishlists").upsert({ user_id: me.id, data: payload, updated_at: new Date().toISOString() });
+  st.textContent = error ? "❌ " + error.message : "✅ Wishlist saved.";
+  if(!error) loadLootData();
+}
+
+/* ---- awards + overview ---- */
+let lootAwards = [], lootWishlists = [];
+async function loadLootData(){
+  try{
+    const [aw, wl] = await Promise.all([
+      sb.from("loot_awards").select("*").order("awarded_at",{ascending:false}).order("id",{ascending:false}).limit(300),
+      sb.from("loot_wishlists").select("data")
+    ]);
+    lootAwards = aw.data || []; lootWishlists = (wl.data || []).map(r=>r.data||{});
+    drawAwards(); drawOverview();
+  }catch(e){ console.warn("loot load", e); }
+}
+function drawAwards(){
+  const officer = ["officer","admin"].includes(me?.role);
+  const q = (lootEl("awardFilter").value||"").toLowerCase();
+  const rows = lootAwards.filter(a=>!q || a.member.toLowerCase().includes(q) || (a.item||"").toLowerCase().includes(q)).map(a=>`
+    <tr>
+      <td class="data-font" style="font-size:.78rem;color:var(--muted)">${esc(a.awarded_at)}</td>
+      <td><b>${esc(a.member)}</b></td>
+      <td>${esc(a.item)}</td>
+      <td style="color:var(--muted)">${esc(a.slot||"")}</td>
+      <td class="d-none d-md-table-cell" style="color:var(--muted)">${esc(a.boss||"")}</td>
+      <td class="d-none d-lg-table-cell" style="color:var(--muted);font-size:.8rem">${esc(a.note||"")}</td>
+      ${officer ? `<td><button class="award-x" data-adel="${a.id}">✕</button></td>` : ""}
+    </tr>`).join("");
+  lootEl("awardBody").innerHTML = rows || `<tr><td colspan="7" class="text-center py-3" style="color:var(--muted)">No awards recorded${q?" matching that filter":""} yet.</td></tr>`;
+}
+function drawOverview(){
+  const season = currentSeasonName();
+  const inSeason = lootAwards.filter(a => !season || !a.season || a.season === season);
+  const byMember = {};
+  inSeason.forEach(a=>{
+    const k = a.member.toLowerCase();
+    byMember[k] = byMember[k] || { name: a.member, count: 0, last: a.awarded_at };
+    byMember[k].count++;
+    if(a.awarded_at > byMember[k].last) byMember[k].last = a.awarded_at;
+  });
+  lootWishlists.forEach(w=>{
+    if(!w.character) return;
+    const k = w.character.toLowerCase();
+    byMember[k] = byMember[k] || { name: w.character, count: 0, last: "" };
+    byMember[k].spec = w.spec; byMember[k].want = (w.trinkets||[])[0]; byMember[k].off = w.tier_offpiece;
+  });
+  const list = Object.values(byMember).sort((a,b)=> a.count - b.count || a.name.localeCompare(b.name));
+  lootEl("ovBody").innerHTML = list.map(m=>`
+    <tr>
+      <td><b>${esc(m.name)}</b> <span style="color:var(--muted);font-size:.78rem">${esc(m.spec||"")}</span></td>
+      <td class="data-font">${m.count}</td>
+      <td class="data-font" style="font-size:.78rem;color:var(--muted)">${esc(m.last||"—")}</td>
+      <td style="font-size:.85rem;color:#D5D2C6">${esc(m.want||"—")}</td>
+      <td class="d-none d-md-table-cell" style="color:var(--muted);font-size:.8rem">${esc(m.off||"—")}</td>
+    </tr>`).join("") || `<tr><td colspan="5" class="text-center py-3" style="color:var(--muted)">No wishlists or awards yet — the table builds itself as raiders save wishlists.</td></tr>`;
+}
+async function recordAward(){
+  const st = lootEl("awStatus");
+  const row = {
+    member: lootEl("awMember").value.trim(),
+    item: lootEl("awItem").value.trim(),
+    slot: lootEl("awSlot").value,
+    boss: lootEl("awBoss").value.trim(),
+    season: lootEl("awSeason").value.trim(),
+    note: lootEl("awNote").value.trim(),
+    awarded_by: me.username
+  };
+  if(!row.member || !row.item){ st.textContent = "⚠ Raider and item are required."; return; }
+  st.textContent = "Recording…";
+  const { error } = await sb.from("loot_awards").insert(row);
+  if(error){ st.textContent = "❌ " + error.message; return; }
+  st.textContent = "✅ Recorded.";
+  lootEl("awItem").value = ""; lootEl("awNote").value = "";
+  loadLootData();
+}
+document.addEventListener("click", async e=>{
+  if(e.target.dataset.adel){
+    if(!confirm("Remove this award from the log?")) return;
+    const { error } = await sb.from("loot_awards").delete().eq("id", e.target.dataset.adel);
+    if(!error) loadLootData(); else alert(error.message);
+  }
+});
+function initLootUI(){
+  lootEl("awSlot").innerHTML = `<option value="">Slot…</option>` + LOOT_SLOTS.map(s=>`<option>${s}</option>`).join("");
+  lootEl("wlOff").innerHTML = TIER_OFF.map(s=>`<option value="${s}">${s || "No off-piece"}</option>`).join("");
+  lootEl("awSeason").value = currentSeasonName();
+  lootEl("wlSave").addEventListener("click", saveMyWishlist);
+  lootEl("awSave").addEventListener("click", recordAward);
+  lootEl("awardFilter").addEventListener("input", drawAwards);
+}
+initLootUI();
 
 /* ================= BOOT ================= */
 (async function(){
