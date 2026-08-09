@@ -546,7 +546,7 @@ footer{border-top:1px solid var(--line);padding:2.5rem 0;color:var(--muted);font
             </div>
             <div class="col-md-6">
               <label class="form-label">Realm *</label>
-              <input class="form-control" id="appRealm" value="Illidan">
+              <input class="form-control" id="appRealm" value="Vek'Nilash">
             </div>
             <div class="col-md-4">
               <label class="form-label">Class *</label>
@@ -581,17 +581,41 @@ footer{border-top:1px solid var(--line);padding:2.5rem 0;color:var(--muted);font
               <input class="form-control" id="appLogs" placeholder="Paste your logs — we will look">
             </div>
             <div class="col-12">
-              <label class="form-label">Raid Experience</label>
+              <label class="form-label">Raid Experience *</label>
               <textarea class="form-control" id="appExp" rows="3" placeholder="Recent tiers, CE history, notable prog moments…"></textarea>
             </div>
             <div class="col-12">
-              <label class="form-label">Why Intent?</label>
+              <label class="form-label">Previous Guilds — and why you left *</label>
+              <textarea class="form-control" id="appPrev" rows="3" placeholder="Last 2–3 guilds and the honest reason each ended. We'd rather hear it from you."></textarea>
+            </div>
+            <div class="col-12">
+              <label class="form-label">A fight or tier where you underperformed — what happened? *</label>
+              <textarea class="form-control" id="appUnder" rows="3" placeholder="Everyone has one. What went wrong, and what did you change?"></textarea>
+            </div>
+            <div class="col-12">
+              <label class="form-label">Why Intent? *</label>
               <textarea class="form-control" id="appWhy" rows="3" placeholder="What are you looking for in a guild, and what do you bring?"></textarea>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Off-specs (Mythic-viable, and willing?)</label>
+              <input class="form-control" id="appOffspec" placeholder="e.g. Resto viable, happy to flex for prog">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Known conflicts in the next 2 months?</label>
+              <input class="form-control" id="appConflicts" placeholder="Travel, work seasons, exams — anything scheduled">
+            </div>
+            <div class="col-12">
+              <label class="form-label">How did you find us? Referred by anyone?</label>
+              <input class="form-control" id="appFound" placeholder="Guild finder, wowprogress, a friend's name…">
             </div>
             <div class="col-12">
               <div class="form-check">
                 <input class="form-check-input" type="checkbox" id="appSched">
-                <label class="form-check-label" style="font-size:.9rem;color:#D5D2C6">I can make Mon/Thu 9:00–11:00 PM CST</label>
+                <label class="form-check-label" style="font-size:.9rem;color:#D5D2C6">I can make the posted raid schedule with 95%+ attendance</label>
+              </div>
+              <div class="form-check mt-1">
+                <input class="form-check-input" type="checkbox" id="appBench">
+                <label class="form-check-label" style="font-size:.9rem;color:#D5D2C6">I understand Intent rosters more raiders than fight spots, and I may sit some pulls *</label>
               </div>
             </div>
             <div class="col-12 d-flex align-items-center gap-3 flex-wrap">
@@ -879,7 +903,7 @@ const CONFIG = {
   rio: { region:"us", realm:"veknilash", guildName:"Intent" },
   integrations: { discordWebhook:"", googleScriptUrl:"" },
   streamers: [
-    { twitch: "yourgm",     name: "GM",        bio: "Guild Master. Streams every raid night from the tank seat. Expect calm calls and loud deaths.", schedule: "Mon/Thu raid + weekend keys" },
+    { twitch: "yourgm",     name: "GM",        bio: "Guild Master. Streams every raid night from the tank seat. Expect calm calls and loud deaths.", schedule: "Tue/Thu raid + weekend keys" },
     { twitch: "yourhealer", name: "Heals",     bio: "Healing officer. Educational healer POV, log reviews, and unhinged M+ pug stories.", schedule: "Most weeknights" },
     { twitch: "yourdps",    name: "Parselord", bio: "Resident parse gremlin. If it can be padded, it will be padded.", schedule: "Weekends" }
   ],
@@ -1268,14 +1292,25 @@ document.getElementById("appSubmit").addEventListener("click", async ()=>{
   const data = {
     character: f("appChar"), realm: f("appRealm"), cls: f("appClass"), spec: f("appSpec"),
     role: f("appRole"), discord: f("appDiscord"), bnet: f("appBnet"), logs: f("appLogs"),
-    experience: f("appExp"), why: f("appWhy"),
+    experience: f("appExp"), prev_guilds: f("appPrev"), underperformed: f("appUnder"), why: f("appWhy"),
+    offspecs: f("appOffspec"), conflicts: f("appConflicts"), found_us: f("appFound"),
     schedule_ok: document.getElementById("appSched").checked ? "Yes" : "No",
+    bench_ok: document.getElementById("appBench").checked ? "Yes" : "No",
     submitted: new Date().toISOString()
   };
-  if(!data.character || !data.cls || !data.role || !data.discord || !data.logs){
-    status.textContent = "⚠ Fill in every required field (*) — logs included. We always look.";
-    status.style.color = "var(--legendary)"; return;
-  }
+  const fail = msg => { status.textContent = msg; status.style.color = "var(--legendary)"; };
+  if(!data.character || !data.cls || !data.role || !data.discord || !data.logs)
+    return fail("⚠ Fill in every required field (*) — logs included. We always look.");
+  if(data.experience.length < 60)
+    return fail("⚠ Raid Experience needs more than a line — give us the actual history.");
+  if(data.prev_guilds.length < 40)
+    return fail("⚠ Tell us about your previous guilds — the honest version beats the polished one.");
+  if(data.underperformed.length < 40)
+    return fail("⚠ The underperformance question is required. Everyone has one; we want how you handled it.");
+  if(data.why.length < 60)
+    return fail("⚠ Why Intent? deserves a real answer, not a wave.");
+  if(!document.getElementById("appBench").checked)
+    return fail("⚠ Please acknowledge the roster/bench policy — it matters that we agree on this now.");
   status.textContent = "Sending…"; status.style.color = "var(--muted)";
   let sent = false;
 
@@ -1302,6 +1337,8 @@ document.getElementById("appSubmit").addEventListener("click", async ()=>{
               { name:"Discord", value:data.discord, inline:true },
               { name:"Battle.net", value:data.bnet||"—", inline:true },
               { name:"Schedule OK", value:data.schedule_ok, inline:true },
+              { name:"Bench OK", value:data.bench_ok, inline:true },
+              { name:"Found via", value:data.found_us||"—", inline:true },
               { name:"Logs", value:data.logs },
               { name:"Experience", value:data.experience||"—" },
               { name:"Why WAI", value:data.why||"—" }
