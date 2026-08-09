@@ -328,6 +328,7 @@ footer{border-top:1px solid var(--line);padding:2.5rem 0;color:var(--muted);font
         <li class="nav-item ms-lg-2 mt-2 mt-lg-0">
           <a class="btn btn-apply btn-sm px-3" href="#apply" data-page="apply">Apply Now</a>
         </li>
+        <li class="nav-item ms-lg-2 mt-2 mt-lg-0 d-flex align-items-center" id="navAuth"></li>
       </ul>
     </div>
   </div>
@@ -549,7 +550,7 @@ footer{border-top:1px solid var(--line);padding:2.5rem 0;color:var(--muted);font
     <div id="lootGate" class="forum-gate">
       <div class="display-font mb-1" style="font-size:1.2rem">Members Only</div>
       <p style="font-size:.85rem;color:var(--muted)">Log in with your guild account to view the loot tracker and manage your wishlist.</p>
-      <a class="btn btn-apply w-100" href="#forums" data-page="forums">Log In on the Forums Tab</a>
+      <button class="btn btn-apply w-100" id="lootLoginBtn">Log In</button>
     </div>
     <div id="lootHome" class="d-none">
       <div class="row g-4 mb-4">
@@ -683,6 +684,22 @@ footer{border-top:1px solid var(--line);padding:2.5rem 0;color:var(--muted);font
   </div>
 </section>
 </main>
+
+<!-- ============ UNIVERSAL LOGIN MODAL ============ -->
+<div class="modal fade" id="loginModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" style="max-width:390px">
+    <div class="modal-content" style="background:var(--panel);border:1px solid var(--line);border-radius:16px">
+      <div class="modal-body p-4 text-center">
+        <div class="display-font mb-1" style="font-size:1.2rem">Member Login</div>
+        <p style="font-size:.82rem;color:var(--muted)">One login for the forums, loot tracker, and all member areas.</p>
+        <input class="form-control mb-2" id="mUser" placeholder="Username" autocomplete="username">
+        <input class="form-control mb-3" id="mPass" type="password" placeholder="Password" autocomplete="current-password">
+        <button class="btn btn-apply w-100" id="mLoginBtn">Log In</button>
+        <div class="data-font mt-2" id="mStatus" style="font-size:.75rem;color:var(--muted)"></div>
+      </div>
+    </div>
+  </div>
+</div>
 
 <footer>
   <div class="container d-flex justify-content-between flex-wrap gap-3">
@@ -1275,36 +1292,84 @@ document.getElementById("replyPost").addEventListener("click", async ()=>{
   openThread(currentThread);
 });
 
-/* ---- forum auth ---- */
+/* ---- unified auth (nav + modal + forums + loot) ---- */
 function toEmail(u){ return u.includes("@") ? u : `${u.toLowerCase()}@${MEMBER_EMAIL_DOMAIN}`; }
 let pwForced = false;
 const el = id => document.getElementById(id);
+let loginModalObj = null;
 
-async function enterForums(user){
+async function doLogin(u, p, statusEl){
+  if(!sb){ if(statusEl) statusEl.textContent = "⚠ Member accounts come online once Supabase is connected."; return false; }
+  if(!u || !p){ if(statusEl) statusEl.textContent = "Enter a username and password."; return false; }
+  if(statusEl) statusEl.textContent = "Checking…";
+  const { data, error } = await sb.auth.signInWithPassword({ email: toEmail(u), password: p });
+  if(error){ if(statusEl) statusEl.textContent = "❌ " + error.message; return false; }
+  return establishSession(data.user, statusEl);
+}
+async function establishSession(user, statusEl){
   const { data: prof, error } = await sb.from("profiles").select("username, role, active").eq("id", user.id).single();
   if(error || !prof || !prof.active){
-    el("loginStatus").textContent = "⛔ This account isn't active yet — poke an officer on Discord.";
-    await sb.auth.signOut(); return;
+    if(statusEl) statusEl.textContent = "⛔ This account isn't active yet — poke an officer on Discord.";
+    await sb.auth.signOut(); return false;
   }
   me = { id: user.id, username: prof.username, role: prof.role };
-  el("forumWho").textContent = prof.username;
-  // First login on an officer-issued temp password? Force a change before entering.
-  if(user.user_metadata?.must_change){ showPwGate(true); return; }
-  openForumHome();
+  if(loginModalObj) loginModalObj.hide();
+  if(user.user_metadata?.must_change){
+    refreshAuthUI(true);   // skip forum-home render; the pw gate takes over
+    history.pushState(null, "", "#forums"); showPage("forums");
+    showPwGate(true);
+    return true;
+  }
+  refreshAuthUI();
+  return true;
 }
-function openForumHome(){
-  el("forumLogin").classList.add("d-none");
-  el("pwGate").classList.add("d-none");
-  el("forumHome").classList.remove("d-none");
-  renderCats(); fShow("cats");
+function refreshAuthUI(skipForum){
+  const nav = el("navAuth");
+  if(nav) nav.innerHTML = me
+    ? `<span class="data-font me-2" style="font-size:.7rem;letter-spacing:.1em;color:var(--legendary)">${esc(me.username).toUpperCase()}</span><button class="btn btn-outline-epic btn-sm" id="navLogoutBtn">Log Out</button>`
+    : `<button class="btn btn-outline-epic btn-sm px-3" id="navLoginBtn">Log In</button>`;
+  if(!skipForum){
+    if(me){
+      el("forumWho").textContent = me.username;
+      el("forumLogin").classList.add("d-none");
+      el("pwGate").classList.add("d-none");
+      el("forumHome").classList.remove("d-none");
+      renderCats(); fShow("cats");
+    } else {
+      el("forumHome").classList.add("d-none");
+      el("pwGate").classList.add("d-none");
+      el("forumLogin").classList.remove("d-none");
+      el("loginStatus").textContent = "";
+    }
+  }
+  if(typeof lootRefresh === "function") lootRefresh();
 }
+async function logoutAll(){
+  if(sb) await sb.auth.signOut();
+  me = null;
+  refreshAuthUI();
+}
+function openLoginModal(){
+  el("mStatus").textContent = ""; el("mPass").value = "";
+  if(!loginModalObj) loginModalObj = new bootstrap.Modal(el("loginModal"));
+  loginModalObj.show();
+  setTimeout(()=>el("mUser").focus(), 250);
+}
+el("mLoginBtn").addEventListener("click", ()=>doLogin(el("mUser").value.trim(), el("mPass").value, el("mStatus")));
+el("mPass").addEventListener("keydown", e=>{ if(e.key === "Enter") doLogin(el("mUser").value.trim(), el("mPass").value, el("mStatus")); });
+document.addEventListener("click", e=>{
+  if(e.target.id === "navLoginBtn" || e.target.id === "lootLoginBtn") openLoginModal();
+  if(e.target.id === "navLogoutBtn") logoutAll();
+});
+
+function openForumHome(){ refreshAuthUI(); }
 function showPwGate(forced){
   pwForced = forced;
   el("forumLogin").classList.add("d-none");
   el("forumHome").classList.add("d-none");
   el("pwGate").classList.remove("d-none");
   el("pwGateMsg").textContent = forced
-    ? "First login detected — replace your temp password with one only you know before entering the forums."
+    ? "First login detected — replace your temp password with one only you know before entering."
     : "Choose a new password for your guild account.";
   el("pwAlt").textContent = forced ? "Log Out" : "Cancel";
   el("pwNew").value = ""; el("pwNew2").value = ""; el("pwStatus").textContent = "";
@@ -1320,33 +1385,14 @@ el("pwSave").addEventListener("click", async ()=>{
   setTimeout(openForumHome, 600);
 });
 el("pwAlt").addEventListener("click", async ()=>{
-  if(pwForced){
-    await sb.auth.signOut(); me = null;
-    el("pwGate").classList.add("d-none");
-    el("forumLogin").classList.remove("d-none");
-    el("loginStatus").textContent = "";
-  } else openForumHome();
+  if(pwForced) logoutAll();
+  else openForumHome();
 });
 el("pwChangeBtn").addEventListener("click", ()=>showPwGate(false));
-document.getElementById("loginBtn").addEventListener("click", async ()=>{
-  const u = document.getElementById("loginUser").value.trim();
-  const p = document.getElementById("loginPass").value;
-  const st = document.getElementById("loginStatus");
-  if(!u || !p){ st.textContent = "Enter a username and password."; return; }
-  if(!sb){ st.textContent = "⚠ Forums come online once Supabase is connected (see SETUP guide)."; return; }
-  st.textContent = "Checking…";
-  const { data, error } = await sb.auth.signInWithPassword({ email: toEmail(u), password: p });
-  if(error){ st.textContent = "❌ " + error.message; return; }
-  enterForums(data.user);
+document.getElementById("loginBtn").addEventListener("click", ()=>{
+  doLogin(document.getElementById("loginUser").value.trim(), document.getElementById("loginPass").value, document.getElementById("loginStatus"));
 });
-document.getElementById("logoutBtn").addEventListener("click", async ()=>{
-  if(sb) await sb.auth.signOut();
-  me = null;
-  document.getElementById("forumHome").classList.add("d-none");
-  document.getElementById("pwGate").classList.add("d-none");
-  document.getElementById("forumLogin").classList.remove("d-none");
-  document.getElementById("loginStatus").textContent = "";
-});
+document.getElementById("logoutBtn").addEventListener("click", logoutAll);
 
 
 /* ================= LOOT TRACKER ================= */
@@ -1500,7 +1546,10 @@ initLootUI();
   loadDiscordWidget();
   if(sb){
     const { data } = await sb.auth.getSession();
-    if(data?.session) enterForums(data.session.user);
+    if(data?.session) await establishSession(data.session.user, null);
+    else refreshAuthUI();
+  } else {
+    refreshAuthUI();
   }
 })();
 
