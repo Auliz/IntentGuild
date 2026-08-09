@@ -1622,7 +1622,7 @@ initLootUI();
 
 
 /* ================= RAID SIGNUPS ================= */
-const RAID_ROLES = { T: "🛡️ Tank", H: "💚 Heal", M: "⚔️ Melee", R: "🏹 Ranged" };
+const RAID_ROLES = { T: "🛡️ Tank", H: "💚 Heal", M: "⚔️ Melee", R: "🏹 Ranged", B: "🪑 Bench" };
 let rbChecked = new Set(), rbRoles = {}, editEventId = null;
 
 function guessRole(name){
@@ -1792,14 +1792,15 @@ function drawRaidEvents(){
   el("raidPastWrap").classList.toggle("d-none", !past.length);
 }
 function buildSignupEmbed(ev){
-  const groups = { T: [], H: [], M: [], R: [], X: [] };
+  const groups = { T: [], H: [], M: [], R: [], B: [], X: [] };
   (ev.roster || []).forEach(s=>{ const { name, role } = parseEntry(s); groups[role || "X"].push(name); });
   const fields = [];
   for(const k of ["T","H","M","R"]){
     if(groups[k].length) fields.push({ name: `${RAID_ROLES[k]} (${groups[k].length})`, value: groups[k].join("\n"), inline: true });
   }
   if(groups.X.length) fields.push({ name: `Roster (${groups.X.length})`, value: groups.X.join("\n"), inline: true });
-  const total = (ev.roster || []).length;
+  if(groups.B.length) fields.push({ name: `${RAID_ROLES.B} (${groups.B.length})`, value: groups.B.join("\n"), inline: false });
+  const total = (ev.roster || []).filter(s => parseEntry(s).role !== "B").length;
   return {
     username: "Raid Signups",
     embeds: [{
