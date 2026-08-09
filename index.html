@@ -1623,7 +1623,7 @@ initLootUI();
 
 /* ================= RAID SIGNUPS ================= */
 const RAID_ROLES = { T: "🛡️ Tank", H: "💚 Heal", M: "⚔️ Melee", R: "🏹 Ranged", B: "🪑 Bench" };
-let rbChecked = new Set(), rbRoles = {}, editEventId = null;
+let rbChecked = new Set(), rbRoles = {}, editEventId = null, discordRaiders = [];
 
 function guessRole(name){
   const hit = rosterCache.find(x => x.character.name.toLowerCase() === name.toLowerCase());
@@ -1638,8 +1638,19 @@ async function raidsRefresh(){
   gate.classList.add("d-none"); home.classList.remove("d-none");
   const officer = ["officer","admin"].includes(me.role);
   el("raidBuilder").classList.toggle("d-none", !officer);
-  if(officer){ buildRosterPicker(); renderAssign(); }
+  if(officer){ await loadDiscordRaiders(); buildRosterPicker(); renderAssign(); }
   loadRaidEvents();
+}
+async function loadDiscordRaiders(){
+  try{
+    const { data } = await sb.from("discord_raiders").select("display_name").order("display_name");
+    discordRaiders = (data || []).map(r => r.display_name);
+  }catch(e){ discordRaiders = []; }
+}
+function pickerSource(){
+  return discordRaiders.length
+    ? discordRaiders.map(n => ({ name: n, rank: null }))
+    : rosterCache.map(m => ({ name: m.character.name, rank: m.rank }));
 }
 function populateRankFilter(){
   const sel = el("rbRank");
@@ -1650,17 +1661,21 @@ function populateRankFilter(){
 }
 function buildRosterPicker(){
   const host = el("rbList");
-  populateRankFilter();
+  const useDiscord = discordRaiders.length > 0;
+  el("rbRank").classList.toggle("d-none", useDiscord);   // the Raider role IS the filter
+  if(!useDiscord) populateRankFilter();
   const q = (el("rbFilter").value || "").toLowerCase();
   const rf = el("rbRank").value;
-  if(!rosterCache.length){
-    host.innerHTML = `<p style="font-size:.8rem;color:var(--muted)">Live roster unavailable — add names manually below.</p>`;
+  const source = pickerSource();
+  if(!source.length){
+    host.innerHTML = `<p style="font-size:.8rem;color:var(--muted)">No roster source available — add names manually below.</p>`;
     return;
   }
-  host.innerHTML = rosterCache
-    .filter(m => m.character.name.toLowerCase().includes(q) && (rf === "" || String(m.rank) === rf))
-    .map(m => `<label class="rb-chip${rbChecked.has(m.character.name) ? " on" : ""}">
-      <input type="checkbox" value="${esc(m.character.name)}" ${rbChecked.has(m.character.name) ? "checked" : ""}>${esc(m.character.name)}</label>`).join("");
+  host.innerHTML = source
+    .filter(m => m.name.toLowerCase().includes(q) && (useDiscord || rf === "" || String(m.rank) === rf))
+    .map(m => `<label class="rb-chip${rbChecked.has(m.name) ? " on" : ""}">
+      <input type="checkbox" value="${esc(m.name)}" ${rbChecked.has(m.name) ? "checked" : ""}>${esc(m.name)}</label>`).join("")
+    || `<p style="font-size:.8rem;color:var(--muted)">No members match that filter.</p>`;
 }
 function manualNames(){
   return el("rbManual").value.split(",").map(s => s.trim()).filter(Boolean);
@@ -1732,7 +1747,7 @@ function loadEventIntoBuilder(id){
   (ev.roster || []).forEach(s=>{
     const { name, role } = parseEntry(s);
     if(role) rbRoles[name] = role;
-    if(rosterCache.some(m => m.character.name === name)) rbChecked.add(name);
+    if(pickerSource().some(m => m.name === name)) rbChecked.add(name);
     else manual.push(name);
   });
   el("rbManual").value = manual.join(", ");
