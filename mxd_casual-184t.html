@@ -57,6 +57,11 @@ table{font-size:.9rem}
 th{font-family:'Chakra Petch',monospace;font-size:.68rem;letter-spacing:.2em;text-transform:uppercase;color:var(--muted)!important}
 td,th{background:transparent!important;border-color:rgba(38,50,41,.5)!important;color:var(--text)!important;vertical-align:middle}
 .note{font-size:.78rem;color:var(--muted)}
+.coll-head{cursor:pointer;user-select:none;display:flex;align-items:center;gap:.55rem;margin:0!important}
+.coll-head:hover{color:var(--legendary)}
+.coll-chev{font-size:.75rem;color:var(--legendary);width:.9rem;flex-shrink:0}
+.coll-count{margin-left:auto;font-family:'Chakra Petch',monospace;font-size:.66rem;color:var(--muted);background:var(--void-2);border:1px solid var(--line);border-radius:5px;padding:.1rem .5rem}
+.panel-body-collapse{margin-top:1rem}
 .toastbox{position:fixed;top:1rem;right:1rem;z-index:1000}
 </style>
 </head>
@@ -343,9 +348,42 @@ async function enterDeck(){
   }
   $("whoAmI").textContent = prof.username;
   $("gate").classList.add("d-none"); $("deck").classList.remove("d-none");
+  makeCollapsible();
   await loadConfig(); loadApplications(); loadMembers();
 }
 $("outBtn").addEventListener("click", async ()=>{ await sb.auth.signOut(); location.reload(); });
+
+/* ---------------- collapsible panels ---------------- */
+function makeCollapsible(){
+  document.querySelectorAll("#tab-site .panel, #tab-content .panel, #tab-integrations .panel").forEach(p=>{
+    const h = p.querySelector("h5");
+    if(!h || h.parentElement !== p || p.dataset.coll) return;
+    p.dataset.coll = "1";
+    const body = document.createElement("div");
+    body.className = "panel-body-collapse d-none";
+    while(h.nextSibling) body.appendChild(h.nextSibling);
+    p.appendChild(body);
+    const chev = document.createElement("span");
+    chev.className = "coll-chev"; chev.textContent = "▸";
+    h.prepend(chev);
+    h.classList.add("coll-head");
+    h.addEventListener("click", ()=>{
+      const opening = body.classList.contains("d-none");
+      body.classList.toggle("d-none", !opening);
+      chev.textContent = opening ? "▾" : "▸";
+    });
+  });
+}
+function updateCounts(){
+  document.querySelectorAll('[id^="list_"]').forEach(host=>{
+    const p = host.closest(".panel");
+    const h = p ? p.querySelector("h5") : null;
+    if(!h) return;
+    let b = h.querySelector(".coll-count");
+    if(!b){ b = document.createElement("span"); b.className = "coll-count"; h.appendChild(b); }
+    b.textContent = host.querySelectorAll(".item-card").length + " items";
+  });
+}
 
 /* ---------------- tabs ---------------- */
 document.querySelectorAll("[data-tab]").forEach(b=>b.addEventListener("click", ()=>{
@@ -393,6 +431,7 @@ function renderList(key){
         }).join("")}
       </div>
     </div>`).join("");
+  updateCounts();
 }
 document.addEventListener("click", e=>{
   const mv = e.target.dataset.mv;
