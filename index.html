@@ -886,6 +886,12 @@ if (SB.url && SB.anonKey && typeof window.supabase !== "undefined") {
   sb = window.supabase.createClient(SB.url, SB.anonKey, { auth: { persistSession: canStore } });
 }
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function mdLite(s){
+  return esc(s)
+    .replace(/\*\*([^*]+)\*\*/g, "<b>$1</b>")
+    .replace(/==([^=]+)==/g, '<span class="text-legendary">$1</span>')
+    .replace(/\*([^*]+)\*/g, "<i>$1</i>");
+}
 
 /* ================= PAGE ROUTER ================= */
 const pages = ["home","about","roster","streams","apply","raids","loot","forums"];
@@ -933,7 +939,7 @@ function renderAll(){
     gateTitle.insertAdjacentHTML("beforebegin", `<img id="gateCrest" src="${esc(S.iconUrl)}" alt="" class="gate-crest">`);
   }
 
-  document.getElementById("aboutParas").innerHTML = CONFIG.about.paragraphs.map(p=>`<p style="color:#D5D2C6">${esc(p)}</p>`).join("");
+  document.getElementById("aboutParas").innerHTML = CONFIG.about.paragraphs.map(p=>`<p style="color:#D5D2C6">${mdLite(p)}</p>`).join("");
   document.getElementById("glanceList").innerHTML = CONFIG.about.glance.map((g,i,a)=>`<li class="${i===a.length-1?"mb-0":"mb-2"}">${esc(g)}</li>`).join("");
 
   document.getElementById("schedTable").innerHTML = CONFIG.schedule.map(r=>`
