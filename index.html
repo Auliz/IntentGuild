@@ -59,7 +59,8 @@ a:hover{color:var(--legendary-soft)}
 .navbar-brand{font-family:var(--font-display);font-weight:900;font-size:1.05rem;color:var(--text)}
 .navbar-brand .wai-w{color:var(--legendary)}
 .navbar-brand small{display:block;font-family:var(--font-data);font-weight:400;font-size:.62rem;color:var(--muted);letter-spacing:.25em;text-transform:uppercase}
-.brand-icon{height:34px;width:34px;border-radius:50%;vertical-align:middle;margin-right:.45rem;border:1px solid var(--line);background:#000}
+.brand-icon{height:38px;width:38px;vertical-align:middle;margin-right:.6rem;filter:drop-shadow(0 1px 4px rgba(0,0,0,.6))}
+.wordmark{color:var(--legendary);letter-spacing:.07em}
 .hero-banner{display:block;width:min(880px,100%);margin:0 auto;border-radius:14px;border:1px solid var(--line);filter:drop-shadow(0 10px 44px rgba(41,196,104,.35)) drop-shadow(0 2px 14px rgba(240,194,75,.25))}
 .gate-crest{width:96px;height:96px;border-radius:50%;margin:0 auto .9rem;display:block;box-shadow:0 0 26px rgba(240,194,75,.35)}
 .disc-card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:1.2rem 1.3rem}
@@ -129,12 +130,24 @@ a:hover{color:var(--legendary-soft)}
 }
 .hero .realm{font-family:var(--font-data);color:var(--muted);letter-spacing:.2em}
 .hero .realm b{color:var(--legendary)}
-.rank-strip{
-  display:flex;gap:2.5rem;justify-content:center;flex-wrap:wrap;margin-top:2.2rem;
+.stat-bar{
+  display:flex;justify-content:center;align-items:stretch;flex-wrap:wrap;
+  margin:2.6rem auto 0;max-width:820px;
+  border-top:1px solid rgba(240,194,75,.28);border-bottom:1px solid rgba(240,194,75,.28);
 }
-.rank-strip .stat{min-width:120px}
-.rank-strip .num{font-family:var(--font-data);font-size:2rem;font-weight:600;color:var(--legendary)}
-.rank-strip .lbl{font-size:.72rem;letter-spacing:.2em;text-transform:uppercase;color:var(--muted)}
+.stat-ident{display:flex;flex-direction:column;justify-content:center;text-align:left;padding:1rem 2rem 1rem 1.2rem}
+.stat-ident .realm-name{font-family:var(--font-display);font-weight:700;font-size:.95rem;color:var(--text);letter-spacing:.04em}
+.stat-ident .realm-sub{font-family:var(--font-data);font-size:.6rem;letter-spacing:.28em;text-transform:uppercase;color:var(--muted);margin-top:.2rem}
+.stat-cell{padding:1rem 1.8rem;text-align:center;position:relative;display:flex;flex-direction:column;justify-content:center}
+.stat-cell::before{content:"";position:absolute;left:0;top:22%;bottom:22%;width:1px;background:var(--line)}
+.stat-cell .num{font-family:var(--font-data);font-size:1.45rem;font-weight:600;color:var(--legendary);font-variant-numeric:tabular-nums;line-height:1.1}
+.stat-cell .lbl{font-size:.6rem;letter-spacing:.24em;text-transform:uppercase;color:var(--muted);margin-top:.2rem}
+@media (max-width:767px){
+  .stat-bar{max-width:100%}
+  .stat-ident{width:100%;text-align:center;align-items:center;padding:.9rem 1rem .4rem}
+  .stat-cell{flex:1;padding:.7rem .6rem}
+  .stat-ident + .stat-cell::before{display:none}
+}
 
 /* ---------- SECTION HEADINGS ---------- */
 .section{padding:3.5rem 0}
@@ -359,12 +372,15 @@ footer{border-top:1px solid var(--line);padding:2.5rem 0;color:var(--muted);font
   <div class="hero container">
     <div class="eyebrow mb-2" id="heroEyebrow">Mythic Raiding Guild</div>
     <h1 id="heroName">WORKING AS INTENDED</h1>
-    <div class="realm mt-2" id="heroRealm">ILLIDAN · US · HORDE</div>
-    <div class="rank-strip" id="rankStrip">
-      <div class="stat"><div class="num" id="rankRealm">—</div><div class="lbl">Realm Rank</div></div>
-      <div class="stat"><div class="num" id="rankRegion">—</div><div class="lbl">US Rank</div></div>
-      <div class="stat"><div class="num" id="rankWorld">—</div><div class="lbl">World Rank</div></div>
-      <div class="stat"><div class="num" id="memberCount">—</div><div class="lbl">Members</div></div>
+    <div class="stat-bar" id="rankStrip">
+      <div class="stat-ident">
+        <span class="realm-name" id="heroRealm">ILLIDAN · US · HORDE</span>
+        <span class="realm-sub">Guild Standing</span>
+      </div>
+      <div class="stat-cell"><div class="num" id="rankRealm">—</div><div class="lbl">Realm</div></div>
+      <div class="stat-cell"><div class="num" id="rankRegion">—</div><div class="lbl">US</div></div>
+      <div class="stat-cell"><div class="num" id="rankWorld">—</div><div class="lbl">World</div></div>
+      <div class="stat-cell"><div class="num" id="memberCount">—</div><div class="lbl">Members</div></div>
     </div>
     <div class="mt-4 d-flex gap-2 justify-content-center flex-wrap">
       <a href="#apply" data-page="apply" class="btn btn-apply px-4 py-2">Join the Roster</a>
@@ -586,6 +602,7 @@ footer{border-top:1px solid var(--line);padding:2.5rem 0;color:var(--muted);font
           <input class="form-control form-control-sm" id="rbFilter" style="max-width:220px" placeholder="Filter names…">
           <select class="form-select form-select-sm" id="rbRank" style="max-width:180px"><option value="">All ranks</option></select>
         </div>
+        <div class="data-font mb-2" id="rbSource" style="font-size:.68rem;letter-spacing:.12em;color:var(--muted)"></div>
         <div id="rbList" class="mb-2"></div>
         <label class="form-label">Manual additions (comma separated)</label>
         <input class="form-control form-control-sm mb-2" id="rbManual" placeholder="PuggerOne, TrialTwo">
@@ -900,7 +917,7 @@ function renderAll(){
     fav.href = S.iconUrl;
   }
   const crest = S.iconUrl ? `<img src="${esc(S.iconUrl)}" alt="" class="brand-icon">` : "";
-  document.getElementById("navName").innerHTML = crest + `<span class="wai-w">${esc(S.name[0])}</span>${esc(S.name.slice(1))}`;
+  document.getElementById("navName").innerHTML = crest + `<span class="wordmark">${esc(S.name)}</span>`;
   document.getElementById("navSub").textContent = S.navSub;
   document.getElementById("heroEyebrow").textContent = S.eyebrow;
   // Hero: banner art replaces the typographic title when set
@@ -908,7 +925,7 @@ function renderAll(){
   if(S.bannerUrl){ h1.innerHTML = `<img src="${esc(S.bannerUrl)}" alt="${esc(S.name)}" class="hero-banner">`; }
   else { h1.textContent = S.name.toUpperCase(); }
   document.getElementById("heroRealm").textContent = S.realmLine;
-  document.getElementById("footName").innerHTML = crest + `<span class="text-legendary">${esc(S.name[0])}</span>${esc(S.name.slice(1))}`;
+  document.getElementById("footName").innerHTML = crest + `<span class="wordmark">${esc(S.name)}</span>`;
   document.getElementById("footSub").textContent = S.realmLine;
   // Crest above the forum login gate
   const gateTitle = document.querySelector("#forumLogin .display-font");
@@ -1663,6 +1680,10 @@ function buildRosterPicker(){
   const host = el("rbList");
   const useDiscord = discordRaiders.length > 0;
   el("rbRank").classList.toggle("d-none", useDiscord);   // the Raider role IS the filter
+  el("rbSource").textContent = useDiscord
+    ? `SOURCE: DISCORD RAIDER ROLE · ${discordRaiders.length} MEMBERS`
+    : `⚠ SOURCE: RAIDER.IO FALLBACK — DISCORD RAIDER LIST IS EMPTY (BOT NOT SYNCING?)`;
+  el("rbSource").style.color = useDiscord ? "var(--muted)" : "var(--legendary)";
   if(!useDiscord) populateRankFilter();
   const q = (el("rbFilter").value || "").toLowerCase();
   const rf = el("rbRank").value;
