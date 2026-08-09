@@ -506,8 +506,14 @@ async function loadApplications(){
           <dt>Battle.net</dt><dd>${esc(d.bnet)||"—"}</dd>
           <dt>Logs</dt><dd>${esc(d.logs)}</dd>
           <dt>Schedule OK</dt><dd>${esc(d.schedule_ok)}</dd>
+          <dt>Bench OK</dt><dd>${esc(d.bench_ok)||"—"}</dd>
           <dt>Experience</dt><dd>${esc(d.experience)||"—"}</dd>
-          <dt>Why WAI</dt><dd>${esc(d.why)||"—"}</dd>
+          <dt>Prev Guilds</dt><dd>${esc(d.prev_guilds)||"—"}</dd>
+          <dt>Underperformed</dt><dd>${esc(d.underperformed)||"—"}</dd>
+          <dt>Why Intent</dt><dd>${esc(d.why)||"—"}</dd>
+          <dt>Off-specs</dt><dd>${esc(d.offspecs)||"—"}</dd>
+          <dt>Conflicts</dt><dd>${esc(d.conflicts)||"—"}</dd>
+          <dt>Found via</dt><dd>${esc(d.found_us)||"—"}</dd>
         </dl>
         <div class="d-flex gap-2 flex-wrap mt-2">
           ${["reviewing","accepted","declined"].map(s=>`<button class="btn btn-outline-epic btn-sm" data-status="${a.id}:${s}">Mark ${s}</button>`).join("")}
