@@ -106,6 +106,8 @@ td,th{background:transparent!important;border-color:rgba(38,50,41,.5)!important;
         <div class="col-md-6"><label class="form-label">Hero Eyebrow</label><input class="form-control" id="cfg_eyebrow"></div>
         <div class="col-md-6"><label class="form-label">Banner Image URL (hero art)</label><input class="form-control" id="cfg_bannerUrl" placeholder="img/brand/banner.png"></div>
         <div class="col-md-6"><label class="form-label">Icon URL (crest — nav, favicon, forum gate, footer)</label><input class="form-control" id="cfg_iconUrl" placeholder="img/brand/icon.png"></div>
+        <div class="col-md-6"><label class="form-label">Splash Video URL (homepage intro)</label><input class="form-control" id="cfg_splashUrl" placeholder="img/brand/intro.mp4 — blank disables"></div>
+        <div class="col-md-6"><label class="form-label">Splash Cooldown (days between showings)</label><input class="form-control" id="cfg_splashDays" placeholder="7"></div>
       </div>
     </div>
     <div class="panel mb-3">
@@ -407,6 +409,7 @@ function renderForms(){
   $("cfg_name").value = cfg.site.name; $("cfg_realmLine").value = cfg.site.realmLine;
   $("cfg_navSub").value = cfg.site.navSub; $("cfg_eyebrow").value = cfg.site.eyebrow;
   $("cfg_bannerUrl").value = cfg.site.bannerUrl || ""; $("cfg_iconUrl").value = cfg.site.iconUrl || "";
+  $("cfg_splashUrl").value = cfg.site.splashUrl || ""; $("cfg_splashDays").value = cfg.site.splashDays ?? "7";
   $("cfg_about").value = cfg.about.paragraphs.join("\n\n");
   $("cfg_glance").value = cfg.about.glance.join("\n");
   $("cfg_schedNote").value = cfg.schedNote;
@@ -453,7 +456,7 @@ document.addEventListener("click", e=>{
   if(add){ harvest(); const blank = {}; SCHEMAS[add].forEach(f=>blank[f.k] = f.t==="check" ? false : ""); cfg[add].push(blank); renderList(add); }
 });
 function harvest(){
-  cfg.site = { name:$("cfg_name").value, realmLine:$("cfg_realmLine").value, navSub:$("cfg_navSub").value, eyebrow:$("cfg_eyebrow").value, bannerUrl:$("cfg_bannerUrl").value.trim(), iconUrl:$("cfg_iconUrl").value.trim() };
+  cfg.site = { name:$("cfg_name").value, realmLine:$("cfg_realmLine").value, navSub:$("cfg_navSub").value, eyebrow:$("cfg_eyebrow").value, bannerUrl:$("cfg_bannerUrl").value.trim(), iconUrl:$("cfg_iconUrl").value.trim(), splashUrl:$("cfg_splashUrl").value.trim(), splashDays:$("cfg_splashDays").value.trim() };
   cfg.about = {
     paragraphs: $("cfg_about").value.split(/\n\s*\n/).map(s=>s.trim()).filter(Boolean),
     glance: $("cfg_glance").value.split("\n").map(s=>s.trim()).filter(Boolean)
