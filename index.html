@@ -95,6 +95,8 @@ a:hover{color:var(--legendary-soft)}
 .re-posted{font-size:.62rem;letter-spacing:.2em;color:var(--kill);border:1px solid rgba(61,220,132,.4);border-radius:5px;padding:.15rem .5rem}
 .re-note{font-size:.85rem;color:#D5D2C6;margin:.5rem 0 0}
 .re-roster{margin-top:.7rem}
+.dt-row{display:flex;justify-content:space-between;align-items:center;gap:.75rem;font-size:.85rem;padding:.3rem 0;border-bottom:1px solid var(--line)}
+.dt-row:last-child{border-bottom:none}
 .award-x{border:1px solid rgba(231,76,60,.4);color:#e88;background:none;border-radius:6px;font-size:.72rem;padding:.1rem .45rem;line-height:1.3}
 .award-x:hover{background:rgba(231,76,60,.15);color:#fbb}
 .disc-more{width:34px;height:34px;border-radius:50%;border:2px solid var(--panel);background:var(--void-2);color:var(--muted);font-family:var(--font-data);font-size:.62rem;display:flex;align-items:center;justify-content:center;flex-shrink:0}
@@ -670,6 +672,16 @@ footer{border-top:1px solid var(--line);padding:2.5rem 0;color:var(--muted);font
               <div class="col-6"><label class="form-label">Tier Off-piece Slot</label><select class="form-select form-select-sm" id="wlOff"></select></div>
               <div class="col-6"><label class="form-label">Crafting This Slot</label><input class="form-control form-control-sm" id="wlCraft" placeholder="e.g. Wrist"></div>
               <div class="col-12"><label class="form-label">Notes for the Council</label><textarea class="form-control form-control-sm" id="wlNotes" rows="2"></textarea></div>
+              <div class="col-12">
+                <label class="form-label">Droptimizer Import <span style="color:var(--muted);text-transform:none;letter-spacing:0">— Raidbots report link</span></label>
+                <div class="d-flex gap-2">
+                  <input class="form-control form-control-sm" id="dtUrl" placeholder="https://www.raidbots.com/simbot/report/…">
+                  <button class="btn btn-outline-epic btn-sm flex-shrink-0" id="dtImport">Import</button>
+                </div>
+                <div class="data-font mt-1" id="dtStatus" style="font-size:.72rem;color:var(--muted)"></div>
+                <textarea class="form-control form-control-sm mt-2 d-none" id="dtPaste" rows="3" placeholder="Paste the report's data.json contents here, then press Import again."></textarea>
+                <div id="dtList" class="mt-2"></div>
+              </div>
               <div class="col-12 d-flex align-items-center gap-2 flex-wrap">
                 <button class="btn btn-apply btn-sm px-3" id="wlSave">Save Wishlist</button>
                 <button class="btn btn-outline-epic btn-sm" id="wlClear">Clear My Wishlist</button>
@@ -1540,11 +1552,15 @@ async function loadMyWishlist(){
     lootEl("wlOff").value = w.tier_offpiece || "";
     lootEl("wlCraft").value = w.crafted || "";
     lootEl("wlNotes").value = w.notes || "";
+    myWishlistExtra = {};
+    if(w.droptimizer) myWishlistExtra.droptimizer = w.droptimizer;
+    renderDtList();
   }catch(e){ console.warn("wishlist load", e); }
 }
 async function saveMyWishlist(){
   const st = lootEl("wlStatus");
   const payload = {
+    ...myWishlistExtra,
     character: lootEl("wlChar").value.trim(),
     spec: lootEl("wlSpec").value.trim(),
     trinkets: [lootEl("wlT1").value.trim(), lootEl("wlT2").value.trim(), lootEl("wlT3").value.trim()].filter(Boolean),
@@ -1557,6 +1573,94 @@ async function saveMyWishlist(){
   const { error } = await sb.from("loot_wishlists").upsert({ user_id: me.id, data: payload, updated_at: new Date().toISOString() });
   st.textContent = error ? "❌ " + error.message : "✅ Wishlist saved.";
   if(!error) loadLootData();
+}
+
+/* ---- droptimizer import ---- */
+let myWishlistExtra = {}, RB_ITEMDB = null;
+async function rbItemNames(){
+  if(RB_ITEMDB) return RB_ITEMDB;
+  try{
+    const r = await fetch("https://www.raidbots.com/static/data/live/equippable-items.json");
+    if(!r.ok) throw 0;
+    const arr = await r.json();
+    RB_ITEMDB = {};
+    arr.forEach(i => { RB_ITEMDB[i.id] = i.name; });
+  }catch(e){ RB_ITEMDB = {}; }
+  return RB_ITEMDB;
+}
+function dtParse(json){
+  const player = json?.sim?.players?.[0];
+  const baseline = player?.collected_data?.dps?.mean;
+  const results = json?.sim?.profilesets?.results || [];
+  if(!baseline || !results.length) throw new Error("No Droptimizer results in that report — make sure it's a Droptimizer sim, not a regular one.");
+  const best = {};
+  results.forEach(r=>{
+    const gain = r.mean - baseline;
+    const toks = String(r.name).split("/");
+    const itemId = [...toks].reverse().find(t => /^\d{6,7}$/.test(t));
+    if(!itemId) return;
+    const ilvl = [...toks].reverse().find(t => /^\d{3}$/.test(t)) || "";
+    if(!best[itemId] || gain > best[itemId].gain) best[itemId] = { id: itemId, ilvl, gain };
+  });
+  const ups = Object.values(best).filter(u => u.gain > 0).sort((a,b) => b.gain - a.gain).slice(0, 12);
+  return { character: player.name, spec: player.specialization || "", baseline, ups };
+}
+async function dtImport(){
+  const st = lootEl("dtStatus");
+  const raw = lootEl("dtUrl").value.trim();
+  const pasted = lootEl("dtPaste").value.trim();
+  try{
+    let json;
+    if(pasted){
+      json = JSON.parse(pasted);
+    } else {
+      const m = raw.match(/([A-Za-z0-9_-]{16,})/);
+      if(!m) throw new Error("Paste your Raidbots report link first.");
+      st.textContent = "Fetching report…";
+      let r;
+      try{ r = await fetch(`https://www.raidbots.com/reports/${m[1]}/data.json`); }
+      catch(e){ throw new Error("fetch-blocked"); }
+      if(!r.ok) throw new Error(r.status === 404 ? "Report not found — check the link (reports also expire after a while)." : "fetch-blocked");
+      json = await r.json();
+    }
+    st.textContent = "Crunching results…";
+    const parsed = dtParse(json);
+    const names = await rbItemNames();
+    const upgrades = parsed.ups.map(u => ({
+      id: u.id, ilvl: u.ilvl,
+      name: names[u.id] || ("Item " + u.id),
+      pct: +((u.gain / parsed.baseline) * 100).toFixed(2)
+    }));
+    myWishlistExtra.droptimizer = {
+      character: parsed.character, spec: parsed.spec,
+      baseline: Math.round(parsed.baseline),
+      imported: new Date().toISOString().slice(0,10),
+      upgrades
+    };
+    if(!lootEl("wlChar").value.trim()) lootEl("wlChar").value = parsed.character;
+    if(!lootEl("wlSpec").value.trim()) lootEl("wlSpec").value = parsed.spec;
+    await saveMyWishlist();
+    renderDtList();
+    lootEl("dtPaste").classList.add("d-none"); lootEl("dtPaste").value = ""; lootEl("dtUrl").value = "";
+    st.textContent = `✅ Imported ${upgrades.length} upgrades for ${parsed.character} (baseline ${Math.round(parsed.baseline).toLocaleString()} DPS).`;
+  }catch(e){
+    if(e.message === "fetch-blocked"){
+      lootEl("dtPaste").classList.remove("d-none");
+      st.textContent = "⚠ Couldn't fetch the report directly. Open your report link with /data.json added to the end, copy everything, paste it below, and press Import again.";
+    } else {
+      st.textContent = "⚠ " + e.message;
+    }
+  }
+}
+function renderDtList(){
+  const host = lootEl("dtList");
+  const d = myWishlistExtra.droptimizer;
+  if(!d || !d.upgrades || !d.upgrades.length){ host.innerHTML = ""; return; }
+  host.innerHTML = `<div class="d-flex justify-content-between align-items-center mb-1">
+      <span class="data-font" style="font-size:.66rem;letter-spacing:.14em;color:var(--muted)">SIM UPGRADES · ${esc(d.character).toUpperCase()} · ${esc(d.imported)}</span>
+      <button class="award-x" id="dtClear" title="Remove imported list">✕</button>
+    </div>` +
+    d.upgrades.map(u => `<div class="dt-row"><span>${esc(u.name)} <span style="color:var(--muted);font-size:.75rem">${esc(u.ilvl)}</span></span><b class="text-legendary data-font" style="font-size:.8rem">+${u.pct}%</b></div>`).join("");
 }
 
 /* ---- awards + overview ---- */
@@ -1601,7 +1705,8 @@ function drawOverview(){
     if(!w.character) return;
     const k = w.character.toLowerCase();
     byMember[k] = byMember[k] || { name: w.character, count: 0, last: "" };
-    byMember[k].spec = w.spec; byMember[k].want = (w.trinkets||[])[0]; byMember[k].off = w.tier_offpiece;
+    const dtTop = w.droptimizer?.upgrades?.[0];
+    byMember[k].spec = w.spec; byMember[k].want = (w.trinkets||[])[0] || (dtTop ? `${dtTop.name} +${dtTop.pct}%` : undefined); byMember[k].off = w.tier_offpiece;
     byMember[k].uid = w._uid;
   });
   const list = Object.values(byMember).sort((a,b)=> a.count - b.count || a.name.localeCompare(b.name));
@@ -1647,6 +1752,7 @@ document.addEventListener("click", async e=>{
   }
   if(e.target.id === "wlClear"){
     if(!confirm("Clear your wishlist? This empties all fields for the council view.")) return;
+    myWishlistExtra = {};
     const { error } = await sb.from("loot_wishlists").upsert({ user_id: me.id, data: {}, updated_at: new Date().toISOString() });
     if(!error){ loadMyWishlist(); loadLootData(); document.getElementById("wlStatus").textContent = "✅ Wishlist cleared."; }
     else document.getElementById("wlStatus").textContent = "❌ " + error.message;
@@ -1656,6 +1762,13 @@ function initLootUI(){
   lootEl("awSlot").innerHTML = `<option value="">Slot…</option>` + LOOT_SLOTS.map(s=>`<option>${s}</option>`).join("");
   lootEl("wlOff").innerHTML = TIER_OFF.map(s=>`<option value="${s}">${s || "No off-piece"}</option>`).join("");
   lootEl("wlSave").addEventListener("click", saveMyWishlist);
+  lootEl("dtImport").addEventListener("click", dtImport);
+  document.addEventListener("click", e=>{
+    if(e.target.id === "dtClear"){
+      delete myWishlistExtra.droptimizer;
+      saveMyWishlist(); renderDtList();
+    }
+  });
   lootEl("awSave").addEventListener("click", recordAward);
   lootEl("awardFilter").addEventListener("input", drawAwards);
 }
