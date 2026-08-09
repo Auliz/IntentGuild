@@ -569,8 +569,9 @@ footer{border-top:1px solid var(--line);padding:2.5rem 0;color:var(--muted);font
               <div class="col-6"><label class="form-label">Tier Off-piece Slot</label><select class="form-select form-select-sm" id="wlOff"></select></div>
               <div class="col-6"><label class="form-label">Crafting This Slot</label><input class="form-control form-control-sm" id="wlCraft" placeholder="e.g. Wrist"></div>
               <div class="col-12"><label class="form-label">Notes for the Council</label><textarea class="form-control form-control-sm" id="wlNotes" rows="2"></textarea></div>
-              <div class="col-12 d-flex align-items-center gap-2">
+              <div class="col-12 d-flex align-items-center gap-2 flex-wrap">
                 <button class="btn btn-apply btn-sm px-3" id="wlSave">Save Wishlist</button>
+                <button class="btn btn-outline-epic btn-sm" id="wlClear">Clear My Wishlist</button>
                 <span class="data-font" id="wlStatus" style="font-size:.75rem;color:var(--muted)"></span>
               </div>
             </div>
@@ -1455,9 +1456,9 @@ async function loadLootData(){
   try{
     const [aw, wl] = await Promise.all([
       sb.from("loot_awards").select("*").order("awarded_at",{ascending:false}).order("id",{ascending:false}).limit(300),
-      sb.from("loot_wishlists").select("data")
+      sb.from("loot_wishlists").select("user_id, data")
     ]);
-    lootAwards = aw.data || []; lootWishlists = (wl.data || []).map(r=>r.data||{});
+    lootAwards = aw.data || []; lootWishlists = (wl.data || []).map(r=>({ ...(r.data||{}), _uid: r.user_id }));
     drawAwards(); drawOverview();
   }catch(e){ console.warn("loot load", e); }
 }
@@ -1492,6 +1493,7 @@ function drawOverview(){
     const k = w.character.toLowerCase();
     byMember[k] = byMember[k] || { name: w.character, count: 0, last: "" };
     byMember[k].spec = w.spec; byMember[k].want = (w.trinkets||[])[0]; byMember[k].off = w.tier_offpiece;
+    byMember[k].uid = w._uid;
   });
   const list = Object.values(byMember).sort((a,b)=> a.count - b.count || a.name.localeCompare(b.name));
   lootEl("ovBody").innerHTML = list.map(m=>`
@@ -1501,6 +1503,7 @@ function drawOverview(){
       <td class="data-font" style="font-size:.78rem;color:var(--muted)">${esc(m.last||"—")}</td>
       <td style="font-size:.85rem;color:#D5D2C6">${esc(m.want||"—")}</td>
       <td class="d-none d-md-table-cell" style="color:var(--muted);font-size:.8rem">${esc(m.off||"—")}</td>
+      ${["officer","admin"].includes(me?.role) && m.uid ? `<td><button class="award-x" data-wldel="${m.uid}" title="Remove this wishlist">✕</button></td>` : `<td></td>`}
     </tr>`).join("") || `<tr><td colspan="5" class="text-center py-3" style="color:var(--muted)">No wishlists or awards yet — the table builds itself as raiders save wishlists.</td></tr>`;
 }
 async function recordAward(){
@@ -1527,6 +1530,17 @@ document.addEventListener("click", async e=>{
     if(!confirm("Remove this award from the log?")) return;
     const { error } = await sb.from("loot_awards").delete().eq("id", e.target.dataset.adel);
     if(!error) loadLootData(); else alert(error.message);
+  }
+  if(e.target.dataset.wldel){
+    if(!confirm("Remove this raider's wishlist? Their award history stays in the log.")) return;
+    const { error } = await sb.from("loot_wishlists").delete().eq("user_id", e.target.dataset.wldel);
+    if(!error) loadLootData(); else alert(error.message);
+  }
+  if(e.target.id === "wlClear"){
+    if(!confirm("Clear your wishlist? This empties all fields for the council view.")) return;
+    const { error } = await sb.from("loot_wishlists").upsert({ user_id: me.id, data: {}, updated_at: new Date().toISOString() });
+    if(!error){ loadMyWishlist(); loadLootData(); document.getElementById("wlStatus").textContent = "✅ Wishlist cleared."; }
+    else document.getElementById("wlStatus").textContent = "❌ " + error.message;
   }
 });
 function initLootUI(){
