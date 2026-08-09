@@ -1463,7 +1463,7 @@ async function loadDeckLink(){
 }
 function refreshAuthUI(skipForum){
   const nav = el("navAuth");
-  const deck = (me?.role === "admin" && deckUrl) ? `<a class="deck-link data-font" href="${esc(deckUrl)}">Deck</a>` : "";
+  const deck = (me?.role === "admin" && deckUrl) ? `<a class="deck-link data-font" href="${esc(deckUrl)}" target="_blank" rel="noopener">Deck</a>` : "";
   if(nav) nav.innerHTML = me
     ? `${deck}<span class="data-font me-2" style="font-size:.7rem;letter-spacing:.1em;color:var(--legendary)">${esc(me.username).toUpperCase()}</span><button class="btn btn-outline-epic btn-sm" id="navLogoutBtn">Log Out</button>`
     : `<button class="btn btn-outline-epic btn-sm px-3" id="navLoginBtn">Log In</button>`;
