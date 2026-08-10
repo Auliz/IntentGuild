@@ -885,38 +885,34 @@ const CONFIG = {
   site: { name:"Intent", realmLine:"VEK'NILASH · US · CROSS-FACTION", navSub:"Mythic Raiding Guild", eyebrow:"Intent on Pushing Limits" },
   about: {
     paragraphs: [
-      "Working as Intended is a Mythic progression guild on Illidan-US. We formed around a simple idea: serious progression doesn't require a toxic environment or a 4-night schedule — it requires preparation, consistency, and a roster that trusts each other.",
-      "We raid two nights a week and aim for Cutting Edge every tier. Outside raid, the guild runs nightly Mythic+ groups, weekly sales/alt runs, and a Discord that never sleeps. Whether you're a hardcore parse-chaser or a keystone enjoyer, there's a seat at the table.",
-      "The name? Every wipe is a feature, not a bug — until it's a kill."
+      "Intent is a new Mythic progression guild, founded by a group of friends who've raided Mythic together — and apart — for years. We've all been in the guilds that fell apart mid-tier: the ones that burned people out with five-night schedules, or let a toxic core rot the roster from the inside. We started this one to do it right from pull one.",
+      "We're building for Cutting Edge, and we're honest that we haven't earned it under this tag yet. What we bring is experience, a clear standard, and officers who've done the work before. We raid four nights a week, review our own logs, and expect everyone to show up prepared.",
+      "If you want to be part of a roster from the ground floor rather than slot into someone else's, this is that opportunity. So.. Are you Intent on Pushing Limits?"
     ],
-    glance: ["⚔️ Faction: Horde · Illidan (US)","🗓️ Raid nights: Tue / Thu","🎯 Goal: Cutting Edge every tier","🔑 M+: Nightly key groups, KSM+ push teams","🎙️ Comms: Discord (required on raid nights)"]
+    glance: ["Est. | August 8, 2026","Raid | Mon / Tue / Wed / Thu","M+ | Keys, KSM+ push teams","Goals | Cutting Edge every tier","Comms | Discord (required on raid nights)"]
   },
   schedule: [
-    {day:"Tuesday", time:"8:00 – 11:00 PM CT", what:"Mythic Progression"},
-    {day:"Thursday", time:"8:00 – 11:00 PM CT", what:"Mythic Progression"},
-    {day:"Sunday", time:"7:00 – 9:00 PM CT", what:"Optional Heroic / Alt / Sales"},
-    {day:"Nightly", time:"Evenings", what:"Mythic+ Key Groups"}
+    {day:"Monday", time:"9:00 – 11:00 PM CT", what:"Mythic Progression"},
+    {day:"Tuesday", time:"9:00 – 11:00 PM CT", what:"Mythic Progression"},
+    {day:"Wednesday", time:"9:00 – 11:00 PM CT", what:"Mythic Progression"},
+    {day:"Thursday", time:"9:00 – 11:00 PM CT", what:"Mythic Progression"}
   ],
   schedNote: "Invites go out 15 minutes before start. First pull is on time.",
   rules: [
-    {title:"Come prepared.", body:"Know the fights, bring full consumables (bank covers feasts/cauldrons), gear enchanted and gemmed before pull one."},
-    {title:"95% attendance.", body:"Life happens — post absences in Discord ahead of time. No-shows without notice cost your spot."},
-    {title:"Own your mistakes.", body:"We review logs, not to shame, but to fix. \"My bad, adjusting\" beats excuses every time."},
-    {title:"Sitting happens.", body:"Roster is 24–26 deep for a reason. Benched raiders stay on Discord and stay ready."},
+    {title:"Own your mistakes.", body:"We review logs, not to shame, but to improve. \"My bad, adjusting\" beats excuses every time."},
+    {title:"Be someone people want to raid with.", body:"Banter yes, toxicity no. This one is non-negotiable."},
+    {title:"Come prepared.", body:"Know the fights, bring consumables, have your gear enchanted and gemmed."},
+    {title:"Sitting happens.", body:"Benched raiders stay on Discord and stay ready."},
     {title:"Loot is council-lite.", body:"RCLootCouncil, prioritizing throughput upgrades for progression. No drama, no exceptions."},
-    {title:"Be someone people want to raid with.", body:"Banter yes, toxicity no. This one is non-negotiable."}
+    {title:"Attendance.", body:"Life happens — post absences in Discord ahead of time if possible."}
   ],
   rio: { region:"us", realm:"veknilash", guildName:"Intent" },
   integrations: { discordWebhook:"", googleScriptUrl:"" },
   streamers: [
-    { twitch: "yourgm",     name: "GM",        bio: "Guild Master. Streams every raid night from the tank seat. Expect calm calls and loud deaths.", schedule: "Tue/Thu raid + weekend keys" },
-    { twitch: "yourhealer", name: "Heals",     bio: "Healing officer. Educational healer POV, log reviews, and unhinged M+ pug stories.", schedule: "Most weeknights" },
-    { twitch: "yourdps",    name: "Parselord", bio: "Resident parse gremlin. If it can be padded, it will be padded.", schedule: "Weekends" }
+    { twitch: "wowbibidi", name: "Bibidi", bio: "Raid Lead. Streams every raid night from ranged PoV. Expect calm calls and loud deaths.", schedule: "Mon-Thur raid + weekend keys" }
   ],
   vods: [
-    { title: "Midnight Falls — Mythic First Kill", url: "#", note: "March on Quel'Danas" },
-    { title: "Belo'ren, Child of Al'ar — Mythic",  url: "#", note: "March on Quel'Danas" },
-    { title: "The Dreamrift — Full Mythic Clear",  url: "#", note: "Season 1" }
+    { title: "Nothing Here Yet", url: "#", note: "Let's make memories." }
   ],
   leaders: [
     { name: "YourGM",   role: "Guild Master · Founder", gm: true, blurb: "Founded WAI to prove CE is possible on two nights. Handles vision, roster, and the checkbook." },
@@ -925,24 +921,15 @@ const CONFIG = {
     { name: "KeyLead",  role: "M+ Officer", blurb: "Organizes nightly keys and the title push team. Knows every route, contests every route." }
   ],
   needs: [
-    { cls: "Demonology Warlock", role: "Ranged DPS", demand: "HIGH", hot: true },
-    { cls: "Elemental Shaman",   role: "Ranged DPS", demand: "HIGH", hot: true },
-    { cls: "Holy Paladin",       role: "Healer",     demand: "MEDIUM" },
-    { cls: "Augmentation Evoker",role: "Ranged DPS", demand: "MEDIUM" },
     { cls: "All exceptional players", role: "Any",   demand: "ALWAYS" }
   ],
   trophies: [
-    { name: "Cutting Edge: Midnight Falls", legendary: true, desc: "Defeated Midnight Falls on Mythic difficulty before the season's end.", flavor: "\"The Sunwell holds. Barely.\"", date: "Season 1 · Midnight" },
-    { name: "Realm-Competitive Progression", legendary: false, desc: "Consistent top-bracket finishes on one of the most competitive servers in NA.", flavor: "\"Illidan is not a casual address.\"", date: "Ongoing" },
-    { name: "Two Nights, Full Clear", legendary: true, desc: "Achieved full Mythic clears on a 6-hour weekly schedule.", flavor: "\"Efficiency is a raid buff.\"", date: "Guild philosophy" },
-    { name: "Keystone Hero Squad", legendary: false, desc: "Multiple in-guild title-range Mythic+ teams pushing every season.", flavor: "\"The route is contested.\"", date: "Every season" },
-    { name: "Zero Roster Collapses", legendary: false, desc: "Core roster retained across every tier since founding.", flavor: "\"People stay where they're valued.\"", date: "Since founding" },
-    { name: "Ahead of the Curve: Every Tier", legendary: false, desc: "AOTC secured within the opening weeks of every raid since founding.", flavor: "\"Heroic is the warm-up.\"", date: "Every tier" }
+    { name: "New Guild Created", legendary: true, desc: "New guild registered and begin forming initial roster.", flavor: "\"New Guild Who Dis?\"", date: "August 08, 2026" }
   ],
   tiers: [
     { slug: "tier-mn-1", name: "Voidspire · Dreamrift · Quel'Danas", meta: "MIDNIGHT · SEASON 1",
-      mythicKilled: 8, heroicKilled: 9,
-      bosses: "Boss 1\nBoss 2\nBoss 3\nBoss 4\nBoss 5\nBoss 6\nBoss 7\nBoss 8\nBoss 9" }
+      mythicKilled: 0, heroicKilled: 0,
+      bosses: "Imperator Averzian/Vorasius/Fallen-King Salhadaar/Chimaerus/Vaelgor & Ezzorak/Lightblinded Vanguard/Crown of the Cosmos/Belo'Ren, Child of Al'Ar/Midnight Falls" }
   ],
 };
 
