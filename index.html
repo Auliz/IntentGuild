@@ -383,9 +383,9 @@ footer{border-top:1px solid var(--line);padding:2.5rem 0;color:var(--muted);font
         <li class="nav-item"><a class="nav-link" href="#about" data-page="about">About</a></li>
         <li class="nav-item"><a class="nav-link" href="#roster" data-page="roster">Roster</a></li>
         <li class="nav-item"><a class="nav-link" href="#streams" data-page="streams">Streams</a></li>
-        <li class="nav-item"><a class="nav-link" href="#raids" data-page="raids">Raids</a></li>
-        <li class="nav-item"><a class="nav-link" href="#loot" data-page="loot">Loot</a></li>
-        <li class="nav-item"><a class="nav-link" href="#forums" data-page="forums">Forums</a></li>
+        <li class="nav-item d-none"><a class="nav-link" href="#raids" data-page="raids">Raids</a></li>
+        <li class="nav-item d-none"><a class="nav-link" href="#loot" data-page="loot">Loot</a></li>
+        <li class="nav-item d-none"><a class="nav-link" href="#forums" data-page="forums">Forums</a></li>
         <li class="nav-item ms-lg-2 mt-2 mt-lg-0">
           <a class="btn btn-apply btn-sm px-3" href="#apply" data-page="apply">Apply Now</a>
         </li>
@@ -962,8 +962,11 @@ function mdLite(s){
 
 /* ================= PAGE ROUTER ================= */
 const pages = ["home","about","roster","streams","apply","raids","loot","forums"];
+// Rollout gate: these tabs are visible to ADMIN accounts only. Empty the list to make them public again.
+const ADMIN_ONLY_PAGES = ["raids","loot","forums"];
 function showPage(id){
   if(!pages.includes(id)) id = "home";
+  if(ADMIN_ONLY_PAGES.includes(id) && me?.role !== "admin") id = "home";
   document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
   document.getElementById("page-"+id).classList.add("active");
   document.querySelectorAll(".nav-link").forEach(l=>l.classList.toggle("active", l.dataset.page===id));
@@ -1512,6 +1515,9 @@ async function loadDeckLink(){
 }
 function refreshAuthUI(skipForum){
   const nav = el("navAuth");
+  document.querySelectorAll(".nav-link").forEach(l=>{
+    if(ADMIN_ONLY_PAGES.includes(l.dataset.page)) l.closest("li").classList.toggle("d-none", me?.role !== "admin");
+  });
   const deck = (me?.role === "admin" && deckUrl) ? `<a class="deck-link data-font" href="${esc(deckUrl)}" target="_blank" rel="noopener">Deck</a>` : "";
   if(nav) nav.innerHTML = me
     ? `${deck}<span class="data-font me-2" style="font-size:.7rem;letter-spacing:.1em;color:var(--legendary)">${esc(me.username).toUpperCase()}</span><button class="btn btn-outline-epic btn-sm" id="navLogoutBtn">Log Out</button>`
