@@ -140,6 +140,7 @@ td,th{background:transparent!important;border-color:rgba(38,50,41,.5)!important;
     <div class="panel mb-3"><h5 class="mb-3">Progression Tiers</h5>
       <p class="note">Bosses: one per line, in kill order — <code>Name | image URL</code> (image optional; without one the banner shows a styled gradient). Kill counts sync live from Raider.io when the slug matches; the numeric fields only cover offline fallback.</p>
       <div id="list_tiers"></div><button class="btn btn-outline-epic btn-sm" data-add="tiers">+ Add Tier</button></div>
+    <div class="panel mb-3"><h5 class="mb-3">Why Raid With Us</h5><p class="note">The three pitch cards on the homepage — **bold**, *italic*, ==gold== work in the text.</p><div id="list_why"></div><button class="btn btn-outline-epic btn-sm" data-add="why">+ Add Card</button></div>
     <div class="panel mb-3"><h5 class="mb-3">Trophy Case</h5><div id="list_trophies"></div><button class="btn btn-outline-epic btn-sm" data-add="trophies">+ Add Trophy</button></div>
     <div class="panel mb-3"><h5 class="mb-3">Leadership</h5><div id="list_leaders"></div><button class="btn btn-outline-epic btn-sm" data-add="leaders">+ Add Leader</button></div>
     <div class="panel mb-3"><h5 class="mb-3">Streamers</h5><div id="list_streamers"></div><button class="btn btn-outline-epic btn-sm" data-add="streamers">+ Add Streamer</button></div>
@@ -262,6 +263,11 @@ const DEFAULTS = {
     {title:"Loot is council-lite.", body:"RCLootCouncil, prioritizing throughput upgrades for progression. No drama, no exceptions."},
     {title:"Be someone people want to raid with.", body:"Banter yes, toxicity no. This one is non-negotiable."}
   ],
+  why: [
+    { title:"Veteran Core", text:"A new tag, not new raiders. Our core has years of Mythic progression together — and in the guilds that collapsed around us. We split off to build it right, and we know exactly which mistakes we're not repeating." },
+    { title:"Standards From Pull One", text:"Four focused nights with assignments posted before the first pull. Logs get reviewed between raids, prep is expected, and the standard is the same for officers and trials." },
+    { title:"Ground Floor", text:"Every kill under this tag is a first. Shape the roster and the culture instead of slotting into someone else's history. Progression matters — but so does wanting to log in." }
+  ],
   trophies: [
     { name:"Cutting Edge: Midnight Falls", legendary:true, desc:"Defeated Midnight Falls on Mythic difficulty before the season's end.", flavor:"\"The Sunwell holds. Barely.\"", date:"Season 1 · Midnight" },
     { name:"Realm-Competitive Progression", legendary:false, desc:"Consistent top-bracket finishes on one of the most competitive servers in NA.", flavor:"\"Illidan is not a casual address.\"", date:"Ongoing" },
@@ -307,6 +313,7 @@ const SCHEMAS = {
   schedule:  [{k:"day",l:"Day",w:3},{k:"time",l:"Time",w:4},{k:"what",l:"Activity",w:5}],
   tiers:     [{k:"name",l:"Display name",w:5},{k:"slug",l:"Raider.io slug",w:3},{k:"current",l:"Current tier",w:2,t:"check"},{k:"meta",l:"Small label",w:2},{k:"mythicKilled",l:"Mythic kills (offline fallback)",w:3},{k:"heroicKilled",l:"Heroic kills (offline fallback)",w:3},{k:"bosses",l:"Bosses — one per line: Name | image URL",w:12,t:"text"}],
   rules:     [{k:"title",l:"Rule",w:4},{k:"body",l:"Details",w:8,t:"text"}],
+  why:       [{k:"title",l:"Card Title",w:12},{k:"text",l:"Card Text",w:12,t:"text"}],
   trophies:  [{k:"name",l:"Title",w:6},{k:"legendary",l:"Legendary",w:2,t:"check"},{k:"date",l:"Date/Tier",w:4},{k:"desc",l:"Description",w:12,t:"text"},{k:"flavor",l:"Flavor line",w:12}],
   leaders:   [{k:"name",l:"Name",w:3},{k:"role",l:"Role",w:4},{k:"character",l:"WoW character (portrait)",w:3},{k:"gm",l:"GM style",w:2,t:"check"},{k:"img",l:"Custom image URL (optional, overrides)",w:12},{k:"blurb",l:"Blurb",w:12,t:"text"}],
   streamers: [{k:"name",l:"Display name",w:4},{k:"twitch",l:"Twitch channel",w:4},{k:"schedule",l:"Schedule",w:4},{k:"bio",l:"Bio",w:12,t:"text"}],
