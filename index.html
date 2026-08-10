@@ -71,7 +71,6 @@ a:hover{color:var(--legendary-soft)}
   border-bottom:1px solid var(--line);
 }
 .navbar-brand{font-family:var(--font-display);font-weight:900;font-size:1.05rem;color:var(--text)}
-.navbar-brand .wai-w{color:var(--legendary)}
 .navbar-brand small{display:block;font-family:var(--font-data);font-weight:400;font-size:.62rem;color:var(--muted);letter-spacing:.25em;text-transform:uppercase}
 .brand-icon{height:38px;width:38px;vertical-align:middle;margin-right:.6rem;filter:drop-shadow(0 1px 4px rgba(0,0,0,.6))}
 .wordmark{color:var(--legendary);letter-spacing:.07em}
@@ -219,6 +218,7 @@ a:hover{color:var(--legendary-soft)}
 .boss-banner{position:relative;height:58px;border-radius:8px;overflow:hidden;margin-bottom:.55rem;border:1px solid var(--line);background:linear-gradient(120deg,var(--panel-2),#080D09);background-size:cover;background-position:center 25%;display:flex;align-items:center;padding:0 1rem;transition:filter .6s ease,opacity .6s ease}
 .boss-banner::before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(5,8,6,.88),rgba(5,8,6,.3) 55%,rgba(5,8,6,.05))}
 .boss-banner .bname{position:relative;font-family:var(--font-display);font-weight:700;font-size:.95rem;text-shadow:0 1px 3px #000;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.boss-banner .bbest{position:absolute;top:.5rem;right:.6rem;font-family:var(--font-data);font-size:.6rem;letter-spacing:.16em;color:var(--legendary-soft);background:rgba(0,0,0,.55);border:1px solid rgba(240,194,75,.4);border-radius:5px;padding:.15rem .5rem;backdrop-filter:blur(3px)}
 .boss-banner .bstate{position:relative;margin-left:auto;padding-left:.8rem;font-family:var(--font-data);font-size:.62rem;letter-spacing:.2em;flex-shrink:0}
 .boss-banner.upcoming{opacity:.7}
 .boss-banner.upcoming .bstate{color:var(--muted)}
@@ -915,7 +915,7 @@ const CONFIG = {
     { title: "Nothing Here Yet", url: "#", note: "Let's make memories." }
   ],
   leaders: [
-    { name: "YourGM",   role: "Guild Master · Founder", gm: true, blurb: "Founded WAI to prove CE is possible on two nights. Handles vision, roster, and the checkbook." },
+    { name: "YourGM",   role: "Guild Master · Founder", gm: true, blurb: "Founded Intent to build the roster we always wanted to raid in." },
     { name: "RaidLead", role: "Raid Leader", blurb: "Voice on comms. Turns 300 pulls of chaos into one clean kill. Reviews every log so you don't have to." },
     { name: "RecruitO", role: "Recruitment Officer", blurb: "First person you'll talk to. Runs trials, tracks the bench, and answers apps within 48 hours." },
     { name: "KeyLead",  role: "M+ Officer", blurb: "Organizes nightly keys and the title push team. Knows every route, contests every route." }
@@ -1136,6 +1136,26 @@ function parseBosses(t){
     return { name: bits[0], img: bits[1] || "" };
   });
 }
+let WCL_BEST = {};   // lowercased boss name -> { m:{best,pulls}, h:{best,pulls} }
+async function loadWclProgress(){
+  if(!sb) return;
+  try{
+    const { data } = await sb.from("wcl_progress").select("*");
+    WCL_BEST = {};
+    (data || []).forEach(r=>{
+      const k = r.name.toLowerCase();
+      WCL_BEST[k] = WCL_BEST[k] || {};
+      WCL_BEST[k][r.difficulty === 5 ? "m" : "h"] = { best: +r.best_pct, pulls: r.pulls };
+    });
+    if(Object.keys(WCL_BEST).length) renderTiers();
+  }catch(e){ console.warn("wcl progress", e); }
+}
+function wclFor(bossName){
+  const n = bossName.toLowerCase();
+  if(WCL_BEST[n]) return WCL_BEST[n];
+  const key = Object.keys(WCL_BEST).find(k => k.includes(n) || n.includes(k));
+  return key ? WCL_BEST[key] : null;
+}
 function renderTier(t){
   const bosses = parseBosses(t);
   const mk = +t.mythicKilled || 0, hk = +t.heroicKilled || 0;
@@ -1143,9 +1163,21 @@ function renderTier(t){
   const rows = bosses.map((b,i)=>{
     const cls = i < mk ? "killed" : i === mk ? "current" : "upcoming";
     const label = cls === "killed" ? "DEFEATED" : cls === "current" ? "PROGRESSING" : "";
+    let drain = "", bestChip = "";
+    if(t.current && cls !== "killed"){
+      const w = wclFor(b.name);
+      const e = w && (w.m && w.m.best < 100 ? { ...w.m, d: "M" } : (w.h && w.h.best < 100 ? { ...w.h, d: "H" } : null));
+      if(e){
+        const g = Math.round(100 - e.best);
+        drain = `filter:grayscale(${g}%) brightness(${cls === "current" ? 1 : .82});`;
+        bestChip = `<span class="bbest">${e.d} BEST ${e.best}%</span>`;
+      }
+    }
+    const bg = b.img ? `background-image:url('${esc(b.img)}');` : "";
     return `
-    <div class="boss-banner ${cls}"${b.img ? ` style="background-image:url('${esc(b.img)}')"` : ""}>
+    <div class="boss-banner ${cls}"${bg || drain ? ` style="${bg}${drain}"` : ""}>
       <span class="bname">${esc(b.name)}</span>
+      ${bestChip}
       <span class="bstate">${label}</span>
     </div>`;
   }).join("");
@@ -2160,6 +2192,7 @@ function maybeSplash(){
   await loadRemoteConfig();  // DB values override defaults
   renderAll();
   document.body.classList.remove("booting");   // reveal identity only once real config is painted
+  loadWclProgress();
   maybeSplash();
   loadGuild();
   loadDiscordWidget();
