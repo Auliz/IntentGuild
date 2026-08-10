@@ -77,6 +77,8 @@ a:hover{color:var(--legendary-soft)}
 .wordmark{color:var(--legendary);letter-spacing:.07em}
 .deck-link{font-size:.68rem;letter-spacing:.16em;text-transform:uppercase;color:var(--legendary-soft);border:1px solid rgba(240,194,75,.35);border-radius:6px;padding:.3rem .65rem;text-decoration:none;margin-right:.55rem}
 .deck-link:hover{background:rgba(240,194,75,.12);color:var(--legendary)}
+.foot-links a{font-family:var(--font-data);font-size:.72rem;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);text-decoration:none}
+.foot-links a:hover{color:var(--legendary)}
 .hero-banner{display:block;width:min(880px,100%);margin:0 auto;border-radius:14px;border:1px solid var(--line);filter:drop-shadow(0 10px 44px rgba(41,196,104,.35)) drop-shadow(0 2px 14px rgba(240,194,75,.25))}
 .gate-crest{width:96px;height:96px;border-radius:50%;margin:0 auto .9rem;display:block;box-shadow:0 0 26px rgba(240,194,75,.35)}
 .disc-card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:1.2rem 1.3rem}
@@ -852,6 +854,10 @@ footer{border-top:1px solid var(--line);padding:2.5rem 0;color:var(--muted);font
       <div class="footer-mark" id="footName"><span class="wordmark">Intent</span></div>
       <div class="data-font" style="font-size:.72rem;letter-spacing:.2em" id="footSub">VEK'NILASH · US</div>
     </div>
+    <div class="foot-links d-flex align-items-center gap-3">
+      <a id="footWcl" href="https://www.warcraftlogs.com" target="_blank" rel="noopener">Warcraft Logs</a>
+      <a id="footRio" href="https://raider.io" target="_blank" rel="noopener">Raider.io</a>
+    </div>
     <div style="font-size:.8rem">
       Progression &amp; roster data via <a href="https://raider.io" target="_blank" rel="noopener">Raider.io</a> ·
       Not affiliated with Blizzard Entertainment.
@@ -993,6 +999,11 @@ function renderAll(){
   else { h1.textContent = S.name.toUpperCase(); }
   document.getElementById("heroRealm").textContent = S.realmLine;
   document.getElementById("footName").innerHTML = crest + `<span class="wordmark">${esc(S.name)}</span>`;
+  const R = CONFIG.rio || {};
+  if(R.region && R.realm && R.guildName){
+    document.getElementById("footRio").href = `https://raider.io/guilds/${encodeURIComponent(R.region)}/${encodeURIComponent(R.realm)}/${encodeURIComponent(R.guildName)}`;
+    document.getElementById("footWcl").href = `https://www.warcraftlogs.com/guild/${encodeURIComponent(R.region)}/${encodeURIComponent(R.realm)}/${encodeURIComponent(R.guildName.toLowerCase())}`;
+  }
   document.getElementById("footSub").textContent = S.realmLine;
   // Crest above the forum login gate
   const gateTitle = document.querySelector("#forumLogin .display-font");
