@@ -437,23 +437,23 @@ footer{border-top:1px solid var(--line);padding:2.5rem 0;color:var(--muted);font
   <!-- Why us -->
   <div class="container section">
     <div class="section-title center"><h2>Why Raid With Us</h2></div>
-    <div class="row g-4">
+    <div class="row g-4" id="whyCards">
       <div class="col-md-4">
         <div class="tier-card">
-          <div class="tier-name text-legendary">Stability</div>
-          <p class="mt-2 mb-0" style="color:#D5D2C6;font-size:.9rem">Same core roster across multiple tiers. We don't rebuild every season — we refine. Officers who show up, a bench that gets real playtime, and zero tier-end collapses.</p>
+          <div class="tier-name text-legendary">Veteran Core</div>
+          <p class="mt-2 mb-0" style="color:#D5D2C6;font-size:.9rem">A new tag, not new raiders. Our core has years of Mythic progression together — and in the guilds that collapsed around us. We split off to build it right, and we know exactly which mistakes we're not repeating.</p>
         </div>
       </div>
       <div class="col-md-4">
         <div class="tier-card">
-          <div class="tier-name text-epic">Efficiency</div>
-          <p class="mt-2 mb-0" style="color:#D5D2C6;font-size:.9rem">Two focused nights, not five sloppy ones. Assignments posted before pull one, logs reviewed between raids, and consumables covered by the guild bank.</p>
+          <div class="tier-name text-epic">Standards From Pull One</div>
+          <p class="mt-2 mb-0" style="color:#D5D2C6;font-size:.9rem">Four focused nights with assignments posted before the first pull. Logs get reviewed between raids, prep is expected, and the standard is the same for officers and trials.</p>
         </div>
       </div>
       <div class="col-md-4">
         <div class="tier-card">
-          <div class="tier-name text-legendary">Community</div>
-          <p class="mt-2 mb-0" style="color:#D5D2C6;font-size:.9rem">M+ keys every night of the week, active Discord, and people who actually like each other. Progression matters — but so does wanting to log in.</p>
+          <div class="tier-name text-legendary">Ground Floor</div>
+          <p class="mt-2 mb-0" style="color:#D5D2C6;font-size:.9rem">Every kill under this tag is a first. Shape the roster and the culture instead of slotting into someone else's history. Progression matters — but so does wanting to log in.</p>
         </div>
       </div>
     </div>
@@ -897,6 +897,11 @@ const CONFIG = {
     {day:"Wednesday", time:"9:00 – 11:00 PM CT", what:"Mythic Progression"},
     {day:"Thursday", time:"9:00 – 11:00 PM CT", what:"Mythic Progression"}
   ],
+  why: [
+    { title:"Veteran Core", text:"A new tag, not new raiders. Our core has years of Mythic progression together — and in the guilds that collapsed around us. We split off to build it right, and we know exactly which mistakes we're not repeating." },
+    { title:"Standards From Pull One", text:"Four focused nights with assignments posted before the first pull. Logs get reviewed between raids, prep is expected, and the standard is the same for officers and trials." },
+    { title:"Ground Floor", text:"Every kill under this tag is a first. Shape the roster and the culture instead of slotting into someone else's history. Progression matters — but so does wanting to log in." }
+  ],
   schedNote: "Invites go out 15 minutes before start. First pull is on time.",
   rules: [
     {title:"Own your mistakes.", body:"We review logs, not to shame, but to improve. \"My bad, adjusting\" beats excuses every time."},
@@ -1002,6 +1007,16 @@ function renderAll(){
   }
 
   document.getElementById("aboutParas").innerHTML = CONFIG.about.paragraphs.map(p=>`<p style="color:#D5D2C6">${mdLite(p)}</p>`).join("");
+  const whyHost = document.getElementById("whyCards");
+  if(whyHost && Array.isArray(CONFIG.why) && CONFIG.why.length){
+    whyHost.innerHTML = CONFIG.why.map((c,i)=>`
+      <div class="col-md-4">
+        <div class="tier-card">
+          <div class="tier-name ${i % 2 ? "text-epic" : "text-legendary"}">${esc(c.title)}</div>
+          <p class="mt-2 mb-0" style="color:#D5D2C6;font-size:.9rem">${mdLite(c.text)}</p>
+        </div>
+      </div>`).join("");
+  }
   document.getElementById("glanceList").innerHTML = CONFIG.about.glance.map((g,i,a)=>`<li class="${i===a.length-1?"mb-0":"mb-2"}">${mdLite(g)}</li>`).join("");
 
   document.getElementById("schedTable").innerHTML = CONFIG.schedule.map(r=>`
