@@ -441,17 +441,17 @@ footer{border-top:1px solid var(--line);padding:2.5rem 0;color:var(--muted);font
     </div>
   </div>
 
+  <!-- Recent keys -->
+  <div class="container section d-none" id="keysSection">
+    <div class="section-title center"><h2>Recent Keystones</h2></div>
+    <div class="keys-feed" id="keysFeed"></div>
+  </div>
+
   <!-- Achievements -->
   <div class="container section">
     <div class="section-title center"><h2>Trophy Case</h2></div>
     <p class="section-sub">What we've earned. Hover a trophy — every one of these was a guild-wide effort.</p>
     <div class="row g-4" id="trophyGrid"></div>
-  </div>
-
-  <!-- Recent keys -->
-  <div class="container section d-none" id="keysSection">
-    <div class="section-title center"><h2>Recent Keystones</h2></div>
-    <div class="keys-feed" id="keysFeed"></div>
   </div>
 
   <!-- Why us -->
@@ -1191,6 +1191,7 @@ async function loadWclProgress(){
     (data || []).forEach(r=>{
       const k = r.name.toLowerCase();
       WCL_BEST[k] = WCL_BEST[k] || {};
+      WCL_BEST[k].id = r.encounter_id;
       WCL_BEST[k][r.difficulty === 5 ? "m" : "h"] = { best: +r.best_pct, pulls: r.pulls };
     });
     if(Object.keys(WCL_BEST).length) renderTiers();
@@ -1219,7 +1220,12 @@ function renderTier(t){
         bestChip = `<span class="bbest">${e.d} BEST ${e.best}%</span>`;
       }
     }
-    const bg = b.img ? `background-image:url('${esc(b.img)}');` : "";
+    let bgUrl = b.img;
+    if(!bgUrl){
+      const w0 = wclFor(b.name);
+      if(w0?.id) bgUrl = `https://assets.rpglogs.com/img/warcraft/bosses/${w0.id}-icon.jpg`;
+    }
+    const bg = bgUrl ? `background-image:url('${esc(bgUrl)}');` : "";
     return `
     <div class="boss-banner ${cls}"${bg || drain ? ` style="${bg}${drain}"` : ""}>
       <span class="bname">${esc(b.name)}</span>
