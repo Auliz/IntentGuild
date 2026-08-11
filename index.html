@@ -112,6 +112,20 @@ a:hover{color:var(--legendary-soft)}
 .sg-line{margin:.6rem 0 .2rem;padding-top:.6rem;border-top:1px solid var(--line);font-size:.8rem}
 .sg-group{margin-right:1rem}
 .sg-names{color:var(--muted)}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px}
+.cal-dow{text-align:center;font-family:var(--font-data);font-size:.6rem;letter-spacing:.15em;color:var(--muted);padding:.25rem 0}
+.cal-cell{min-height:72px;border:1px solid var(--line);border-radius:6px;padding:.25rem .3rem;background:var(--void-2);position:relative;overflow:hidden}
+.cal-cell.empty{border:none;background:none}
+.cal-cell.today{border-color:var(--legendary);box-shadow:inset 0 0 10px rgba(240,194,75,.12)}
+.cal-cell.clickable{cursor:pointer}
+.cal-cell.clickable:hover{border-color:rgba(240,194,75,.5)}
+.cal-num{font-family:var(--font-data);font-size:.68rem;color:var(--muted)}
+.cal-ev{display:block;font-size:.62rem;line-height:1.25;margin-top:.2rem;padding:.1rem .3rem;border-radius:4px;background:rgba(240,194,75,.14);border:1px solid rgba(240,194,75,.4);color:var(--legendary-soft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer}
+.cal-ev:hover{background:rgba(240,194,75,.28)}
+.raid-scroll{max-height:560px;overflow-y:auto;padding-right:.4rem}
+.raid-scroll::-webkit-scrollbar{width:6px}
+.raid-scroll::-webkit-scrollbar-thumb{background:var(--line);border-radius:3px}
+.sched-row{display:flex;gap:.5rem;margin-top:.6rem}
 .raid-event{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:1.1rem 1.3rem;margin-bottom:.9rem}
 .raid-event.past{opacity:.55}
 .re-title{font-family:var(--font-display);font-weight:700;font-size:1.05rem}
@@ -119,6 +133,15 @@ a:hover{color:var(--legendary-soft)}
 .re-posted{font-size:.62rem;letter-spacing:.2em;color:var(--kill);border:1px solid rgba(61,220,132,.4);border-radius:5px;padding:.15rem .5rem}
 .re-note{font-size:.85rem;color:#D5D2C6;margin:.5rem 0 0}
 .re-roster{margin-top:.7rem}
+.bls-boss{margin-bottom:1.1rem}
+.bls-head{display:flex;justify-content:space-between;align-items:baseline;border-bottom:1px solid rgba(240,194,75,.3);padding-bottom:.3rem;margin-bottom:.4rem}
+.bls-name{font-family:var(--font-display);font-weight:700;font-size:.95rem;color:var(--legendary-soft)}
+.bls-count{font-size:.62rem;letter-spacing:.16em;color:var(--muted)}
+.bls-item{display:grid;grid-template-columns:minmax(180px,1fr) 2fr;gap:.8rem;padding:.35rem 0;border-bottom:1px solid var(--line);font-size:.86rem;align-items:baseline}
+.bls-item:last-child{border-bottom:none}
+.bls-wants{display:flex;flex-wrap:wrap;gap:.35rem .9rem}
+.bls-chip{white-space:nowrap;font-size:.8rem}
+@media (max-width:575px){.bls-item{grid-template-columns:1fr}}
 .dt-row{display:flex;justify-content:space-between;align-items:center;gap:.75rem;font-size:.85rem;padding:.3rem 0;border-bottom:1px solid var(--line)}
 .dt-row:last-child{border-bottom:none}
 .award-x{border:1px solid rgba(231,76,60,.4);color:#e88;background:none;border-radius:6px;font-size:.72rem;padding:.1rem .45rem;line-height:1.3}
@@ -665,6 +688,24 @@ footer{border-top:1px solid var(--line);padding:2.5rem 0;color:var(--muted);font
     </div>
     <div id="raidHome" class="d-none">
 
+      <div class="row g-4 mb-4">
+        <div class="col-lg-7">
+          <div class="app-panel" style="padding:1.2rem 1.2rem 1rem">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <button class="btn btn-outline-epic btn-sm" id="calPrev">‹</button>
+              <h5 class="display-font m-0" id="calTitle" style="font-size:1.05rem"></h5>
+              <button class="btn btn-outline-epic btn-sm" id="calNext">›</button>
+            </div>
+            <div id="calGrid"></div>
+            <p id="calHint" class="mb-0 mt-2 d-none" style="font-size:.72rem;color:var(--muted)">Click a day to schedule a raid · click an event pill to edit it</p>
+          </div>
+        </div>
+        <div class="col-lg-5">
+          <h5 class="display-font mb-2" style="font-size:1.05rem">Upcoming Raids</h5>
+          <div id="raidUpcoming" class="raid-scroll"></div>
+        </div>
+      </div>
+
       <div id="raidBuilder" class="app-panel mb-4 d-none" style="padding:1.4rem">
         <h5 class="display-font mb-1" style="font-size:1.05rem">Build a Raid Event <span class="data-font" style="font-size:.65rem;color:var(--muted);letter-spacing:.15em">OFFICERS</span></h5>
         <div class="row g-2 mb-2">
@@ -692,8 +733,6 @@ footer{border-top:1px solid var(--line);padding:2.5rem 0;color:var(--muted);font
         <p class="mt-2 mb-0" style="font-size:.75rem;color:var(--muted)">After posting to Discord, tap ✅ ❌ ❓ 🕐 on the message once to seed the reactions — webhooks can post but can't react.</p>
       </div>
 
-      <h5 class="display-font mb-2" style="font-size:1.05rem">Upcoming Raids</h5>
-      <div id="raidUpcoming"></div>
       <div id="raidPastWrap" class="d-none">
         <h5 class="display-font mb-2 mt-4" style="font-size:.95rem;color:var(--muted)">Recent</h5>
         <div id="raidPast"></div>
@@ -759,17 +798,9 @@ footer{border-top:1px solid var(--line);padding:2.5rem 0;color:var(--muted);font
       </div>
 
       <div id="bossSheetWrap" class="app-panel mb-4 d-none" style="padding:1.3rem">
-        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-1">
-          <h5 class="display-font m-0" style="font-size:1.05rem">Boss Loot Sheet</h5>
-          <select class="form-select form-select-sm" id="bsBoss" style="max-width:280px"></select>
-        </div>
-        <p style="font-size:.78rem;color:var(--muted)">Who wants what when this boss dies — from everyone's Droptimizer imports, biggest gains first.</p>
-        <div class="table-responsive">
-          <table class="roster-table">
-            <thead><tr><th>Raider</th><th>Item</th><th>ilvl</th><th>Gain</th></tr></thead>
-            <tbody id="bsBody"></tbody>
-          </table>
-        </div>
+        <h5 class="display-font mb-1" style="font-size:1.05rem">Boss Loot Sheet</h5>
+        <p style="font-size:.78rem;color:var(--muted)">The whole raid at a glance — every item anyone's Droptimizer wants, grouped by boss, biggest gains first.</p>
+        <div id="bsSections"></div>
       </div>
 
       <div id="awardFormWrap" class="app-panel mb-3 d-none" style="padding:1.2rem">
@@ -1776,22 +1807,43 @@ async function rbItemNames(){
   }catch(e){ RB_ITEMDB = {}; }
   return RB_ITEMDB;
 }
+function rawFormEncMap(json){
+  const map = {};
+  const scan = (o)=>{
+    if(Array.isArray(o)){ o.forEach(scan); return; }
+    if(o && typeof o === "object"){
+      const id = o.itemId ?? o.item_id ?? (o.item && (o.item.id ?? o.item.itemId));
+      const enc = o.encounterId ?? o.encounter_id ?? (o.encounter && o.encounter.id);
+      if(id && enc && +enc >= 2000 && +enc < 20000) map[String(id)] = +enc;
+      Object.values(o).forEach(v=>{ if(v && typeof v === "object") scan(v); });
+    }
+  };
+  try{ scan(json?.simbot?.meta?.rawFormData); }catch(e){}
+  return map;
+}
 function dtParse(json){
   const player = json?.sim?.players?.[0];
   const baseline = player?.collected_data?.dps?.mean;
   const results = json?.sim?.profilesets?.results || [];
   if(!baseline || !results.length) throw new Error("No Droptimizer results in that report — make sure it's a Droptimizer sim, not a regular one.");
+  const encMap = rawFormEncMap(json);
   const best = {};
   results.forEach(r=>{
     const gain = r.mean - baseline;
+    // Format: {instanceId}/{encounterId}/{source}/{itemId}/{ilvl}/... trailing tokens may include a second item id
     const toks = String(r.name).split("/");
-    const itemId = [...toks].reverse().find(t => /^\d{6,7}$/.test(t));
+    const itemId = toks.find(t => /^\d{6,7}$/.test(t));   // FIRST long id is the sim candidate
     if(!itemId) return;
-    const ilvl = [...toks].reverse().find(t => /^\d{3}$/.test(t)) || "";
-    let enc = null;
-    for(let i = toks.indexOf(itemId) - 1; i >= 0; i--){
-      if(/^\d{4}$/.test(toks[i])){ enc = +toks[i]; break; }
+    const iIdx = toks.indexOf(itemId);
+    const ilvl = toks.slice(iIdx + 1).find(t => /^\d{3}$/.test(t)) || "";
+    const src = toks.slice(0, iIdx).find(t => /[a-z]/i.test(t)) || "";
+    let enc = encMap[itemId] || null;
+    if(!enc){
+      if(/vault/i.test(src)) enc = "vault";
+      else if(/dungeon|mplus/i.test(src)) enc = "mplus";
+      else if(/^\d{4}$/.test(toks[1])) enc = +toks[1];
     }
+    if(!enc && !dtParse._warned){ dtParse._warned = true; console.warn("[droptimizer] couldn't map boss for profileset:", r.name); }
     if(!best[itemId] || gain > best[itemId].gain) best[itemId] = { id: itemId, ilvl, gain, enc };
   });
   const ups = Object.values(best).filter(u => u.gain > 0).sort((a,b) => b.gain - a.gain).slice(0, 12);
@@ -1858,39 +1910,51 @@ function renderDtList(){
 /* ---- boss loot sheet ---- */
 function encLabel(enc){
   if(enc === null || enc === undefined || enc === "null") return "Other Sources";
+  if(enc === "vault") return "Great Vault";
+  if(enc === "mplus") return "Mythic+ / Dungeons";
   return WCL_ENC_NAMES[enc] || ("Boss #" + enc);
+}
+function encOrder(k){
+  if(k === "null") return 4e9;
+  if(k === "vault") return 2e9;
+  if(k === "mplus") return 3e9;
+  return +k;
 }
 function drawBossSheet(){
   const wrap = lootEl("bossSheetWrap");
-  const byEnc = {};
+  const byEnc = {};   // enc -> { items: { itemKey: {name, ilvl, wants:[{raider,pct}]} } }
   lootWishlists.forEach(w=>{
     const d = w.droptimizer;
     if(!d || !d.upgrades) return;
     const raider = d.character || w.character || "?";
     d.upgrades.forEach(u=>{
       const k = String(u.enc ?? "null");
-      (byEnc[k] = byEnc[k] || []).push({ raider, item: u.name, ilvl: u.ilvl, pct: u.pct });
+      const sec = byEnc[k] = byEnc[k] || { items: {} };
+      const it = sec.items[u.name] = sec.items[u.name] || { name: u.name, ilvl: u.ilvl, wants: [] };
+      it.wants.push({ raider, pct: u.pct });
     });
   });
-  const encs = Object.keys(byEnc);
+  const encs = Object.keys(byEnc).sort((a,b) => encOrder(a) - encOrder(b));
   if(!encs.length){ wrap.classList.add("d-none"); return; }
   wrap.classList.remove("d-none");
-  const sel = lootEl("bsBoss");
-  const prev = sel.value;
-  encs.sort((a,b)=>{
-    if(a === "null") return 1; if(b === "null") return -1;
-    return +a - +b;
-  });
-  sel.innerHTML = encs.map(e => `<option value="${e}">${esc(encLabel(e === "null" ? null : +e))} (${byEnc[e].length})</option>`).join("");
-  if(encs.includes(prev)) sel.value = prev;
-  const rows = (byEnc[sel.value] || []).sort((a,b)=>b.pct - a.pct);
-  lootEl("bsBody").innerHTML = rows.map(r=>`
-    <tr>
-      <td><b>${esc(r.raider)}</b></td>
-      <td>${esc(r.item)}</td>
-      <td class="data-font" style="color:var(--muted);font-size:.8rem">${esc(r.ilvl||"—")}</td>
-      <td class="data-font text-legendary">+${r.pct}%</td>
-    </tr>`).join("");
+  lootEl("bsSections").innerHTML = encs.map(e=>{
+    const items = Object.values(byEnc[e].items);
+    items.forEach(it => it.wants.sort((a,b)=>b.pct - a.pct));
+    items.sort((a,b)=>b.wants[0].pct - a.wants[0].pct);
+    const wantCount = items.reduce((n,it)=>n + it.wants.length, 0);
+    return `
+    <div class="bls-boss">
+      <div class="bls-head">
+        <span class="bls-name">${esc(encLabel(e === "null" ? null : +e))}</span>
+        <span class="bls-count data-font">${wantCount} WANT${wantCount === 1 ? "" : "S"}</span>
+      </div>
+      ${items.map(it=>`
+      <div class="bls-item">
+        <span class="bls-iname">${esc(it.name)} <span style="color:var(--muted);font-size:.75rem">${esc(it.ilvl||"")}</span></span>
+        <span class="bls-wants">${it.wants.map(x=>`<span class="bls-chip"><b>${esc(x.raider)}</b> <span class="text-legendary data-font">+${x.pct}%</span></span>`).join("")}</span>
+      </div>`).join("")}
+    </div>`;
+  }).join("");
 }
 
 /* ---- awards + overview ---- */
@@ -2001,7 +2065,6 @@ function initLootUI(){
   });
   lootEl("awSave").addEventListener("click", recordAward);
   lootEl("awardFilter").addEventListener("input", drawAwards);
-  lootEl("bsBoss").addEventListener("change", drawBossSheet);
 }
 initLootUI();
 
@@ -2146,6 +2209,32 @@ function loadEventIntoBuilder(id){
   el("raidBuilder").scrollIntoView({ behavior: "smooth", block: "start" });
 }
 let raidEvents = [], raidSignups = {};
+let calY = null, calM = null;
+function drawCalendar(){
+  if(calY === null){ const d = new Date(); calY = d.getFullYear(); calM = d.getMonth(); }
+  const grid = el("calGrid");
+  if(!grid) return;
+  const first = new Date(calY, calM, 1);
+  el("calTitle").textContent = first.toLocaleString("en-US", { month: "long", year: "numeric" });
+  const startDow = first.getDay();
+  const dayCount = new Date(calY, calM + 1, 0).getDate();
+  const today = new Date().toISOString().slice(0,10);
+  const byDate = {};
+  raidEvents.forEach(ev => { (byDate[ev.event_date] = byDate[ev.event_date] || []).push(ev); });
+  const officer = ["officer","admin"].includes(me?.role);
+  let cells = ["S","M","T","W","T","F","S"].map(d => `<div class="cal-dow">${d}</div>`).join("");
+  for(let i = 0; i < startDow; i++) cells += `<div class="cal-cell empty"></div>`;
+  for(let d = 1; d <= dayCount; d++){
+    const iso = `${calY}-${String(calM+1).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
+    const evs = byDate[iso] || [];
+    cells += `<div class="cal-cell${iso === today ? " today" : ""}${officer ? " clickable" : ""}"${officer ? ` data-calday="${iso}"` : ""}>
+      <span class="cal-num">${d}</span>
+      ${evs.map(ev => `<span class="cal-ev"${officer ? ` data-calev="${ev.id}"` : ""} title="${esc(ev.title)}">${esc(ev.title)}</span>`).join("")}
+    </div>`;
+  }
+  grid.innerHTML = `<div class="cal-grid">${cells}</div>`;
+  el("calHint").classList.toggle("d-none", !officer);
+}
 async function loadRaidEvents(){
   try{
     const { data } = await sb.from("raid_events").select("*").order("event_date", {ascending:true}).limit(50);
@@ -2177,9 +2266,10 @@ function drawRaidEvents(){
           <div class="re-when data-font">${esc(ev.event_date)}${ev.event_time ? " · " + esc(ev.event_time) : ""}</div>
         </div>
         <div class="d-flex gap-2 align-items-center flex-shrink-0">
-          ${ev.post_requested ? `<span class="re-posted data-font" style="color:var(--legendary);border-color:rgba(240,194,75,.4)">QUEUED</span>` : ev.posted_at ? `<span class="re-posted data-font">POSTED</span>` : ""}
+          ${ev.post_at ? `<span class="re-posted data-font" style="color:var(--legendary);border-color:rgba(240,194,75,.4)" title="Scheduled Discord post">🕐 ${new Date(ev.post_at).toLocaleString([], {month:"short",day:"numeric",hour:"numeric",minute:"2-digit"})}</span>` : ev.post_requested ? `<span class="re-posted data-font" style="color:var(--legendary);border-color:rgba(240,194,75,.4)">QUEUED</span>` : ev.posted_at ? `<span class="re-posted data-font">POSTED</span>` : ""}
           ${officer ? `<button class="btn btn-outline-epic btn-sm" data-reedit="${ev.id}">Edit</button>
           <button class="btn btn-apply btn-sm" data-repost="${ev.id}">${botMode() ? (ev.discord_message_id ? "Update via Bot" : "Post via Bot") : (ev.discord_message_id ? "Update Discord Post" : "Post to Discord")}</button>
+          ${botMode() ? (ev.post_at ? `<button class="btn btn-outline-epic btn-sm" data-unsched="${ev.id}">Unschedule</button>` : `<button class="btn btn-outline-epic btn-sm" data-resched="${ev.id}">Schedule…</button>`) : ""}
           <button class="award-x" data-redel="${ev.id}">✕</button>` : ""}
         </div>
       </div>
@@ -2189,11 +2279,16 @@ function drawRaidEvents(){
           return ns.length ? `<span class="sg-group">${SS[k]} <b>${ns.length}</b> <span class="sg-names">${ns.join(", ")}</span></span>` : ""; }).filter(Boolean).join("");
         return line ? `<div class="sg-line">${line}</div>` : ""; })()}
       <div class="re-roster">${tags || `<span style="color:var(--muted);font-size:.8rem">Open signups — no set roster</span>`}</div>
+      ${officer && botMode() ? `<div class="sched-row d-none" id="schedRow-${ev.id}">
+        <input type="datetime-local" class="form-control form-control-sm" id="schedAt-${ev.id}" style="max-width:230px">
+        <button class="btn btn-apply btn-sm" data-schedok="${ev.id}">Set</button>
+      </div>` : ""}
     </div>`;
   };
   el("raidUpcoming").innerHTML = upcoming.map(card).join("") || `<p style="color:var(--muted)">No upcoming raids scheduled.</p>`;
   el("raidPast").innerHTML = past.map(card).join("");
   el("raidPastWrap").classList.toggle("d-none", !past.length);
+  drawCalendar();
 }
 function buildSignupEmbed(ev){
   const groups = { T: [], H: [], M: [], R: [], B: [], X: [] };
@@ -2221,7 +2316,7 @@ async function postEventToDiscord(id){
   const ev = raidEvents.find(e => e.id === +id);
   if(!ev) return;
   if(botMode()){
-    const { error } = await sb.from("raid_events").update({ post_requested: true }).eq("id", ev.id);
+    const { error } = await sb.from("raid_events").update({ post_requested: true, post_at: null }).eq("id", ev.id);
     if(error) alert(error.message); else loadRaidEvents();
     return;
   }
@@ -2246,6 +2341,30 @@ async function postEventToDiscord(id){
 document.addEventListener("click", async e=>{
   if(e.target.dataset.repost) postEventToDiscord(e.target.dataset.repost);
   if(e.target.dataset.reedit) loadEventIntoBuilder(e.target.dataset.reedit);
+  if(e.target.dataset.calev){ loadEventIntoBuilder(e.target.dataset.calev); return; }
+  if(e.target.dataset.calday || (e.target.classList?.contains("cal-num") && e.target.closest("[data-calday]"))){
+    const day = e.target.dataset.calday || e.target.closest("[data-calday]").dataset.calday;
+    resetBuilder();
+    el("reDate").value = day;
+    el("raidBuilder").classList.remove("d-none");
+    el("raidBuilder").scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+  if(e.target.dataset.resched){
+    document.getElementById("schedRow-" + e.target.dataset.resched)?.classList.toggle("d-none");
+  }
+  if(e.target.dataset.schedok){
+    const id = e.target.dataset.schedok;
+    const v = document.getElementById("schedAt-" + id)?.value;
+    if(!v){ alert("Pick a date and time first."); return; }
+    const when = new Date(v);
+    if(when.getTime() < Date.now()){ alert("That time is in the past — use Post Now instead."); return; }
+    const { error } = await sb.from("raid_events").update({ post_at: when.toISOString(), post_requested: false }).eq("id", id);
+    if(!error) loadRaidEvents(); else alert(error.message);
+  }
+  if(e.target.dataset.unsched){
+    const { error } = await sb.from("raid_events").update({ post_at: null }).eq("id", e.target.dataset.unsched);
+    if(!error) loadRaidEvents(); else alert(error.message);
+  }
   if(e.target.id === "reCancel") resetBuilder();
   if(e.target.dataset.role){
     const [name, k] = e.target.dataset.role.split("::");
@@ -2264,6 +2383,8 @@ document.addEventListener("change", e=>{
     renderAssign();
   }
 });
+el("calPrev").addEventListener("click", ()=>{ calM--; if(calM < 0){ calM = 11; calY--; } drawCalendar(); });
+el("calNext").addEventListener("click", ()=>{ calM++; if(calM > 11){ calM = 0; calY++; } drawCalendar(); });
 el("rbManual").addEventListener("input", renderAssign);
 el("rbFilter").addEventListener("input", buildRosterPicker);
 el("rbRank").addEventListener("change", buildRosterPicker);
