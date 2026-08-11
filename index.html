@@ -133,6 +133,10 @@ a:hover{color:var(--legendary-soft)}
 .re-posted{font-size:.62rem;letter-spacing:.2em;color:var(--kill);border:1px solid rgba(61,220,132,.4);border-radius:5px;padding:.15rem .5rem}
 .re-note{font-size:.85rem;color:#D5D2C6;margin:.5rem 0 0}
 .re-roster{margin-top:.7rem}
+.dt-slot{font-family:var(--font-data);font-size:.62rem;letter-spacing:.18em;text-transform:uppercase;color:var(--legendary-soft);margin:.6rem 0 .1rem;border-bottom:1px solid rgba(240,194,75,.25);padding-bottom:.15rem}
+.bls-toggle{display:flex;border:1px solid var(--line);border-radius:7px;overflow:hidden}
+.bls-mode{border:none;background:none;color:var(--muted);font-family:var(--font-data);font-size:.66rem;letter-spacing:.14em;text-transform:uppercase;padding:.35rem .8rem}
+.bls-mode.on{background:rgba(240,194,75,.14);color:var(--legendary)}
 .bls-boss{margin-bottom:1.1rem}
 .bls-head{display:flex;justify-content:space-between;align-items:baseline;border-bottom:1px solid rgba(240,194,75,.3);padding-bottom:.3rem;margin-bottom:.4rem}
 .bls-name{font-family:var(--font-display);font-weight:700;font-size:.95rem;color:var(--legendary-soft)}
@@ -798,8 +802,14 @@ footer{border-top:1px solid var(--line);padding:2.5rem 0;color:var(--muted);font
       </div>
 
       <div id="bossSheetWrap" class="app-panel mb-4 d-none" style="padding:1.3rem">
-        <h5 class="display-font mb-1" style="font-size:1.05rem">Boss Loot Sheet</h5>
-        <p style="font-size:.78rem;color:var(--muted)">The whole raid at a glance — every item anyone's Droptimizer wants, grouped by boss, biggest gains first.</p>
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+          <h5 class="display-font mb-0" style="font-size:1.05rem">Boss Loot Sheet</h5>
+          <div class="bls-toggle" role="group">
+            <button class="bls-mode on" data-blsmode="boss">By Boss</button>
+            <button class="bls-mode" data-blsmode="raider">By Raider</button>
+          </div>
+        </div>
+        <p style="font-size:.78rem;color:var(--muted)">The whole raid at a glance — every wanted item from everyone's Droptimizer imports, biggest gains first.</p>
         <div id="bsSections"></div>
       </div>
 
@@ -1836,6 +1846,7 @@ function dtParse(json){
     if(!itemId) return;
     const iIdx = toks.indexOf(itemId);
     const ilvl = toks.slice(iIdx + 1).find(t => /^\d{3}$/.test(t)) || "";
+    const slotTok = toks.slice(iIdx + 1).find(t => /^[a-z_]+\d?$/i.test(t)) || "";
     const src = toks.slice(0, iIdx).find(t => /[a-z]/i.test(t)) || "";
     let enc = encMap[itemId] || null;
     if(!enc){
@@ -1844,9 +1855,9 @@ function dtParse(json){
       else if(/vault/i.test(src)) enc = "vault";                       // vault rows with no readable origin
     }
     if(!enc && !dtParse._warned){ dtParse._warned = true; console.warn("[droptimizer] couldn't map boss for profileset:", r.name); }
-    if(!best[itemId] || gain > best[itemId].gain) best[itemId] = { id: itemId, ilvl, gain, enc };
+    if(!best[itemId] || gain > best[itemId].gain) best[itemId] = { id: itemId, ilvl, gain, enc, slot: slotTok };
   });
-  const ups = Object.values(best).filter(u => u.gain > 0).sort((a,b) => b.gain - a.gain).slice(0, 12);
+  const ups = Object.values(best).filter(u => u.gain > 0).sort((a,b) => b.gain - a.gain).slice(0, 24);
   return { character: player.name, spec: player.specialization || "", baseline, ups };
 }
 async function dtImport(){
@@ -1871,7 +1882,7 @@ async function dtImport(){
     const parsed = dtParse(json);
     const names = await rbItemNames();
     const upgrades = parsed.ups.map(u => ({
-      id: u.id, ilvl: u.ilvl, enc: u.enc || null,
+      id: u.id, ilvl: u.ilvl, enc: u.enc || null, slot: u.slot || "",
       name: names[u.id] || ("Item " + u.id),
       pct: +((u.gain / parsed.baseline) * 100).toFixed(2)
     }));
@@ -1896,15 +1907,26 @@ async function dtImport(){
     }
   }
 }
+const SLOT_LABELS = { head:"Head", neck:"Neck", shoulder:"Shoulders", back:"Back", chest:"Chest", wrist:"Wrist", hands:"Hands", waist:"Waist", legs:"Legs", feet:"Feet", finger:"Rings", trinket:"Trinkets", main_hand:"Weapons", off_hand:"Off-hand" };
+const SLOT_ORDER = ["main_hand","off_hand","trinket","head","neck","shoulder","back","chest","wrist","hands","waist","legs","feet","finger"];
+function slotKey(s){ return String(s||"").toLowerCase().replace(/\d+$/,""); }
 function renderDtList(){
   const host = lootEl("dtList");
   const d = myWishlistExtra.droptimizer;
   if(!d || !d.upgrades || !d.upgrades.length){ host.innerHTML = ""; return; }
+  const bySlot = {};
+  d.upgrades.forEach(u => { (bySlot[slotKey(u.slot)] = bySlot[slotKey(u.slot)] || []).push(u); });
+  const keys = Object.keys(bySlot).sort((a,b)=>{
+    const ia = SLOT_ORDER.indexOf(a), ib = SLOT_ORDER.indexOf(b);
+    return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib);
+  });
   host.innerHTML = `<div class="d-flex justify-content-between align-items-center mb-1">
       <span class="data-font" style="font-size:.66rem;letter-spacing:.14em;color:var(--muted)">SIM UPGRADES · ${esc(d.character).toUpperCase()} · ${esc(d.imported)}</span>
       <button class="award-x" id="dtClear" title="Remove imported list">✕</button>
     </div>` +
-    d.upgrades.map(u => `<div class="dt-row"><span>${esc(u.name)} <span style="color:var(--muted);font-size:.75rem">${esc(u.ilvl)}</span></span><b class="text-legendary data-font" style="font-size:.8rem">+${u.pct}%</b></div>`).join("");
+    keys.map(k => `
+      <div class="dt-slot">${esc(SLOT_LABELS[k] || (k ? k[0].toUpperCase()+k.slice(1) : "Other"))}</div>
+      ${bySlot[k].map(u => `<div class="dt-row"><span>${esc(u.name)} <span style="color:var(--muted);font-size:.75rem">${esc(u.ilvl)}</span></span><b class="text-legendary data-font" style="font-size:.8rem">+${u.pct}%</b></div>`).join("")}`).join("");
 }
 
 /* ---- boss loot sheet ---- */
@@ -1922,8 +1944,10 @@ function encOrder(k){
   if(k === "mplus") return 3e9;
   return +k;
 }
+let bsMode = "boss";
 function drawBossSheet(){
   const wrap = lootEl("bossSheetWrap");
+  if(bsMode === "raider"){ drawRaiderSheet(); return; }
   const byEnc = {};   // enc -> { items: { itemKey: {name, ilvl, wants:[{raider,pct}]} } }
   lootWishlists.forEach(w=>{
     const d = w.droptimizer;
@@ -1954,6 +1978,35 @@ function drawBossSheet(){
       <div class="bls-item">
         <span class="bls-iname">${esc(it.name)} <span style="color:var(--muted);font-size:.75rem">${esc(it.ilvl||"")}</span></span>
         <span class="bls-wants">${it.wants.map(x=>`<span class="bls-chip"><b>${esc(x.raider)}</b> <span class="text-legendary data-font">+${x.pct}%</span></span>`).join("")}</span>
+      </div>`).join("")}
+    </div>`;
+  }).join("");
+}
+
+function drawRaiderSheet(){
+  const wrap = lootEl("bossSheetWrap");
+  const byRaider = {};
+  lootWishlists.forEach(w=>{
+    const d = w.droptimizer;
+    if(!d || !d.upgrades) return;
+    const raider = d.character || w.character || "?";
+    byRaider[raider] = (byRaider[raider] || []).concat(d.upgrades);
+  });
+  const names = Object.keys(byRaider).sort((a,b)=>a.localeCompare(b));
+  if(!names.length){ wrap.classList.add("d-none"); return; }
+  wrap.classList.remove("d-none");
+  lootEl("bsSections").innerHTML = names.map(n=>{
+    const rows = [...byRaider[n]].sort((a,b)=>b.pct - a.pct);
+    return `
+    <div class="bls-boss">
+      <div class="bls-head">
+        <span class="bls-name">${esc(n)}</span>
+        <span class="bls-count data-font">${rows.length} WANT${rows.length === 1 ? "" : "S"}</span>
+      </div>
+      ${rows.map(u=>`
+      <div class="bls-item">
+        <span class="bls-iname">${esc(u.name)} <span style="color:var(--muted);font-size:.75rem">${esc(u.ilvl||"")}</span></span>
+        <span class="bls-wants"><span class="bls-chip" style="color:var(--muted)">${esc(encLabel(u.enc ?? null))}</span><span class="bls-chip text-legendary data-font">+${u.pct}%</span></span>
       </div>`).join("")}
     </div>`;
   }).join("");
@@ -2040,6 +2093,11 @@ document.addEventListener("click", async e=>{
     if(!confirm("Remove this award from the log?")) return;
     const { error } = await sb.from("loot_awards").delete().eq("id", e.target.dataset.adel);
     if(!error) loadLootData(); else alert(error.message);
+  }
+  if(e.target.dataset.blsmode){
+    bsMode = e.target.dataset.blsmode;
+    document.querySelectorAll(".bls-mode").forEach(b => b.classList.toggle("on", b.dataset.blsmode === bsMode));
+    drawBossSheet();
   }
   if(e.target.dataset.wldel){
     if(!confirm("Remove this raider's wishlist? Their award history stays in the log.")) return;
