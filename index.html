@@ -1912,7 +1912,9 @@ function encLabel(enc){
   if(enc === null || enc === undefined || enc === "null") return "Other Sources";
   if(enc === "vault") return "Great Vault";
   if(enc === "mplus") return "Mythic+ / Dungeons";
-  return WCL_ENC_NAMES[enc] || ("Boss #" + enc);
+  const n = +enc;
+  if(!Number.isFinite(n)) return "Other Sources";
+  return WCL_ENC_NAMES[n] || ("Boss #" + n);
 }
 function encOrder(k){
   if(k === "null") return 4e9;
@@ -1945,7 +1947,7 @@ function drawBossSheet(){
     return `
     <div class="bls-boss">
       <div class="bls-head">
-        <span class="bls-name">${esc(encLabel(e === "null" ? null : +e))}</span>
+        <span class="bls-name">${esc(encLabel(e))}</span>
         <span class="bls-count data-font">${wantCount} WANT${wantCount === 1 ? "" : "S"}</span>
       </div>
       ${items.map(it=>`
