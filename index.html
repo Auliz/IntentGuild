@@ -1839,9 +1839,9 @@ function dtParse(json){
     const src = toks.slice(0, iIdx).find(t => /[a-z]/i.test(t)) || "";
     let enc = encMap[itemId] || null;
     if(!enc){
-      if(/vault/i.test(src)) enc = "vault";
-      else if(/dungeon|mplus/i.test(src)) enc = "mplus";
-      else if(/^\d{4}$/.test(toks[1])) enc = +toks[1];
+      if(/dungeon|mplus/i.test(src)) enc = "mplus";                    // dungeon loot: not a raid boss, keep bucketed
+      else if(/^\d{4}$/.test(toks[1])) enc = +toks[1];                // origin encounter — present even on vault entries
+      else if(/vault/i.test(src)) enc = "vault";                       // vault rows with no readable origin
     }
     if(!enc && !dtParse._warned){ dtParse._warned = true; console.warn("[droptimizer] couldn't map boss for profileset:", r.name); }
     if(!best[itemId] || gain > best[itemId].gain) best[itemId] = { id: itemId, ilvl, gain, enc };
