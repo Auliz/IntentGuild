@@ -234,7 +234,8 @@ a:hover{color:var(--legendary-soft)}
 .boss-banner{position:relative;height:58px;border-radius:8px;overflow:hidden;margin-bottom:.55rem;border:1px solid var(--line);background:linear-gradient(120deg,var(--panel-2),#080D09);background-size:cover;background-position:center 25%;display:flex;align-items:center;padding:0 1rem;transition:filter .6s ease,opacity .6s ease}
 .boss-banner::before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(5,8,6,.88),rgba(5,8,6,.3) 55%,rgba(5,8,6,.05))}
 .boss-banner .bname{position:relative;font-family:var(--font-display);font-weight:700;font-size:.95rem;text-shadow:0 1px 3px #000;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.boss-banner .bbest{position:absolute;top:.5rem;right:.6rem;font-family:var(--font-data);font-size:.6rem;letter-spacing:.16em;color:var(--legendary-soft);background:rgba(0,0,0,.55);border:1px solid rgba(240,194,75,.4);border-radius:5px;padding:.15rem .5rem;backdrop-filter:blur(3px)}
+.boss-banner .bbest{position:relative;margin-left:auto;margin-right:.6rem;flex-shrink:0;font-family:var(--font-data);font-size:.6rem;letter-spacing:.16em;color:var(--legendary-soft);background:rgba(0,0,0,.55);border:1px solid rgba(240,194,75,.4);border-radius:5px;padding:.15rem .5rem;backdrop-filter:blur(3px);white-space:nowrap}
+.boss-banner .bbest ~ .bstate{margin-left:0;padding-left:0}
 .boss-banner .bstate{position:relative;margin-left:auto;padding-left:.8rem;font-family:var(--font-data);font-size:.62rem;letter-spacing:.2em;flex-shrink:0}
 .boss-banner.upcoming{opacity:.7}
 .boss-banner.upcoming .bstate{color:var(--muted)}
@@ -1217,8 +1218,9 @@ function renderTier(t){
       const w = wclFor(b.name);
       const e = w && (w.m && w.m.best < 100 ? { ...w.m, d: "M" } : (w.h && w.h.best < 100 ? { ...w.h, d: "H" } : null));
       if(e){
-        const g = Math.round(100 - e.best);
-        drain = `filter:grayscale(${g}%) brightness(${cls === "current" ? 1 : .82});`;
+        const g = Math.round(100 * (1 - Math.pow(e.best / 100, 1.5)));   // perceptual: visible by mid-prog, full gray at the kill
+        const br = (cls === "current" ? (0.85 + 0.15 * e.best / 100) : 0.8).toFixed(2);
+        drain = `filter:grayscale(${g}%) brightness(${br});`;
         bestChip = `<span class="bbest">${e.d} BEST ${e.best}%</span>`;
       }
     }
