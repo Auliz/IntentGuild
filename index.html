@@ -758,6 +758,20 @@ footer{border-top:1px solid var(--line);padding:2.5rem 0;color:var(--muted);font
         </div>
       </div>
 
+      <div id="bossSheetWrap" class="app-panel mb-4 d-none" style="padding:1.3rem">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-1">
+          <h5 class="display-font m-0" style="font-size:1.05rem">Boss Loot Sheet</h5>
+          <select class="form-select form-select-sm" id="bsBoss" style="max-width:280px"></select>
+        </div>
+        <p style="font-size:.78rem;color:var(--muted)">Who wants what when this boss dies — from everyone's Droptimizer imports, biggest gains first.</p>
+        <div class="table-responsive">
+          <table class="roster-table">
+            <thead><tr><th>Raider</th><th>Item</th><th>ilvl</th><th>Gain</th></tr></thead>
+            <tbody id="bsBody"></tbody>
+          </table>
+        </div>
+      </div>
+
       <div id="awardFormWrap" class="app-panel mb-3 d-none" style="padding:1.2rem">
         <h5 class="display-font mb-2" style="font-size:1rem">Record an Award <span class="data-font" style="font-size:.65rem;color:var(--muted);letter-spacing:.15em">OFFICERS</span></h5>
         <div class="row g-2 align-items-end">
@@ -1186,6 +1200,7 @@ function parseBosses(t){
   });
 }
 let WCL_BEST = {};   // lowercased boss name -> { m:{best,pulls}, h:{best,pulls} }
+let WCL_ENC_NAMES = {};  // encounter id -> proper boss name (from wcl_progress)
 async function loadWclProgress(){
   if(!sb) return;
   try{
@@ -1195,6 +1210,7 @@ async function loadWclProgress(){
       const k = r.name.toLowerCase();
       WCL_BEST[k] = WCL_BEST[k] || {};
       WCL_BEST[k].id = r.encounter_id;
+      WCL_ENC_NAMES[r.encounter_id] = r.name;
       WCL_BEST[k][r.difficulty === 5 ? "m" : "h"] = { best: +r.best_pct, pulls: r.pulls };
     });
     if(Object.keys(WCL_BEST).length) renderTiers();
@@ -1772,7 +1788,11 @@ function dtParse(json){
     const itemId = [...toks].reverse().find(t => /^\d{6,7}$/.test(t));
     if(!itemId) return;
     const ilvl = [...toks].reverse().find(t => /^\d{3}$/.test(t)) || "";
-    if(!best[itemId] || gain > best[itemId].gain) best[itemId] = { id: itemId, ilvl, gain };
+    let enc = null;
+    for(let i = toks.indexOf(itemId) - 1; i >= 0; i--){
+      if(/^\d{4}$/.test(toks[i])){ enc = +toks[i]; break; }
+    }
+    if(!best[itemId] || gain > best[itemId].gain) best[itemId] = { id: itemId, ilvl, gain, enc };
   });
   const ups = Object.values(best).filter(u => u.gain > 0).sort((a,b) => b.gain - a.gain).slice(0, 12);
   return { character: player.name, spec: player.specialization || "", baseline, ups };
@@ -1799,7 +1819,7 @@ async function dtImport(){
     const parsed = dtParse(json);
     const names = await rbItemNames();
     const upgrades = parsed.ups.map(u => ({
-      id: u.id, ilvl: u.ilvl,
+      id: u.id, ilvl: u.ilvl, enc: u.enc || null,
       name: names[u.id] || ("Item " + u.id),
       pct: +((u.gain / parsed.baseline) * 100).toFixed(2)
     }));
@@ -1835,6 +1855,44 @@ function renderDtList(){
     d.upgrades.map(u => `<div class="dt-row"><span>${esc(u.name)} <span style="color:var(--muted);font-size:.75rem">${esc(u.ilvl)}</span></span><b class="text-legendary data-font" style="font-size:.8rem">+${u.pct}%</b></div>`).join("");
 }
 
+/* ---- boss loot sheet ---- */
+function encLabel(enc){
+  if(enc === null || enc === undefined || enc === "null") return "Other Sources";
+  return WCL_ENC_NAMES[enc] || ("Boss #" + enc);
+}
+function drawBossSheet(){
+  const wrap = lootEl("bossSheetWrap");
+  const byEnc = {};
+  lootWishlists.forEach(w=>{
+    const d = w.droptimizer;
+    if(!d || !d.upgrades) return;
+    const raider = d.character || w.character || "?";
+    d.upgrades.forEach(u=>{
+      const k = String(u.enc ?? "null");
+      (byEnc[k] = byEnc[k] || []).push({ raider, item: u.name, ilvl: u.ilvl, pct: u.pct });
+    });
+  });
+  const encs = Object.keys(byEnc);
+  if(!encs.length){ wrap.classList.add("d-none"); return; }
+  wrap.classList.remove("d-none");
+  const sel = lootEl("bsBoss");
+  const prev = sel.value;
+  encs.sort((a,b)=>{
+    if(a === "null") return 1; if(b === "null") return -1;
+    return +a - +b;
+  });
+  sel.innerHTML = encs.map(e => `<option value="${e}">${esc(encLabel(e === "null" ? null : +e))} (${byEnc[e].length})</option>`).join("");
+  if(encs.includes(prev)) sel.value = prev;
+  const rows = (byEnc[sel.value] || []).sort((a,b)=>b.pct - a.pct);
+  lootEl("bsBody").innerHTML = rows.map(r=>`
+    <tr>
+      <td><b>${esc(r.raider)}</b></td>
+      <td>${esc(r.item)}</td>
+      <td class="data-font" style="color:var(--muted);font-size:.8rem">${esc(r.ilvl||"—")}</td>
+      <td class="data-font text-legendary">+${r.pct}%</td>
+    </tr>`).join("");
+}
+
 /* ---- awards + overview ---- */
 let lootAwards = [], lootWishlists = [];
 async function loadLootData(){
@@ -1844,7 +1902,7 @@ async function loadLootData(){
       sb.from("loot_wishlists").select("user_id, data")
     ]);
     lootAwards = aw.data || []; lootWishlists = (wl.data || []).map(r=>({ ...(r.data||{}), _uid: r.user_id }));
-    drawAwards(); drawOverview();
+    drawAwards(); drawOverview(); drawBossSheet();
   }catch(e){ console.warn("loot load", e); }
 }
 function drawAwards(){
@@ -1943,6 +2001,7 @@ function initLootUI(){
   });
   lootEl("awSave").addEventListener("click", recordAward);
   lootEl("awardFilter").addEventListener("input", drawAwards);
+  lootEl("bsBoss").addEventListener("change", drawBossSheet);
 }
 initLootUI();
 
