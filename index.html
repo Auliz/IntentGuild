@@ -1084,7 +1084,7 @@ const pages = ["home","about","roster","streams","apply","raids","loot","forums"
 const ADMIN_ONLY_PAGES = ["forums"];
 function showPage(id){
   if(!pages.includes(id)) id = "home";
-  if(ADMIN_ONLY_PAGES.includes(id) && me?.role !== "admin") id = "home";
+  if(ADMIN_ONLY_PAGES.includes(id) && me?.role !== "admin") id = "home","raids","loot";
   document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
   document.getElementById("page-"+id).classList.add("active");
   document.querySelectorAll(".nav-link").forEach(l=>l.classList.toggle("active", l.dataset.page===id));
