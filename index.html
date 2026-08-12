@@ -766,81 +766,41 @@ footer{border-top:1px solid var(--line);padding:2.5rem 0;color:var(--muted);font
       <button class="btn btn-apply w-100" id="lootLoginBtn">Log In</button>
     </div>
     <div id="lootHome" class="d-none">
-      <div class="row g-4 mb-4">
-        <div class="col-lg-5">
-          <div class="app-panel" style="padding:1.4rem">
-            <h5 class="display-font mb-1" style="font-size:1.05rem">My Wishlist</h5>
-            <p style="font-size:.78rem;color:var(--muted)">The council sees this at award time — keep it current going into each raid week.</p>
-            <div class="row g-2">
-              <div class="col-6"><label class="form-label">Character *</label><input class="form-control form-control-sm" id="wlChar"></div>
-              <div class="col-6"><label class="form-label">Spec</label><input class="form-control form-control-sm" id="wlSpec" placeholder="e.g. Demonology"></div>
-              <div class="col-12"><label class="form-label">Top 3 Trinkets (best first)</label>
-                <input class="form-control form-control-sm mb-1" id="wlT1" placeholder="Trinket 1">
-                <input class="form-control form-control-sm mb-1" id="wlT2" placeholder="Trinket 2">
-                <input class="form-control form-control-sm" id="wlT3" placeholder="Trinket 3">
-              </div>
-              <div class="col-6"><label class="form-label">Tier Off-piece Slot</label><select class="form-select form-select-sm" id="wlOff"></select></div>
-              <div class="col-6"><label class="form-label">Crafting This Slot</label><input class="form-control form-control-sm" id="wlCraft" placeholder="e.g. Wrist"></div>
-              <div class="col-12"><label class="form-label">Notes for the Council</label><textarea class="form-control form-control-sm" id="wlNotes" rows="2"></textarea></div>
-              <div class="col-12">
-                <label class="form-label">Droptimizer Import <span style="color:var(--muted);text-transform:none;letter-spacing:0">— Raidbots report link</span></label>
-                <div class="d-flex gap-2">
-                  <input class="form-control form-control-sm" id="dtUrl" placeholder="https://www.raidbots.com/simbot/report/…">
-                  <button class="btn btn-outline-epic btn-sm flex-shrink-0" id="dtImport">Import</button>
-                </div>
-                <div class="data-font mt-1" id="dtStatus" style="font-size:.72rem;color:var(--muted)"></div>
-                <textarea class="form-control form-control-sm mt-2 d-none" id="dtPaste" rows="3" placeholder="Paste the report's data.json contents here, then press Import again."></textarea>
-                <div id="dtList" class="mt-2"></div>
-              </div>
-              <div class="col-12 d-flex align-items-center gap-2 flex-wrap">
-                <button class="btn btn-apply btn-sm px-3" id="wlSave">Save Wishlist</button>
-                <button class="btn btn-outline-epic btn-sm" id="wlClear">Clear My Wishlist</button>
-                <span class="data-font" id="wlStatus" style="font-size:.75rem;color:var(--muted)"></span>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="col-lg-7">
-      <div id="bossSheetWrap" class="app-panel d-none" style="padding:1.3rem">
+      <div class="app-panel" style="padding:1.3rem">
         <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
           <h5 class="display-font mb-0" style="font-size:1.05rem">Boss Loot Sheet</h5>
-          <div class="bls-toggle" role="group">
-            <button class="bls-mode on" data-blsmode="boss">By Boss</button>
-            <button class="bls-mode" data-blsmode="raider">By Raider</button>
+          <div class="d-flex align-items-center gap-2 flex-wrap">
+            <div class="bls-toggle" role="group">
+              <button class="bls-mode on" data-blsscope="me">Personal</button>
+              <button class="bls-mode" data-blsscope="team">Team</button>
+            </div>
+            <div class="bls-toggle" role="group" id="blsModeGroup"></div>
+            <button class="btn btn-apply btn-sm" id="dtOpen">Import Droptimizer</button>
           </div>
         </div>
-        <p style="font-size:.78rem;color:var(--muted)">The whole raid at a glance — every wanted item from everyone's Droptimizer imports, biggest gains first.</p>
+        <p class="mt-1" style="font-size:.78rem;color:var(--muted)">Wanted items from Droptimizer imports, biggest gains first.</p>
         <div class="lp-legend">
           <span class="lpill lp-tier">Tier</span><span class="lpill lp-weapon">Weapon</span><span class="lpill lp-jewelry">Jewelry</span><span class="lpill lp-trinket">Trinket</span><span class="lpill lp-other">Other</span>
         </div>
         <div id="bsSections" class="bls-scroll"></div>
       </div>
-        </div>
-      </div>
 
-      <div id="awardFormWrap" class="app-panel mb-3 d-none" style="padding:1.2rem">
-        <h5 class="display-font mb-2" style="font-size:1rem">Record an Award <span class="data-font" style="font-size:.65rem;color:var(--muted);letter-spacing:.15em">OFFICERS</span></h5>
-        <div class="row g-2 align-items-end">
-          <div class="col-md-2"><label class="form-label">Raider *</label><input class="form-control form-control-sm" id="awMember"></div>
-          <div class="col-md-3"><label class="form-label">Item *</label><input class="form-control form-control-sm" id="awItem"></div>
-          <div class="col-md-2"><label class="form-label">Slot</label><select class="form-select form-select-sm" id="awSlot"></select></div>
-          <div class="col-md-2"><label class="form-label">Boss</label><input class="form-control form-control-sm" id="awBoss"></div>
-          <div class="col-md-2"><label class="form-label">Season</label><input class="form-control form-control-sm" id="awSeason"></div>
-          <div class="col-md-1"><button class="btn btn-apply btn-sm w-100" id="awSave">Add</button></div>
-          <div class="col-12"><label class="form-label">Note</label><input class="form-control form-control-sm" id="awNote" placeholder="Optional — big upgrade, council decision context…"></div>
-          <div class="col-12"><span class="data-font" id="awStatus" style="font-size:.75rem;color:var(--muted)"></span></div>
+      <div class="modal fade" id="dtModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" style="max-width:440px">
+          <div class="modal-content" style="background:var(--panel);border:1px solid var(--line);border-radius:16px">
+            <div class="modal-body p-4">
+              <div class="display-font mb-1" style="font-size:1.15rem">Droptimizer Import</div>
+              <p style="font-size:.8rem;color:var(--muted)">Run a Droptimizer on <a href="https://www.raidbots.com" target="_blank" rel="noopener">Raidbots</a>, then paste the report link. Re-import any time — the newest sim replaces the old.</p>
+              <div id="dtMeta" class="mb-2"></div>
+              <div class="d-flex gap-2">
+                <input class="form-control form-control-sm" id="dtUrl" placeholder="https://www.raidbots.com/simbot/report/…">
+                <button class="btn btn-apply btn-sm flex-shrink-0" id="dtImport">Import</button>
+              </div>
+              <div class="data-font mt-2" id="dtStatus" style="font-size:.72rem;color:var(--muted)"></div>
+              <textarea class="form-control form-control-sm mt-2 d-none" id="dtPaste" rows="3" placeholder="Paste the report's data.json contents here, then press Import again."></textarea>
+            </div>
+          </div>
         </div>
-      </div>
-
-      <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
-        <h5 class="display-font m-0" style="font-size:1.05rem">Award Log</h5>
-        <input class="form-control form-control-sm" id="awardFilter" style="max-width:240px" placeholder="Filter by raider or item…">
-      </div>
-      <div class="table-responsive">
-        <table class="roster-table">
-          <thead><tr><th>Date</th><th>Raider</th><th>Item</th><th>Slot</th><th class="d-none d-md-table-cell">Boss</th><th class="d-none d-lg-table-cell">Note</th><th></th></tr></thead>
-          <tbody id="awardBody"></tbody>
-        </table>
       </div>
     </div>
   </div>
@@ -1752,13 +1712,9 @@ document.getElementById("logoutBtn").addEventListener("click", logoutAll);
 
 
 /* ================= LOOT TRACKER ================= */
-const LOOT_SLOTS = ["Head","Neck","Shoulders","Back","Chest","Wrist","Hands","Waist","Legs","Feet","Ring","Trinket","Weapon","Off-hand","Tier Token","Very Rare"];
-const TIER_OFF = ["","Head","Shoulders","Chest","Hands","Legs"];
-function currentTier(){ return (CONFIG.tiers || []).find(x=>x.current) || (CONFIG.tiers || [])[0] || null; }
-function currentSeasonName(){ const t = currentTier(); return t ? t.name : ""; }
-function currentSeasonKey(){ const t = currentTier(); return t ? (t.slug || t.name) : ""; }
-function normSeason(s){ return String(s||"").toLowerCase().replace(/[^a-z0-9]/g,""); }
 function lootEl(id){ return document.getElementById(id); }
+let lootWishlists = [], myWishlistExtra = {}, RB_ITEMDB = null, dtModalObj = null;
+let viewScope = "me", modeMe = "slot", modeTeam = "boss";
 
 async function lootRefresh(){
   const gate = lootEl("lootGate"), home = lootEl("lootHome");
@@ -1766,50 +1722,27 @@ async function lootRefresh(){
   if(!sb){ gate.querySelector("p").textContent = "The loot tracker comes online once Supabase is connected."; return; }
   if(!me){ gate.classList.remove("d-none"); home.classList.add("d-none"); return; }
   gate.classList.add("d-none"); home.classList.remove("d-none");
-  const officer = ["officer","admin"].includes(me.role);
-  lootEl("awardFormWrap").classList.toggle("d-none", !officer);
-  lootEl("awSeason").value = currentSeasonKey();
-  await Promise.all([loadMyWishlist(), loadLootData()]);
+  await loadLootData();
 }
-
-/* ---- my wishlist ---- */
-async function loadMyWishlist(){
+async function loadLootData(){
   try{
-    const { data } = await sb.from("loot_wishlists").select("data").eq("user_id", me.id).maybeSingle();
-    const w = data?.data || {};
-    lootEl("wlChar").value = w.character || me.username;
-    lootEl("wlSpec").value = w.spec || "";
-    lootEl("wlT1").value = (w.trinkets||[])[0] || "";
-    lootEl("wlT2").value = (w.trinkets||[])[1] || "";
-    lootEl("wlT3").value = (w.trinkets||[])[2] || "";
-    lootEl("wlOff").value = w.tier_offpiece || "";
-    lootEl("wlCraft").value = w.crafted || "";
-    lootEl("wlNotes").value = w.notes || "";
+    const [mine, all] = await Promise.all([
+      sb.from("loot_wishlists").select("data").eq("user_id", me.id).maybeSingle(),
+      sb.from("loot_wishlists").select("user_id, data")
+    ]);
     myWishlistExtra = {};
-    if(w.droptimizer) myWishlistExtra.droptimizer = w.droptimizer;
-    renderDtList();
-  }catch(e){ console.warn("wishlist load", e); }
+    if(mine.data?.data?.droptimizer) myWishlistExtra.droptimizer = mine.data.data.droptimizer;
+    lootWishlists = (all.data || []).map(r => ({ ...(r.data || {}), _uid: r.user_id }));
+    drawSheet(); renderDtMeta();
+  }catch(e){ console.warn("loot load", e); }
 }
-async function saveMyWishlist(){
-  const st = lootEl("wlStatus");
-  const payload = {
-    ...myWishlistExtra,
-    character: lootEl("wlChar").value.trim(),
-    spec: lootEl("wlSpec").value.trim(),
-    trinkets: [lootEl("wlT1").value.trim(), lootEl("wlT2").value.trim(), lootEl("wlT3").value.trim()].filter(Boolean),
-    tier_offpiece: lootEl("wlOff").value,
-    crafted: lootEl("wlCraft").value.trim(),
-    notes: lootEl("wlNotes").value.trim()
-  };
-  if(!payload.character){ st.textContent = "⚠ Character name required."; return; }
-  st.textContent = "Saving…";
-  const { error } = await sb.from("loot_wishlists").upsert({ user_id: me.id, data: payload, updated_at: new Date().toISOString() });
-  st.textContent = error ? "❌ " + error.message : "✅ Wishlist saved.";
-  if(!error) loadLootData();
+async function persistWishlist(){
+  const { error } = await sb.from("loot_wishlists").upsert({ user_id: me.id, data: myWishlistExtra, updated_at: new Date().toISOString() });
+  if(error) console.warn("wishlist save", error);
+  return !error;
 }
 
 /* ---- droptimizer import ---- */
-let myWishlistExtra = {}, RB_ITEMDB = null;
 async function rbItemNames(){
   if(RB_ITEMDB) return RB_ITEMDB;
   try{
@@ -1846,7 +1779,7 @@ function dtParse(json){
     const gain = r.mean - baseline;
     // Format: {instanceId}/{encounterId}/{source}/{itemId}/{ilvl}/... trailing tokens may include a second item id
     const toks = String(r.name).split("/");
-    const itemId = toks.find(t => /^\d{6,7}$/.test(t));   // FIRST long id is the sim candidate
+    const itemId = toks.find(t => /^\d{6,7}$/.test(t));
     if(!itemId) return;
     const iIdx = toks.indexOf(itemId);
     const ilvl = toks.slice(iIdx + 1).find(t => /^\d{3}$/.test(t)) || "";
@@ -1854,9 +1787,9 @@ function dtParse(json){
     const src = toks.slice(0, iIdx).find(t => /[a-z]/i.test(t)) || "";
     let enc = encMap[itemId] || null;
     if(!enc){
-      if(/dungeon|mplus/i.test(src)) enc = "mplus";                    // dungeon loot: not a raid boss, keep bucketed
-      else if(/^\d{4}$/.test(toks[1])) enc = +toks[1];                // origin encounter — present even on vault entries
-      else if(/vault/i.test(src)) enc = "vault";                       // vault rows with no readable origin
+      if(/dungeon|mplus/i.test(src)) enc = "mplus";
+      else if(/^\d{4}$/.test(toks[1])) enc = +toks[1];
+      else if(/vault/i.test(src)) enc = "vault";
     }
     if(!enc && !dtParse._warned){ dtParse._warned = true; console.warn("[droptimizer] couldn't map boss for profileset:", r.name); }
     if(!best[itemId] || gain > best[itemId].gain) best[itemId] = { id: itemId, ilvl, gain, enc, slot: slotTok };
@@ -1873,11 +1806,11 @@ async function dtImport(){
     if(pasted){
       json = JSON.parse(pasted);
     } else {
-      const m = raw.match(/([A-Za-z0-9_-]{16,})/);
-      if(!m) throw new Error("Paste your Raidbots report link first.");
+      const mm = raw.match(/([A-Za-z0-9_-]{16,})/);
+      if(!mm) throw new Error("Paste your Raidbots report link first.");
       st.textContent = "Fetching report…";
       let r;
-      try{ r = await fetch(`https://www.raidbots.com/reports/${m[1]}/data.json`); }
+      try{ r = await fetch(`https://www.raidbots.com/reports/${mm[1]}/data.json`); }
       catch(e){ throw new Error("fetch-blocked"); }
       if(!r.ok) throw new Error(r.status === 404 ? "Report not found — check the link (reports also expire after a while)." : "fetch-blocked");
       json = await r.json();
@@ -1896,12 +1829,10 @@ async function dtImport(){
       imported: new Date().toISOString().slice(0,10),
       upgrades
     };
-    if(!lootEl("wlChar").value.trim()) lootEl("wlChar").value = parsed.character;
-    if(!lootEl("wlSpec").value.trim()) lootEl("wlSpec").value = parsed.spec;
-    await saveMyWishlist();
-    renderDtList();
+    await persistWishlist();
     lootEl("dtPaste").classList.add("d-none"); lootEl("dtPaste").value = ""; lootEl("dtUrl").value = "";
     st.textContent = `✅ Imported ${upgrades.length} upgrades for ${parsed.character} (baseline ${Math.round(parsed.baseline).toLocaleString()} DPS).`;
+    loadLootData();
   }catch(e){
     if(e.message === "fetch-blocked"){
       lootEl("dtPaste").classList.remove("d-none");
@@ -1911,6 +1842,19 @@ async function dtImport(){
     }
   }
 }
+function renderDtMeta(){
+  const host = lootEl("dtMeta");
+  if(!host) return;
+  const d = myWishlistExtra.droptimizer;
+  host.innerHTML = d
+    ? `<div class="d-flex justify-content-between align-items-center">
+        <span class="data-font" style="font-size:.66rem;letter-spacing:.14em;color:var(--legendary-soft)">CURRENT: ${esc(d.character).toUpperCase()} · ${esc(d.imported)} · ${d.upgrades.length} ITEMS</span>
+        <button class="award-x" id="dtClear" title="Remove imported list">✕</button>
+      </div>`
+    : `<span class="data-font" style="font-size:.66rem;letter-spacing:.14em;color:var(--muted)">NO IMPORT YET</span>`;
+}
+
+/* ---- sheet views ---- */
 const SLOT_LABELS = { head:"Head", neck:"Neck", shoulder:"Shoulders", back:"Back", chest:"Chest", wrist:"Wrist", hands:"Hands", waist:"Waist", legs:"Legs", feet:"Feet", finger:"Rings", trinket:"Trinkets", main_hand:"Weapons", off_hand:"Off-hand" };
 const SLOT_ORDER = ["main_hand","off_hand","trinket","head","neck","shoulder","back","chest","wrist","hands","waist","legs","feet","finger"];
 function slotKey(s){ return String(s||"").toLowerCase().replace(/\d+$/,""); }
@@ -1922,26 +1866,6 @@ function slotCat(s){
   if(k === "trinket") return "trinket";
   return "other";
 }
-function renderDtList(){
-  const host = lootEl("dtList");
-  const d = myWishlistExtra.droptimizer;
-  if(!d || !d.upgrades || !d.upgrades.length){ host.innerHTML = ""; return; }
-  const bySlot = {};
-  d.upgrades.forEach(u => { (bySlot[slotKey(u.slot)] = bySlot[slotKey(u.slot)] || []).push(u); });
-  const keys = Object.keys(bySlot).sort((a,b)=>{
-    const ia = SLOT_ORDER.indexOf(a), ib = SLOT_ORDER.indexOf(b);
-    return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib);
-  });
-  host.innerHTML = `<div class="d-flex justify-content-between align-items-center mb-1">
-      <span class="data-font" style="font-size:.66rem;letter-spacing:.14em;color:var(--muted)">SIM UPGRADES · ${esc(d.character).toUpperCase()} · ${esc(d.imported)}</span>
-      <button class="award-x" id="dtClear" title="Remove imported list">✕</button>
-    </div>` +
-    keys.map(k => `
-      <div class="dt-slot">${esc(SLOT_LABELS[k] || (k ? k[0].toUpperCase()+k.slice(1) : "Other"))}</div>
-      ${bySlot[k].map(u => `<div class="dt-row"><span>${esc(u.name)} <span style="color:var(--muted);font-size:.75rem">${esc(u.ilvl)}</span></span><b class="text-legendary data-font" style="font-size:.8rem">+${u.pct}%</b></div>`).join("")}`).join("");
-}
-
-/* ---- boss loot sheet ---- */
 function encLabel(enc){
   if(enc === null || enc === undefined || enc === "null") return "Other Sources";
   if(enc === "vault") return "Great Vault";
@@ -1956,166 +1880,136 @@ function encOrder(k){
   if(k === "mplus") return 3e9;
   return +k;
 }
-let bsMode = "boss";
-function drawBossSheet(){
-  const wrap = lootEl("bossSheetWrap");
-  if(bsMode === "raider"){ drawRaiderSheet(); return; }
-  const byEnc = {};   // enc -> { items: { itemKey: {name, ilvl, wants:[{raider,pct}]} } }
-  lootWishlists.forEach(w=>{
-    const d = w.droptimizer;
-    if(!d || !d.upgrades) return;
-    const raider = d.character || w.character || "?";
-    d.upgrades.forEach(u=>{
-      const k = String(u.enc ?? "null");
-      const sec = byEnc[k] = byEnc[k] || { items: {} };
-      const it = sec.items[u.name] = sec.items[u.name] || { name: u.name, ilvl: u.ilvl, slot: u.slot, wants: [] };
-      it.wants.push({ raider, pct: u.pct });
-    });
-  });
-  const encs = Object.keys(byEnc).sort((a,b) => encOrder(a) - encOrder(b));
-  if(!encs.length){ wrap.classList.add("d-none"); return; }
-  wrap.classList.remove("d-none");
-  lootEl("bsSections").innerHTML = encs.map(e=>{
-    const items = Object.values(byEnc[e].items);
-    items.forEach(it => it.wants.sort((a,b)=>b.pct - a.pct));
-    items.sort((a,b)=>b.wants[0].pct - a.wants[0].pct);
-    const wantCount = items.reduce((n,it)=>n + it.wants.length, 0);
-    return `
-    <div class="bls-boss">
-      <div class="bls-head">
-        <span class="bls-name">${esc(encLabel(e))}</span>
-        <span class="bls-count data-font">${wantCount} WANT${wantCount === 1 ? "" : "S"}</span>
-      </div>
-      ${items.map(it=>`
-      <div class="bls-item">
-        <span class="bls-iname"><span class="lpill lp-${slotCat(it.slot)}">${esc(it.name)}</span> <span style="color:var(--muted);font-size:.75rem">${esc(it.ilvl||"")}</span></span>
-        <span class="bls-wants">${it.wants.map(x=>`<span class="bls-chip"><b>${esc(x.raider)}</b> <span class="text-legendary data-font">+${x.pct}%</span></span>`).join("")}</span>
-      </div>`).join("")}
-    </div>`;
-  }).join("");
+function itemPill(u){
+  return `<span class="lpill lp-${slotCat(u.slot)}">${esc(u.name)}</span> <span style="color:var(--muted);font-size:.75rem">${esc(u.ilvl||"")}</span>`;
 }
+function sheetSection(title, count, rowsHtml, extra){
+  return `<div class="bls-boss">
+    <div class="bls-head">
+      <span class="bls-name">${title}</span>
+      <span class="d-flex align-items-center gap-2">
+        <span class="bls-count data-font">${count} WANT${count === 1 ? "" : "S"}</span>${extra || ""}
+      </span>
+    </div>${rowsHtml}
+  </div>`;
+}
+function drawSheet(){
+  const host = lootEl("bsSections");
+  if(!host) return;
+  // secondary toggle reflects scope
+  const mg = lootEl("blsModeGroup");
+  const modes = viewScope === "me" ? [["slot","By Slot"],["boss","By Boss"]] : [["boss","By Boss"],["raider","By Raider"]];
+  const active = viewScope === "me" ? modeMe : modeTeam;
+  mg.innerHTML = modes.map(([k,l]) => `<button class="bls-mode${active === k ? " on" : ""}" data-blsmode="${k}">${l}</button>`).join("");
+  document.querySelectorAll("[data-blsscope]").forEach(b => b.classList.toggle("on", b.dataset.blsscope === viewScope));
 
-function drawRaiderSheet(){
-  const wrap = lootEl("bossSheetWrap");
-  const byRaider = {};
-  lootWishlists.forEach(w=>{
-    const d = w.droptimizer;
-    if(!d || !d.upgrades) return;
-    const raider = d.character || w.character || "?";
-    const rec = byRaider[raider] = byRaider[raider] || { uid: w._uid, ups: [] };
-    rec.ups.push(...d.upgrades);
-  });
-  const names = Object.keys(byRaider).sort((a,b)=>a.localeCompare(b));
-  if(!names.length){ wrap.classList.add("d-none"); return; }
-  wrap.classList.remove("d-none");
-  const officer = ["officer","admin"].includes(me?.role);
-  lootEl("bsSections").innerHTML = names.map(n=>{
-    const rec = byRaider[n];
-    const rows = [...rec.ups].sort((a,b)=>b.pct - a.pct);
-    return `
-    <div class="bls-boss">
-      <div class="bls-head">
-        <span class="bls-name">${esc(n)}</span>
-        <span class="d-flex align-items-center gap-2">
-          <span class="bls-count data-font">${rows.length} WANT${rows.length === 1 ? "" : "S"}</span>
-          ${officer && rec.uid ? `<button class="award-x" data-wldel="${rec.uid}" title="Remove this raider's wishlist">✕</button>` : ""}
-        </span>
-      </div>
-      ${rows.map(u=>`
-      <div class="bls-item">
-        <span class="bls-iname"><span class="lpill lp-${slotCat(u.slot)}">${esc(u.name)}</span> <span style="color:var(--muted);font-size:.75rem">${esc(u.ilvl||"")}</span></span>
-        <span class="bls-wants"><span class="bls-chip" style="color:var(--muted)">${esc(encLabel(u.enc ?? null))}</span><span class="bls-chip text-legendary data-font">+${u.pct}%</span></span>
-      </div>`).join("")}
-    </div>`;
-  }).join("");
-}
-
-/* ---- awards + overview ---- */
-let lootAwards = [], lootWishlists = [];
-async function loadLootData(){
-  try{
-    const [aw, wl] = await Promise.all([
-      sb.from("loot_awards").select("*").order("awarded_at",{ascending:false}).order("id",{ascending:false}).limit(300),
-      sb.from("loot_wishlists").select("user_id, data")
-    ]);
-    lootAwards = aw.data || []; lootWishlists = (wl.data || []).map(r=>({ ...(r.data||{}), _uid: r.user_id }));
-    drawAwards(); drawBossSheet();
-  }catch(e){ console.warn("loot load", e); }
-}
-function drawAwards(){
-  const officer = ["officer","admin"].includes(me?.role);
-  const q = (lootEl("awardFilter").value||"").toLowerCase();
-  const rows = lootAwards.filter(a=>!q || a.member.toLowerCase().includes(q) || (a.item||"").toLowerCase().includes(q)).map(a=>`
-    <tr>
-      <td class="data-font" style="font-size:.78rem;color:var(--muted)">${esc(a.awarded_at)}</td>
-      <td><b>${esc(a.member)}</b></td>
-      <td>${esc(a.item)}</td>
-      <td style="color:var(--muted)">${esc(a.slot||"")}</td>
-      <td class="d-none d-md-table-cell" style="color:var(--muted)">${esc(a.boss||"")}</td>
-      <td class="d-none d-lg-table-cell" style="color:var(--muted);font-size:.8rem">${esc(a.note||"")}</td>
-      ${officer ? `<td><button class="award-x" data-adel="${a.id}">✕</button></td>` : ""}
-    </tr>`).join("");
-  lootEl("awardBody").innerHTML = rows || `<tr><td colspan="7" class="text-center py-3" style="color:var(--muted)">No awards recorded${q?" matching that filter":""} yet.</td></tr>`;
-}
-async function recordAward(){
-  const st = lootEl("awStatus");
-  const row = {
-    member: lootEl("awMember").value.trim(),
-    item: lootEl("awItem").value.trim(),
-    slot: lootEl("awSlot").value,
-    boss: lootEl("awBoss").value.trim(),
-    season: lootEl("awSeason").value.trim(),
-    note: lootEl("awNote").value.trim(),
-    awarded_by: me.username
-  };
-  if(!row.member || !row.item){ st.textContent = "⚠ Raider and item are required."; return; }
-  st.textContent = "Recording…";
-  const { error } = await sb.from("loot_awards").insert(row);
-  if(error){ st.textContent = "❌ " + error.message; return; }
-  st.textContent = "✅ Recorded.";
-  lootEl("awItem").value = ""; lootEl("awNote").value = "";
-  loadLootData();
-}
-document.addEventListener("click", async e=>{
-  if(e.target.dataset.adel){
-    if(!confirm("Remove this award from the log?")) return;
-    const { error } = await sb.from("loot_awards").delete().eq("id", e.target.dataset.adel);
-    if(!error) loadLootData(); else alert(error.message);
+  if(viewScope === "me"){
+    const d = myWishlistExtra.droptimizer;
+    if(!d || !d.upgrades?.length){
+      host.innerHTML = `<p class="py-4 text-center" style="color:var(--muted)">No sim imported yet — hit <b>Import Droptimizer</b> and paste your Raidbots report link.</p>`;
+      return;
+    }
+    if(modeMe === "slot"){
+      const bySlot = {};
+      d.upgrades.forEach(u => { (bySlot[slotKey(u.slot)] = bySlot[slotKey(u.slot)] || []).push(u); });
+      const keys = Object.keys(bySlot).sort((a,b)=>{
+        const ia = SLOT_ORDER.indexOf(a), ib = SLOT_ORDER.indexOf(b);
+        return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib);
+      });
+      host.innerHTML = keys.map(k=>{
+        const rows = [...bySlot[k]].sort((a,b)=>b.pct - a.pct);
+        return sheetSection(esc(SLOT_LABELS[k] || (k ? k[0].toUpperCase()+k.slice(1) : "Other")), rows.length,
+          rows.map(u=>`<div class="bls-item"><span class="bls-iname">${itemPill(u)}</span>
+            <span class="bls-wants"><span class="bls-chip" style="color:var(--muted)">${esc(encLabel(u.enc ?? null))}</span><span class="bls-chip text-legendary data-font">+${u.pct}%</span></span></div>`).join(""));
+      }).join("");
+    } else {
+      const byEnc = {};
+      d.upgrades.forEach(u => { const k = String(u.enc ?? "null"); (byEnc[k] = byEnc[k] || []).push(u); });
+      const encs = Object.keys(byEnc).sort((a,b) => encOrder(a) - encOrder(b));
+      host.innerHTML = encs.map(e=>{
+        const rows = [...byEnc[e]].sort((a,b)=>b.pct - a.pct);
+        return sheetSection(esc(encLabel(e)), rows.length,
+          rows.map(u=>`<div class="bls-item"><span class="bls-iname">${itemPill(u)}</span>
+            <span class="bls-wants"><span class="bls-chip text-legendary data-font">+${u.pct}%</span></span></div>`).join(""));
+      }).join("");
+    }
+    return;
   }
+
+  // team scope
+  const officer = ["officer","admin"].includes(me?.role);
+  if(modeTeam === "raider"){
+    const byRaider = {};
+    lootWishlists.forEach(w=>{
+      const d = w.droptimizer;
+      if(!d || !d.upgrades) return;
+      const raider = d.character || w.character || "?";
+      const rec = byRaider[raider] = byRaider[raider] || { uid: w._uid, ups: [] };
+      rec.ups.push(...d.upgrades);
+    });
+    const names = Object.keys(byRaider).sort((a,b)=>a.localeCompare(b));
+    if(!names.length){ host.innerHTML = `<p class="py-4 text-center" style="color:var(--muted)">No imports on the team yet.</p>`; return; }
+    host.innerHTML = names.map(n=>{
+      const rec = byRaider[n];
+      const rows = [...rec.ups].sort((a,b)=>b.pct - a.pct);
+      const x = officer && rec.uid ? `<button class="award-x" data-wldel="${rec.uid}" title="Remove this raider's wishlist">✕</button>` : "";
+      return sheetSection(esc(n), rows.length,
+        rows.map(u=>`<div class="bls-item"><span class="bls-iname">${itemPill(u)}</span>
+          <span class="bls-wants"><span class="bls-chip" style="color:var(--muted)">${esc(encLabel(u.enc ?? null))}</span><span class="bls-chip text-legendary data-font">+${u.pct}%</span></span></div>`).join(""), x);
+    }).join("");
+  } else {
+    const byEnc = {};
+    lootWishlists.forEach(w=>{
+      const d = w.droptimizer;
+      if(!d || !d.upgrades) return;
+      const raider = d.character || w.character || "?";
+      d.upgrades.forEach(u=>{
+        const k = String(u.enc ?? "null");
+        const sec = byEnc[k] = byEnc[k] || { items: {} };
+        const it = sec.items[u.name] = sec.items[u.name] || { name: u.name, ilvl: u.ilvl, slot: u.slot, wants: [] };
+        it.wants.push({ raider, pct: u.pct });
+      });
+    });
+    const encs = Object.keys(byEnc).sort((a,b) => encOrder(a) - encOrder(b));
+    if(!encs.length){ host.innerHTML = `<p class="py-4 text-center" style="color:var(--muted)">No imports on the team yet.</p>`; return; }
+    host.innerHTML = encs.map(e=>{
+      const items = Object.values(byEnc[e].items);
+      items.forEach(it => it.wants.sort((a,b)=>b.pct - a.pct));
+      items.sort((a,b)=>b.wants[0].pct - a.wants[0].pct);
+      const wantCount = items.reduce((n,it)=>n + it.wants.length, 0);
+      return sheetSection(esc(encLabel(e)), wantCount,
+        items.map(it=>`<div class="bls-item"><span class="bls-iname">${itemPill(it)}</span>
+          <span class="bls-wants">${it.wants.map(x=>`<span class="bls-chip"><b>${esc(x.raider)}</b> <span class="text-legendary data-font">+${x.pct}%</span></span>`).join("")}</span></div>`).join(""));
+    }).join("");
+  }
+}
+
+/* ---- wiring ---- */
+document.addEventListener("click", async e=>{
+  if(e.target.id === "dtOpen"){
+    if(!dtModalObj) dtModalObj = new bootstrap.Modal(lootEl("dtModal"));
+    lootEl("dtStatus").textContent = "";
+    renderDtMeta();
+    dtModalObj.show();
+  }
+  if(e.target.id === "dtClear"){
+    if(!confirm("Remove your imported sim from the sheet?")) return;
+    delete myWishlistExtra.droptimizer;
+    await persistWishlist();
+    renderDtMeta(); loadLootData();
+  }
+  if(e.target.dataset.blsscope){ viewScope = e.target.dataset.blsscope; drawSheet(); }
   if(e.target.dataset.blsmode){
-    bsMode = e.target.dataset.blsmode;
-    document.querySelectorAll(".bls-mode").forEach(b => b.classList.toggle("on", b.dataset.blsmode === bsMode));
-    drawBossSheet();
+    if(viewScope === "me") modeMe = e.target.dataset.blsmode; else modeTeam = e.target.dataset.blsmode;
+    drawSheet();
   }
   if(e.target.dataset.wldel){
-    if(!confirm("Remove this raider's wishlist? Their award history stays in the log.")) return;
+    if(!confirm("Remove this raider's wishlist?")) return;
     const { error } = await sb.from("loot_wishlists").delete().eq("user_id", e.target.dataset.wldel);
     if(!error) loadLootData(); else alert(error.message);
   }
-  if(e.target.id === "wlClear"){
-    if(!confirm("Clear your wishlist? This empties all fields for the council view.")) return;
-    myWishlistExtra = {};
-    const { error } = await sb.from("loot_wishlists").upsert({ user_id: me.id, data: {}, updated_at: new Date().toISOString() });
-    if(!error){ loadMyWishlist(); loadLootData(); document.getElementById("wlStatus").textContent = "✅ Wishlist cleared."; }
-    else document.getElementById("wlStatus").textContent = "❌ " + error.message;
-  }
 });
-function initLootUI(){
-  lootEl("awSlot").innerHTML = `<option value="">Slot…</option>` + LOOT_SLOTS.map(s=>`<option>${s}</option>`).join("");
-  lootEl("wlOff").innerHTML = TIER_OFF.map(s=>`<option value="${s}">${s || "No off-piece"}</option>`).join("");
-  lootEl("wlSave").addEventListener("click", saveMyWishlist);
-  lootEl("dtImport").addEventListener("click", dtImport);
-  document.addEventListener("click", e=>{
-    if(e.target.id === "dtClear"){
-      delete myWishlistExtra.droptimizer;
-      saveMyWishlist(); renderDtList();
-    }
-  });
-  lootEl("awSave").addEventListener("click", recordAward);
-  lootEl("awardFilter").addEventListener("input", drawAwards);
-}
-initLootUI();
-
+lootEl("dtImport").addEventListener("click", dtImport);
 
 /* ================= RAID SIGNUPS ================= */
 const RAID_ROLES = { T: "🛡️ Tank", H: "💚 Heal", M: "⚔️ Melee", R: "🏹 Ranged", B: "🪑 Bench" };
