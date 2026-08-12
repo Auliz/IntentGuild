@@ -483,8 +483,8 @@ footer{border-top:1px solid var(--line);padding:2.5rem 0;color:var(--muted);font
         <li class="nav-item"><a class="nav-link" href="#about" data-page="about">About</a></li>
         <li class="nav-item"><a class="nav-link" href="#roster" data-page="roster">Roster</a></li>
         <li class="nav-item"><a class="nav-link" href="#streams" data-page="streams">Streams</a></li>
-        <li class="nav-item d-none"><a class="nav-link" href="#raids" data-page="raids">Raids</a></li>
-        <li class="nav-item d-none"><a class="nav-link" href="#loot" data-page="loot">Loot</a></li>
+        <li class="nav-item"><a class="nav-link" href="#raids" data-page="raids">Raids</a></li>
+        <li class="nav-item"><a class="nav-link" href="#loot" data-page="loot">Loot</a></li>
         <li class="nav-item d-none"><a class="nav-link" href="#forums" data-page="forums">Forums</a></li>
         <li class="nav-item ms-lg-2 mt-2 mt-lg-0">
           <a class="btn btn-apply btn-sm px-3" href="#apply" data-page="apply">Apply Now</a>
@@ -527,7 +527,7 @@ footer{border-top:1px solid var(--line);padding:2.5rem 0;color:var(--muted);font
   <!-- Current Progression -->
   <div class="container section pt-2">
     <div class="section-title center"><h2>Current Progression</h2></div>
-    <p class="section-sub">The Venomous Abyss opens with Season 2 on August 18.</p>
+    <p class="section-sub">Midnight · Season 1 — live boss-by-boss status across the active tier. The Venomous Abyss opens with Season 2 on August 18.</p>
     <div class="prog-grid">
       <div id="tierGrid"><!-- populated by JS (live Raider.io or fallback) --></div>
       <div class="prog-side">
@@ -537,7 +537,7 @@ footer{border-top:1px solid var(--line);padding:2.5rem 0;color:var(--muted);font
         </div>
         <div class="app-panel" style="padding:1.3rem 1.4rem">
           <div class="data-font" style="font-size:.62rem;letter-spacing:.25em;text-transform:uppercase;color:var(--epic-soft);margin-bottom:.5rem">Live Data</div>
-          <p style="margin:0;font-size:.88rem;color:#D5D2C6">Progression, roster, and rankings sync automatically from <a href="https://raider.io" target="_blank" rel="noopener">Raider.io</a> and <a href="https://www.warcraftlogs.com" target="_blank" rel="noopener">Warcraft Logs</a>.</p>
+          <p style="margin:0;font-size:.88rem;color:#D5D2C6">Progression, roster, and rankings sync automatically from <a href="https://raider.io" target="_blank" rel="noopener">Raider.io</a> and <a href="https://www.warcraftlogs.com" target="_blank" rel="noopener">Warcraft Logs</a>. Content on this page is published from the Command Deck — edits there appear here on the next load.</p>
         </div>
       </div>
     </div>
@@ -1084,7 +1084,7 @@ const pages = ["home","about","roster","streams","apply","raids","loot","forums"
 const ADMIN_ONLY_PAGES = ["forums"];
 function showPage(id){
   if(!pages.includes(id)) id = "home";
-  if(ADMIN_ONLY_PAGES.includes(id) && me?.role !== "admin") id = "home","raids","loot";
+  if(ADMIN_ONLY_PAGES.includes(id) && me?.role !== "admin") id = "home";
   document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
   document.getElementById("page-"+id).classList.add("active");
   document.querySelectorAll(".nav-link").forEach(l=>l.classList.toggle("active", l.dataset.page===id));
@@ -2552,7 +2552,7 @@ function maybeSplash(){
   renderAll();
   const sy = document.getElementById("syncStatus");
   if(sy){
-    if(window.__cfgSynced){ sy.textContent = " "; sy.style.color = "var(--kill)"; }
+    if(window.__cfgSynced){ sy.textContent = "SYNCED WITH COMMAND DECK CONFIG"; sy.style.color = "var(--kill)"; }
     else sy.textContent = "OFFLINE — SHOWING BUILT-IN DEFAULTS";
   }
   document.body.classList.remove("booting");   // reveal identity only once real config is painted
