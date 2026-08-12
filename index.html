@@ -537,7 +537,7 @@ footer{border-top:1px solid var(--line);padding:2.5rem 0;color:var(--muted);font
         </div>
         <div class="app-panel" style="padding:1.3rem 1.4rem">
           <div class="data-font" style="font-size:.62rem;letter-spacing:.25em;text-transform:uppercase;color:var(--epic-soft);margin-bottom:.5rem">Live Data</div>
-          <p style="margin:0;font-size:.88rem;color:#D5D2C6">Progression, roster, and rankings sync automatically from <a href="https://raider.io" target="_blank" rel="noopener">Raider.io</a> and <a href="https://www.warcraftlogs.com" target="_blank" rel="noopener">Warcraft Logs</a>. Content on this page is published from the Command Deck — edits there appear here on the next load.</p>
+          <p style="margin:0;font-size:.88rem;color:#D5D2C6">Progression, roster, and rankings sync automatically from <a href="https://raider.io" target="_blank" rel="noopener">Raider.io</a> and <a href="https://www.warcraftlogs.com" target="_blank" rel="noopener">Warcraft Logs</a>.</p>
         </div>
       </div>
     </div>
@@ -2552,7 +2552,7 @@ function maybeSplash(){
   renderAll();
   const sy = document.getElementById("syncStatus");
   if(sy){
-    if(window.__cfgSynced){ sy.textContent = "SYNCED WITH COMMAND DECK CONFIG"; sy.style.color = "var(--kill)"; }
+    if(window.__cfgSynced){ sy.textContent = " "; sy.style.color = "var(--kill)"; }
     else sy.textContent = "OFFLINE — SHOWING BUILT-IN DEFAULTS";
   }
   document.body.classList.remove("booting");   // reveal identity only once real config is painted
