@@ -150,6 +150,13 @@ a:hover{color:var(--legendary-soft)}
 .bls-mode.on{background:rgba(240,194,75,.14);color:var(--legendary)}
 .bls-boss{margin-bottom:1.1rem}
 .bls-head{display:flex;justify-content:space-between;align-items:baseline;border-bottom:1px solid rgba(240,194,75,.3);padding-bottom:.3rem;margin-bottom:.4rem}
+.bls-click{cursor:pointer;user-select:none}
+.bls-click:hover .bls-name{color:var(--legendary)}
+.bls-chev{display:inline-block;margin-right:.45rem;font-size:.7rem;color:var(--muted);transition:transform .15s ease}
+.bls-boss.collapsed .bls-chev{transform:rotate(-90deg)}
+.bls-boss.collapsed .bls-body{display:none}
+.bls-boss.collapsed .bls-head{margin-bottom:0;border-bottom-color:var(--line)}
+.bls-slot{font-size:.6rem;letter-spacing:.2em;text-transform:uppercase;color:var(--epic-soft);margin:.55rem 0 .1rem;padding-bottom:.1rem}
 .bls-name{font-family:var(--font-display);font-weight:700;font-size:.95rem;color:var(--legendary-soft)}
 .bls-count{font-size:.62rem;letter-spacing:.16em;color:var(--muted)}
 .bls-item{display:grid;grid-template-columns:minmax(180px,1fr) 2fr;gap:.8rem;padding:.35rem 0;border-bottom:1px solid var(--line);font-size:.86rem;align-items:baseline}
@@ -1074,7 +1081,7 @@ function mdLite(s){
 /* ================= PAGE ROUTER ================= */
 const pages = ["home","about","roster","streams","apply","raids","loot","forums"];
 // Rollout gate: these tabs are visible to ADMIN accounts only. Empty the list to make them public again.
-const ADMIN_ONLY_PAGES = ["raids","loot","forums"];
+const ADMIN_ONLY_PAGES = ["forums"];
 function showPage(id){
   if(!pages.includes(id)) id = "home";
   if(ADMIN_ONLY_PAGES.includes(id) && me?.role !== "admin") id = "home";
@@ -2007,15 +2014,30 @@ function encOrder(k){
 function itemPill(u){
   return `<span class="lpill lp-${slotCat(u.slot)}">${esc(u.name)}</span> <span style="color:var(--muted);font-size:.75rem">${esc(u.ilvl||"")}</span>`;
 }
-function sheetSection(title, count, rowsHtml, extra){
-  return `<div class="bls-boss">
-    <div class="bls-head">
-      <span class="bls-name">${title}</span>
+const blsCollapsed = new Set();
+function sheetSection(title, count, bodyHtml, extra, key){
+  const collapsed = key && blsCollapsed.has(key);
+  return `<div class="bls-boss${collapsed ? " collapsed" : ""}"${key ? ` data-blskey="${esc(key)}"` : ""}>
+    <div class="bls-head bls-click">
+      <span class="bls-name"><span class="bls-chev">▾</span>${title}</span>
       <span class="d-flex align-items-center gap-2">
         <span class="bls-count data-font">${count} WANT${count === 1 ? "" : "S"}</span>${extra || ""}
       </span>
-    </div>${rowsHtml}
+    </div>
+    <div class="bls-body">${bodyHtml}</div>
   </div>`;
+}
+function groupRowsBySlot(list, rowFn){
+  const bySlot = {};
+  list.forEach(x => { (bySlot[slotKey(x.slot)] = bySlot[slotKey(x.slot)] || []).push(x); });
+  const keys = Object.keys(bySlot).sort((a,b)=>{
+    const ia = SLOT_ORDER.indexOf(a), ib = SLOT_ORDER.indexOf(b);
+    return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib);
+  });
+  return keys.map(k =>
+    `<div class="bls-slot data-font">${esc(SLOT_LABELS[k] || (k ? k[0].toUpperCase()+k.slice(1) : "Other"))}</div>` +
+    bySlot[k].map(rowFn).join("")
+  ).join("");
 }
 function drawSheet(){
   const host = lootEl("bsSections");
@@ -2044,7 +2066,7 @@ function drawSheet(){
         const rows = [...bySlot[k]].sort((a,b)=>b.pct - a.pct);
         return sheetSection(esc(SLOT_LABELS[k] || (k ? k[0].toUpperCase()+k.slice(1) : "Other")), rows.length,
           rows.map(u=>`<div class="bls-item"><span class="bls-iname">${itemPill(u)}</span>
-            <span class="bls-wants"><span class="bls-chip" style="color:var(--muted)">${esc(encLabel(u.enc ?? null))}</span><span class="bls-chip text-legendary data-font">+${u.pct}%</span></span></div>`).join(""));
+            <span class="bls-wants"><span class="bls-chip" style="color:var(--muted)">${esc(encLabel(u.enc ?? null))}</span><span class="bls-chip text-legendary data-font">+${u.pct}%</span></span></div>`).join(""), "", "me-slot-" + k);
       }).join("");
     } else {
       const byEnc = {};
@@ -2053,8 +2075,8 @@ function drawSheet(){
       host.innerHTML = encs.map(e=>{
         const rows = [...byEnc[e]].sort((a,b)=>b.pct - a.pct);
         return sheetSection(esc(encLabel(e)), rows.length,
-          rows.map(u=>`<div class="bls-item"><span class="bls-iname">${itemPill(u)}</span>
-            <span class="bls-wants"><span class="bls-chip text-legendary data-font">+${u.pct}%</span></span></div>`).join(""));
+          groupRowsBySlot(rows, u=>`<div class="bls-item"><span class="bls-iname">${itemPill(u)}</span>
+            <span class="bls-wants"><span class="bls-chip text-legendary data-font">+${u.pct}%</span></span></div>`), "", "me-boss-" + e);
       }).join("");
     }
     return;
@@ -2079,7 +2101,7 @@ function drawSheet(){
       const x = officer && rec.uid ? `<button class="award-x" data-wldel="${rec.uid}" title="Remove this raider's wishlist">✕</button>` : "";
       return sheetSection(esc(n), rows.length,
         rows.map(u=>`<div class="bls-item"><span class="bls-iname">${itemPill(u)}</span>
-          <span class="bls-wants"><span class="bls-chip" style="color:var(--muted)">${esc(encLabel(u.enc ?? null))}</span><span class="bls-chip text-legendary data-font">+${u.pct}%</span></span></div>`).join(""), x);
+          <span class="bls-wants"><span class="bls-chip" style="color:var(--muted)">${esc(encLabel(u.enc ?? null))}</span><span class="bls-chip text-legendary data-font">+${u.pct}%</span></span></div>`).join(""), x, "team-raider-" + n);
     }).join("");
   } else {
     const byEnc = {};
@@ -2102,8 +2124,8 @@ function drawSheet(){
       items.sort((a,b)=>b.wants[0].pct - a.wants[0].pct);
       const wantCount = items.reduce((n,it)=>n + it.wants.length, 0);
       return sheetSection(esc(encLabel(e)), wantCount,
-        items.map(it=>`<div class="bls-item"><span class="bls-iname">${itemPill(it)}</span>
-          <span class="bls-wants">${it.wants.map(x=>`<span class="bls-chip"><b>${esc(x.raider)}</b> <span class="text-legendary data-font">+${x.pct}%</span></span>`).join("")}</span></div>`).join(""));
+        groupRowsBySlot(items, it=>`<div class="bls-item"><span class="bls-iname">${itemPill(it)}</span>
+          <span class="bls-wants">${it.wants.map(x=>`<span class="bls-chip"><b>${esc(x.raider)}</b> <span class="text-legendary data-font">+${x.pct}%</span></span>`).join("")}</span></div>`), "", "team-boss-" + e);
     }).join("");
   }
 }
@@ -2121,6 +2143,15 @@ document.addEventListener("click", async e=>{
     delete myWishlistExtra.droptimizer;
     await persistWishlist();
     renderDtMeta(); loadLootData();
+  }
+  const blsHead = e.target.closest(".bls-head");
+  if(blsHead && !e.target.closest("button")){
+    const sec = blsHead.closest("[data-blskey]");
+    if(sec){
+      const k = sec.dataset.blskey;
+      blsCollapsed.has(k) ? blsCollapsed.delete(k) : blsCollapsed.add(k);
+      sec.classList.toggle("collapsed");
+    }
   }
   if(e.target.dataset.blsscope){ viewScope = e.target.dataset.blsscope; drawSheet(); }
   if(e.target.dataset.blsmode){
