@@ -126,6 +126,22 @@ td,th{background:transparent!important;border-color:rgba(38,50,41,.5)!important;
       <textarea class="form-control" id="cfg_glance" rows="5"></textarea>
     </div>
     <div class="panel mb-3">
+      <h5 class="mb-3">Stream Overlay <span class="pill" style="background:rgba(41,196,104,.15);color:var(--epic-soft);font-size:.6rem;letter-spacing:.1em">TWITCH / OBS</span></h5>
+      <p class="note mb-3">Feeds the recruiting overlay's browser source. Progression, next-pull, and recruiting needs pull automatically from your live config — these fields control the wording and which stats show.</p>
+      <div class="row g-3">
+        <div class="col-md-6"><label class="form-label">Headline</label><input class="form-control" id="cfg_ovHeadline" placeholder="Recruiting"></div>
+        <div class="col-md-6"><label class="form-label">Site URL (shown on overlay)</label><input class="form-control" id="cfg_ovSiteUrl" placeholder="intent.gg"></div>
+        <div class="col-md-12"><label class="form-label">Recruiting Pitch (one short line)</label><input class="form-control" id="cfg_ovPitch" placeholder="Mythic prog · building toward Cutting Edge"></div>
+        <div class="col-md-12"><label class="form-label">Tagline (corner bug footer)</label><input class="form-control" id="cfg_ovTagline" placeholder="Mon–Thu · 9–11 CT"></div>
+      </div>
+      <label class="form-label mt-3 mb-2">Stats shown on overlay</label>
+      <div class="d-flex gap-4 flex-wrap">
+        <label class="d-flex align-items-center gap-2" style="cursor:pointer"><input type="checkbox" id="cfg_ovMythic" checked> Mythic kill count</label>
+        <label class="d-flex align-items-center gap-2" style="cursor:pointer"><input type="checkbox" id="cfg_ovNext" checked> Next pull (boss)</label>
+        <label class="d-flex align-items-center gap-2" style="cursor:pointer"><input type="checkbox" id="cfg_ovNights" checked> Raid nights / week</label>
+      </div>
+    </div>
+    <div class="panel mb-3">
       <h5 class="mb-3">Raid Schedule</h5>
       <div id="list_schedule"></div>
       <button class="btn btn-outline-epic btn-sm" data-add="schedule">+ Add Row</button>
@@ -434,6 +450,9 @@ function renderForms(){
   $("cfg_name").value = cfg.site.name; $("cfg_realmLine").value = cfg.site.realmLine;
   $("cfg_navSub").value = cfg.site.navSub; $("cfg_eyebrow").value = cfg.site.eyebrow;
   $("cfg_heroImageUrl").value = cfg.site.heroImageUrl || ""; $("cfg_progShotUrl").value = cfg.site.progShotUrl || ""; $("cfg_progShotCaption").value = cfg.site.progShotCaption || "";
+  const ov = cfg.overlay || {};
+  $("cfg_ovHeadline").value = ov.headline || ""; $("cfg_ovSiteUrl").value = ov.siteUrl || ""; $("cfg_ovPitch").value = ov.pitch || ""; $("cfg_ovTagline").value = ov.tagline || "";
+  $("cfg_ovMythic").checked = ov.showMythic !== false; $("cfg_ovNext").checked = ov.showNext !== false; $("cfg_ovNights").checked = ov.showNights !== false;
   $("cfg_bannerUrl").value = cfg.site.bannerUrl || ""; $("cfg_iconUrl").value = cfg.site.iconUrl || "";
   $("cfg_splashUrl").value = cfg.site.splashUrl || ""; $("cfg_splashDays").value = cfg.site.splashDays ?? "7";
   $("cfg_about").value = cfg.about.paragraphs.join("\n\n");
@@ -491,6 +510,15 @@ function harvest(){
     glance: $("cfg_glance").value.split("\n").map(s=>s.trim()).filter(Boolean)
   };
   cfg.schedNote = $("cfg_schedNote").value;
+  cfg.overlay = {
+    headline: $("cfg_ovHeadline").value.trim(),
+    siteUrl: $("cfg_ovSiteUrl").value.trim(),
+    pitch: $("cfg_ovPitch").value.trim(),
+    tagline: $("cfg_ovTagline").value.trim(),
+    showMythic: $("cfg_ovMythic").checked,
+    showNext: $("cfg_ovNext").checked,
+    showNights: $("cfg_ovNights").checked
+  };
   cfg.integrations = { discordWebhook:$("cfg_discordWebhook").value.trim(), googleScriptUrl:$("cfg_googleScriptUrl").value.trim(), discordServerId:$("cfg_discordServerId").value.trim(), signupWebhook:$("cfg_signupWebhook").value.trim() };
   cfg.rio = { region:$("cfg_region").value.trim()||"us", realm:$("cfg_realm").value.trim(), guildName:$("cfg_rioGuild").value.trim() };
   cfg.keysFeed = { minLevel:$("cfg_keysMinLevel").value.trim(), maxRank:$("cfg_keysMaxRank").value.trim() };
