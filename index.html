@@ -1543,13 +1543,13 @@ document.getElementById("appSubmit").addEventListener("click", async ()=>{
   const fail = msg => { status.textContent = msg; status.style.color = "var(--legendary)"; };
   if(!data.character || !data.cls || !data.role || !data.discord || !data.logs)
     return fail("⚠ Fill in every required field (*) — logs included. We always look.");
-  if(data.experience.length < 60)
+  if(data.experience.length < 30)
     return fail("⚠ Raid Experience needs more than a line — give us the actual history.");
-  if(data.prev_guilds.length < 40)
+  if(data.prev_guilds.length < 30)
     return fail("⚠ Tell us about your previous guilds — the honest version beats the polished one.");
-  if(data.underperformed.length < 40)
+  if(data.underperformed.length < 30)
     return fail("⚠ The underperformance question is required. Everyone has one; we want how you handled it.");
-  if(data.why.length < 60)
+  if(data.why.length < 30)
     return fail("⚠ Why Intent? deserves a real answer, not a wave.");
   if(!document.getElementById("appBench").checked)
     return fail("⚠ Please acknowledge the roster/bench policy — it matters that we agree on this now.");
