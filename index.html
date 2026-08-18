@@ -1,652 +1,1763 @@
-<!-- Command Deck is for Admin accounts only. Managed through Cloudflare for access  -->
 <!DOCTYPE html>
 <html lang="en" data-bs-theme="dark">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="robots" content="noindex, nofollow">
-<title>Command Deck</title>
+<title>Intent Guild | Vek'Nilash US</title>
+<meta name="description" content="Intent is a Mythic raiding guild on Vek'Nilash (US). View our progression, meet the team, watch our streamers, and apply today.">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/css/bootstrap.min.css">
-<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Inter:wght@400;500;600;700&family=Chakra+Petch:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Inter:wght@400;500;600;700&family=Chakra+Petch:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 :root{
-  --void:#050806;--void-2:#0A0F0B;--panel:#0D1410;--panel-2:#121A14;--line:#263229;
-  --epic:#29C468;--epic-soft:#7FE6A4;--legendary:#F0C24B;--legendary-soft:#FFDF8A;
-  --text:#F1EFE7;--muted:#99A29B;--kill:#3DDC84;--danger:#E74C3C;
+  --void:#050806;
+  --void-2:#0A0F0B;
+  --panel:#0D1410;
+  --panel-2:#121A14;
+  --line:#263229;
+  --epic:#29C468;          /* WoW epic rarity */
+  --epic-soft:#7FE6A4;
+  --legendary:#F0C24B;     /* WoW legendary rarity */
+  --legendary-soft:#FFDF8A;
+  --text:#F1EFE7;
+  --muted:#99A29B;
+  --kill:#3DDC84;
+  --font-display:'Cinzel',serif;
+  --font-body:'Inter',system-ui,sans-serif;
+  --font-data:'Chakra Petch',monospace;
 }
-body{background:var(--void);color:var(--text);font-family:'Inter',system-ui,sans-serif}
-body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;
-  background:radial-gradient(60vw 40vh at 90% -5%,rgba(240,194,75,.10),transparent 60%),var(--void)}
-h1,h2,h3,h5,.display-font{font-family:'Cinzel',serif}
-.data-font{font-family:'Chakra Petch',monospace}
-.text-epic{color:var(--epic-soft)!important}.text-legendary{color:var(--legendary)!important}
-.btn-apply{background:linear-gradient(135deg,var(--legendary),#FFD97A);border:none;color:#141000;font-weight:700}
-.btn-apply:hover{filter:brightness(1.1);color:#141000}
-.btn-outline-epic{border:1px solid var(--epic);color:var(--epic-soft);font-weight:600}
-.btn-outline-epic:hover{background:rgba(240,194,75,.10);color:#fff;border-color:var(--epic-soft)}
-.btn-ghost-danger{border:1px solid rgba(231,76,60,.4);color:#e88;background:none}
-.btn-ghost-danger:hover{background:rgba(231,76,60,.15);color:#fbb}
-.form-label{font-family:'Chakra Petch',monospace;font-size:.7rem;letter-spacing:.2em;text-transform:uppercase;color:var(--muted)}
-.form-control,.form-select{background:var(--void-2);border:1px solid var(--line);color:var(--text)}
-.form-control:focus,.form-select:focus{background:var(--void-2);border-color:var(--epic);color:var(--text);box-shadow:0 0 0 .2rem rgba(41,196,104,.2)}
-.form-check-input:checked{background-color:var(--epic);border-color:var(--epic)}
-.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:1.5rem}
-.gate{max-width:400px;margin:14vh auto 0}
-.deck-tabs .nav-link{color:var(--muted);font-weight:600;border:none;border-bottom:2px solid transparent;border-radius:0}
-.deck-tabs .nav-link.active{color:var(--legendary);background:none;border-bottom-color:var(--legendary)}
-.item-card{background:var(--void-2);border:1px solid var(--line);border-radius:10px;padding:1rem;margin-bottom:.8rem;position:relative}
-.item-card .tools{position:absolute;top:.5rem;right:.5rem;display:flex;gap:.3rem}
-.item-card .tools .btn{padding:.15rem .5rem;font-size:.8rem;line-height:1.2}
-.item-card .tools .mv{border:1px solid var(--line);color:var(--muted);background:none}
-.item-card .tools .mv:hover{border-color:var(--epic);color:var(--epic-soft)}
-.item-card .tools .mv:disabled{opacity:.3}
-.pill{font-family:'Chakra Petch',monospace;font-size:.65rem;padding:.15rem .5rem;border-radius:5px;letter-spacing:.1em}
-.pill-new{background:rgba(240,194,75,.18);color:var(--legendary)}
-.pill-reviewing{background:rgba(41,196,104,.18);color:var(--epic-soft)}
-.pill-accepted{background:rgba(61,220,132,.15);color:var(--kill)}
-.pill-declined{background:rgba(231,76,60,.15);color:#e88}
-.pill-admin{background:rgba(240,194,75,.18);color:var(--legendary)}
-.pill-officer{background:rgba(41,196,104,.18);color:var(--epic-soft)}
-.pill-member{background:rgba(153,162,155,.12);color:var(--muted)}
-.pill-inactive{background:rgba(231,76,60,.12);color:#e88}
-.app-row{cursor:pointer}
-.app-detail{background:var(--void-2);border:1px solid var(--line);border-radius:10px;padding:1rem;font-size:.88rem}
-.app-detail dt{font-family:'Chakra Petch',monospace;font-size:.65rem;letter-spacing:.15em;color:var(--muted);text-transform:uppercase}
-.app-detail dd{margin-bottom:.6rem;color:#D5D2C6;white-space:pre-wrap}
-.savebar{position:sticky;bottom:0;background:rgba(5,8,6,.92);backdrop-filter:blur(10px);border-top:1px solid var(--line);padding:.8rem 0;z-index:50}
-table{font-size:.9rem}
-th{font-family:'Chakra Petch',monospace;font-size:.68rem;letter-spacing:.2em;text-transform:uppercase;color:var(--muted)!important}
-td,th{background:transparent!important;border-color:rgba(38,50,41,.5)!important;color:var(--text)!important;vertical-align:middle}
-.note{font-size:.78rem;color:var(--muted)}
+html{scroll-behavior:smooth}
+body{
+  background:var(--void);
+  color:var(--text);
+  font-family:var(--font-body);
+  overflow-x:hidden;
+}
+/* ambient void glow */
+body::before{
+  content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;
+  background:
+    radial-gradient(60vw 40vh at 85% -5%, rgba(240,194,75,.13), transparent 60%),
+    radial-gradient(50vw 35vh at 5% 105%, rgba(41,196,104,.10), transparent 60%),
+    var(--void);
+}
+h1,h2,h3,.display-font{font-family:var(--font-display);letter-spacing:.02em}
+.navbar-brand,.hero{transition:opacity .3s ease}
+.booting .navbar-brand,.booting .hero{opacity:0}
+.data-font{font-family:var(--font-data)}
+a{color:var(--epic-soft)}
+a:hover{color:var(--legendary-soft)}
+.text-epic{color:var(--epic-soft)!important}
+.text-legendary{color:var(--legendary)!important}
+.text-muted-2{color:var(--muted)!important}
+
 .pw-wrap{position:relative}
 .pw-wrap input{padding-right:3.6rem;width:100%}
 .pw-toggle{position:absolute;right:.6rem;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--muted);font-family:var(--font-data);font-size:.6rem;letter-spacing:.15em;padding:.2rem .25rem;cursor:pointer}
 .pw-toggle:hover{color:var(--legendary)}
-.coll-head{cursor:pointer;user-select:none;display:flex;align-items:center;gap:.55rem;margin:0!important}
-.coll-head:hover{color:var(--legendary)}
-.coll-chev{font-size:.75rem;color:var(--legendary);width:.9rem;flex-shrink:0}
-.coll-count{margin-left:auto;font-family:'Chakra Petch',monospace;font-size:.66rem;color:var(--muted);background:var(--void-2);border:1px solid var(--line);border-radius:5px;padding:.1rem .5rem}
-.panel-body-collapse{margin-top:1rem}
-.toastbox{position:fixed;top:1rem;right:1rem;z-index:1000}
+
+/* ---------- SPLASH ---------- */
+#splash{position:fixed;inset:0;z-index:3000;background:#000;display:flex;align-items:center;justify-content:center;opacity:1;transition:opacity .7s ease}
+#splash.splash-out{opacity:0;pointer-events:none}
+#splash video{width:100%;height:100%;object-fit:cover}
+#splashSkip{position:absolute;bottom:2rem;right:2rem;background:rgba(0,0,0,.5);border:1px solid rgba(240,194,75,.5);color:var(--legendary-soft);font-family:var(--font-data);font-size:.75rem;letter-spacing:.2em;padding:.45rem 1.1rem;border-radius:8px;backdrop-filter:blur(4px)}
+#splashSkip:hover{background:rgba(240,194,75,.15)}
+
+/* ---------- NAV ---------- */
+.navbar{
+  background:rgba(5,8,6,.82);
+  backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--line);
+}
+.navbar-brand{font-family:var(--font-display);font-weight:900;font-size:1.05rem;color:var(--text)}
+.navbar-brand small{display:block;font-family:var(--font-data);font-weight:400;font-size:.62rem;color:var(--muted);letter-spacing:.25em;text-transform:uppercase}
+.brand-icon{height:38px;width:38px;vertical-align:middle;margin-right:.6rem;filter:drop-shadow(0 1px 4px rgba(0,0,0,.6))}
+.wordmark{color:var(--legendary);letter-spacing:.07em}
+.deck-link{font-size:.68rem;letter-spacing:.16em;text-transform:uppercase;color:var(--legendary-soft);border:1px solid rgba(240,194,75,.35);border-radius:6px;padding:.3rem .65rem;text-decoration:none;margin-right:.55rem}
+.deck-link:hover{background:rgba(240,194,75,.12);color:var(--legendary)}
+.keys-feed{max-width:820px;margin:0 auto;border-top:1px solid var(--line)}
+.key-row{display:grid;grid-template-columns:64px 1.2fr 2fr auto;gap:1rem;align-items:center;padding:.6rem .8rem;border-bottom:1px solid var(--line);font-size:.88rem;text-decoration:none;color:inherit;border-left:2px solid transparent;transition:background .2s ease,border-color .2s ease,box-shadow .2s ease}
+.key-row:hover{background:rgba(240,194,75,.05);border-left-color:var(--legendary);box-shadow:inset 0 0 18px rgba(240,194,75,.06);color:inherit}
+.key-row:hover .key-dun{color:var(--legendary-soft)}
+.key-lvl{font-family:var(--font-data);font-weight:600;color:var(--legendary);font-variant-numeric:tabular-nums}
+.key-lvl.dep{color:var(--muted)}
+.key-chev{color:var(--legendary);letter-spacing:.05em;font-size:.72rem}
+.key-dun{color:var(--text);white-space:nowrap}
+.key-who{color:var(--muted);font-size:.82rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.key-ago{font-family:var(--font-data);font-size:.7rem;letter-spacing:.1em;color:var(--muted);white-space:nowrap}
+@media (max-width:575px){.key-row{grid-template-columns:52px 1fr auto}.key-who{display:none}}
+.foot-grid{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1.5rem}
+.foot-links{display:flex;align-items:center;gap:1.6rem}
+.foot-links a{font-family:var(--font-data);font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);text-decoration:none;white-space:nowrap}
+.foot-links a:hover{color:var(--legendary)}
+#footDiscord{color:var(--legendary-soft)}
+.foot-legal{border-top:1px solid var(--line);margin-top:1.4rem;padding-top:1rem;text-align:center;font-size:.72rem;color:var(--muted)}
+@media (max-width:767px){.foot-grid{flex-direction:column;text-align:center}.foot-brand{text-align:center}}
+.hero-banner{display:block;width:min(880px,100%);margin:0 auto;border-radius:14px;border:1px solid var(--line);filter:drop-shadow(0 10px 44px rgba(41,196,104,.35)) drop-shadow(0 2px 14px rgba(240,194,75,.25))}
+.gate-crest{width:96px;height:96px;border-radius:50%;margin:0 auto .9rem;display:block;box-shadow:0 0 26px rgba(240,194,75,.35)}
+.disc-card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:1.2rem 1.3rem}
+.disc-name{font-family:var(--font-display);font-weight:700;font-size:1rem;color:var(--legendary)}
+.disc-online{font-family:var(--font-data);font-size:.75rem;color:var(--kill);letter-spacing:.1em;flex-shrink:0}
+.disc-avatars{display:flex;margin-top:.8rem;flex-wrap:wrap}
+.disc-avatars img{width:34px;height:34px;border-radius:50%;border:2px solid var(--panel);margin-right:-9px;margin-bottom:4px;background:#000}
+.rb-chip{display:inline-flex;align-items:center;gap:.35rem;border:1px solid var(--line);border-radius:20px;padding:.25rem .7rem;margin:0 .35rem .35rem 0;font-size:.8rem;cursor:pointer;color:var(--muted);user-select:none}
+.rb-chip input{accent-color:var(--epic)}
+.rb-chip.on{border-color:var(--epic);color:var(--text);background:rgba(41,196,104,.08)}
+.rb-tag{display:inline-block;border:1px solid var(--line);border-radius:5px;padding:.1rem .5rem;margin:0 .3rem .3rem 0;font-size:.75rem;color:#D5D2C6;background:var(--void-2)}
+.role-row{display:flex;align-items:center;gap:.3rem;margin-bottom:.3rem}
+.role-name{font-size:.82rem;min-width:120px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.role-btn{border:1px solid var(--line);background:var(--void-2);border-radius:6px;font-size:.8rem;padding:.1rem .45rem;line-height:1.4;opacity:.45}
+.role-btn.on{border-color:var(--legendary);opacity:1;box-shadow:0 0 8px rgba(240,194,75,.25)}
+.sg-line{margin:.6rem 0 .2rem;padding-top:.6rem;border-top:1px solid var(--line);font-size:.8rem}
+.sg-group{margin-right:1rem}
+.sg-names{color:var(--muted)}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px}
+.cal-dow{text-align:center;font-family:var(--font-data);font-size:.6rem;letter-spacing:.15em;color:var(--muted);padding:.25rem 0}
+.cal-cell{min-height:72px;border:1px solid var(--line);border-radius:6px;padding:.25rem .3rem;background:var(--void-2);position:relative;overflow:hidden}
+.cal-cell.empty{border:none;background:none}
+.cal-cell.today{border-color:var(--legendary);box-shadow:inset 0 0 10px rgba(240,194,75,.12)}
+.cal-cell.clickable{cursor:pointer}
+.cal-cell.clickable:hover{border-color:rgba(240,194,75,.5)}
+.cal-num{font-family:var(--font-data);font-size:.68rem;color:var(--muted)}
+.cal-ev{display:block;font-size:.62rem;line-height:1.25;margin-top:.2rem;padding:.1rem .3rem;border-radius:4px;background:rgba(240,194,75,.14);border:1px solid rgba(240,194,75,.4);color:var(--legendary-soft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer}
+.cal-ev:hover{background:rgba(240,194,75,.28)}
+.raid-scroll{max-height:560px;overflow-y:auto;padding-right:.4rem}
+.raid-scroll::-webkit-scrollbar{width:6px}
+.raid-scroll::-webkit-scrollbar-thumb{background:var(--line);border-radius:3px}
+.sched-row{display:flex;gap:.5rem;margin-top:.6rem}
+.raid-event{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:1.1rem 1.3rem;margin-bottom:.9rem}
+.raid-event.past{opacity:.55}
+.re-title{font-family:var(--font-display);font-weight:700;font-size:1.05rem}
+.re-when{font-size:.75rem;color:var(--legendary);letter-spacing:.1em}
+.re-posted{font-size:.62rem;letter-spacing:.2em;color:var(--kill);border:1px solid rgba(61,220,132,.4);border-radius:5px;padding:.15rem .5rem}
+.re-note{font-size:.85rem;color:#D5D2C6;margin:.5rem 0 0}
+.re-roster{margin-top:.7rem}
+.dt-slot{font-family:var(--font-data);font-size:.62rem;letter-spacing:.18em;text-transform:uppercase;color:var(--legendary-soft);margin:.6rem 0 .1rem;border-bottom:1px solid rgba(240,194,75,.25);padding-bottom:.15rem}
+.lpill{display:inline-block;padding:.06rem .55rem;border-radius:20px;font-size:.8rem;border:1px solid;line-height:1.4}
+.lp-tier{color:#FFDF8A;border-color:rgba(240,194,75,.5);background:rgba(240,194,75,.09)}
+.lp-weapon{color:#F0917B;border-color:rgba(232,106,74,.5);background:rgba(232,106,74,.09)}
+.lp-jewelry{color:#9CC8EF;border-color:rgba(127,184,230,.5);background:rgba(127,184,230,.09)}
+.lp-trinket{color:#7FE6A4;border-color:rgba(41,196,104,.5);background:rgba(41,196,104,.09)}
+.lp-other{color:#C9CFC9;border-color:var(--line);background:rgba(255,255,255,.03)}
+.lp-legend{display:flex;gap:.5rem;flex-wrap:wrap;margin:0 0 .6rem}
+.lp-legend .lpill{font-size:.6rem;padding:0 .45rem}
+.bls-scroll{max-height:600px;overflow-y:auto;padding-right:.4rem}
+.bls-scroll::-webkit-scrollbar{width:6px}
+.bls-scroll::-webkit-scrollbar-thumb{background:var(--line);border-radius:3px}
+.bls-toggle{display:flex;border:1px solid var(--line);border-radius:7px;overflow:hidden}
+.bls-mode{border:none;background:none;color:var(--muted);font-family:var(--font-data);font-size:.66rem;letter-spacing:.14em;text-transform:uppercase;padding:.35rem .8rem}
+.bls-mode.on{background:rgba(240,194,75,.14);color:var(--legendary)}
+.bls-boss{margin-bottom:1.1rem}
+.bls-head{display:flex;justify-content:space-between;align-items:baseline;border-bottom:1px solid rgba(240,194,75,.3);padding-bottom:.3rem;margin-bottom:.4rem}
+.bls-click{cursor:pointer;user-select:none}
+.bls-click:hover .bls-name{color:var(--legendary)}
+.bls-chev{display:inline-block;margin-right:.45rem;font-size:.7rem;color:var(--muted);transition:transform .15s ease}
+.bls-boss.collapsed .bls-chev{transform:rotate(-90deg)}
+.bls-boss.collapsed .bls-body{display:none}
+.bls-boss.collapsed .bls-head{margin-bottom:0;border-bottom-color:var(--line)}
+.bls-slot{font-size:.6rem;letter-spacing:.2em;text-transform:uppercase;color:var(--epic-soft);margin:.55rem 0 .1rem;padding-bottom:.1rem}
+.bls-name{font-family:var(--font-display);font-weight:700;font-size:.95rem;color:var(--legendary-soft)}
+.bls-count{font-size:.62rem;letter-spacing:.16em;color:var(--muted)}
+.bls-item{display:grid;grid-template-columns:minmax(180px,1fr) 2fr;gap:.8rem;padding:.35rem 0;border-bottom:1px solid var(--line);font-size:.86rem;align-items:baseline}
+.bls-item:last-child{border-bottom:none}
+.bls-wants{display:flex;flex-wrap:wrap;gap:.35rem .9rem}
+.bls-chip{white-space:nowrap;font-size:.8rem}
+@media (max-width:575px){.bls-item{grid-template-columns:1fr}}
+.dt-row{display:flex;justify-content:space-between;align-items:center;gap:.75rem;font-size:.85rem;padding:.3rem 0;border-bottom:1px solid var(--line)}
+.dt-row:last-child{border-bottom:none}
+.award-x{border:1px solid rgba(231,76,60,.4);color:#e88;background:none;border-radius:6px;font-size:.72rem;padding:.1rem .45rem;line-height:1.3}
+.award-x:hover{background:rgba(231,76,60,.15);color:#fbb}
+.disc-more{width:34px;height:34px;border-radius:50%;border:2px solid var(--panel);background:var(--void-2);color:var(--muted);font-family:var(--font-data);font-size:.62rem;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.nav-link{color:var(--muted);font-weight:600;font-size:.9rem;letter-spacing:.03em}
+.nav-link:hover{color:var(--text)}
+.nav-link.active{color:var(--legendary)!important}
+.nav-link.active{position:relative}
+.nav-link.active::after{content:"";position:absolute;left:.75rem;right:.75rem;bottom:2px;height:2px;background:linear-gradient(90deg,var(--legendary),var(--epic))}
+.btn-apply{
+  background:linear-gradient(135deg,var(--legendary),#FFD97A);
+  border:none;color:#141000;font-weight:700;
+  box-shadow:0 0 18px rgba(240,194,75,.35);
+}
+.btn-apply:hover{background:linear-gradient(135deg,#FFD97A,var(--legendary));color:#141000;box-shadow:0 0 26px rgba(240,194,75,.55)}
+.btn-outline-epic{border:1px solid var(--epic);color:var(--epic-soft);font-weight:600}
+.btn-outline-epic:hover{background:rgba(41,196,104,.15);color:#fff;border-color:var(--epic-soft)}
+
+/* ---------- PAGE SYSTEM (tabbed multi-page feel) ---------- */
+.page{display:none;animation:pageIn .35s ease}
+.page.active{display:block}
+@keyframes pageIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){
+  .page{animation:none}
+  *{transition:none!important}
+}
+
+/* ---------- HERO ---------- */
+.hero{
+  position:relative;
+  padding:6.5rem 0 4rem;
+  text-align:center;
+}
+.hero .eyebrow{
+  font-family:var(--font-data);letter-spacing:.4em;text-transform:uppercase;
+  font-size:.75rem;color:var(--legendary);
+}
+.hero h1{
+  font-weight:900;font-size:clamp(2.2rem,6.5vw,4.6rem);line-height:1.05;
+  background:linear-gradient(120deg,#fff 25%,var(--legendary-soft) 65%,var(--legendary));
+  -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+  text-shadow:0 0 60px rgba(240,194,75,.35);
+}
+.hero .realm{font-family:var(--font-data);color:var(--muted);letter-spacing:.2em}
+.hero .realm b{color:var(--legendary)}
+.hero-wrap{position:relative;overflow:hidden;border-bottom:1px solid var(--line)}
+.hero-keyart{position:absolute;inset:0;background-size:cover;background-position:center 30%}
+.hero-scrim{position:absolute;inset:0;pointer-events:none;background:radial-gradient(90vw 70vh at 50% 100%, rgba(5,8,6,.3), rgba(5,8,6,.92) 75%),linear-gradient(180deg, rgba(5,8,6,.75), rgba(5,8,6,.35) 35%, rgba(5,8,6,.88) 88%)}
+.hero-glow{position:absolute;inset:0;pointer-events:none;background:radial-gradient(55vw 32vh at 50% 92%, rgba(240,194,75,.14), transparent 65%);animation:heroGlow 6s ease-in-out infinite}
+@keyframes heroGlow{0%,100%{opacity:.55}50%{opacity:.85}}
+.hero-embers{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.hero-embers span{position:absolute;bottom:-10px;border-radius:50%;opacity:0;animation:emberRise linear infinite}
+@keyframes emberRise{0%{transform:translateY(0) translateX(0);opacity:0}12%{opacity:.85}85%{opacity:.4}100%{transform:translateY(-72vh) translateX(24px);opacity:0}}
+@media (prefers-reduced-motion:reduce){.hero-glow,.hero-embers span{animation:none}.hero-embers{display:none}}
+.hero-wrap .hero{position:relative}
+.realm-line{font-size:.8rem;letter-spacing:.24em;color:var(--muted);margin-top:.9rem}
+.sync-line{font-size:.6rem;letter-spacing:.2em;text-transform:uppercase;color:var(--muted)}
+.hero-wrap .stat-bar{background:rgba(5,8,6,.45);backdrop-filter:blur(3px)}
+.prog-grid{display:grid;grid-template-columns:1.15fr .85fr;gap:1.4rem;align-items:start}
+@media (max-width:991px){.prog-grid{grid-template-columns:1fr}}
+.prog-side{display:flex;flex-direction:column;gap:1.2rem}
+.prog-shot{position:relative;border-radius:14px;overflow:hidden;border:1px solid var(--line);min-height:210px}
+.prog-shot-img{position:absolute;inset:0;background-size:cover;background-position:center}
+.prog-shot-cap{position:absolute;right:1.1rem;bottom:.7rem;font-size:.6rem;letter-spacing:.22em;color:var(--legendary-soft);text-transform:uppercase;text-shadow:0 1px 4px #000;z-index:1}
+.prog-shot::after{content:"";position:absolute;left:0;right:0;bottom:0;height:60%;background:linear-gradient(180deg,transparent,rgba(5,8,6,.65));pointer-events:none}
+.locked-trophy{background:var(--void-2);border:1px dashed var(--line);border-radius:8px;padding:1.2rem 1.3rem;height:100%;display:flex;flex-direction:column;justify-content:center;text-align:center;opacity:.75;transition:border-color .2s ease,opacity .2s ease}
+.locked-trophy:hover{border-color:rgba(240,194,75,.4);opacity:1}
+.lt-q{font-size:1.3rem;color:#3a4a3e;letter-spacing:.2em;font-weight:700}
+.lt-hint{font-size:.62rem;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin-top:.4rem}
+.lt-tag{font-size:.58rem;letter-spacing:.14em;color:#556157;margin-top:.35rem}
+.why-card{position:relative;transition:border-color .2s ease,transform .2s ease,box-shadow .2s ease}
+.why-card:hover{transform:translateY(-4px);box-shadow:0 8px 28px rgba(0,0,0,.45)}
+.why-gold:hover{border-color:var(--legendary)}
+.why-epic:hover{border-color:var(--epic)}
+.why-num{font-size:.6rem;letter-spacing:.25em;margin-bottom:.4rem}
+.why-gold .why-num{color:var(--legendary)}
+.why-epic .why-num{color:var(--epic-soft)}
+.recruit-band{position:relative;border-top:1px solid var(--line);border-bottom:1px solid var(--line);overflow:hidden;margin-top:3rem}
+.recruit-band::before{content:"";position:absolute;inset:0;background:radial-gradient(60vw 40vh at 50% 110%, rgba(240,194,75,.12), transparent 65%),linear-gradient(180deg,var(--void),#0A0F0B)}
+.recruit-inner{position:relative;max-width:760px;margin:0 auto;padding:4rem 1.5rem;text-align:center}
+.need-chip{display:inline-flex;align-items:center;gap:1.1rem;padding:.75rem 1.5rem;border:1px solid rgba(240,194,75,.4);border-radius:10px;background:rgba(240,194,75,.06)}
+.need-chip b{font-size:.95rem}
+.need-chip .nd{font-family:var(--font-data);font-size:.64rem;letter-spacing:.22em;color:var(--legendary)}
+.stat-bar{
+  display:flex;justify-content:center;align-items:stretch;flex-wrap:wrap;
+  margin:2.6rem auto 0;max-width:820px;
+  border-top:1px solid rgba(240,194,75,.28);border-bottom:1px solid rgba(240,194,75,.28);
+}
+.stat-ident{display:flex;flex-direction:column;justify-content:center;text-align:left;padding:1rem 2rem 1rem 1.2rem}
+.stat-ident .realm-name{font-family:var(--font-display);font-weight:700;font-size:.95rem;color:var(--text);letter-spacing:.04em}
+.stat-ident .realm-sub{font-family:var(--font-data);font-size:.6rem;letter-spacing:.28em;text-transform:uppercase;color:var(--muted);margin-top:.2rem}
+.stat-cell{padding:1rem 1.8rem;text-align:center;position:relative;display:flex;flex-direction:column;justify-content:center}
+.stat-cell::before{content:"";position:absolute;left:0;top:22%;bottom:22%;width:1px;background:var(--line)}
+.stat-cell .num{font-family:var(--font-data);font-size:1.45rem;font-weight:600;color:var(--legendary);font-variant-numeric:tabular-nums;line-height:1.1}
+.stat-cell .lbl{font-size:.6rem;letter-spacing:.24em;text-transform:uppercase;color:var(--muted);margin-top:.2rem}
+@media (max-width:767px){
+  .stat-bar{max-width:100%}
+  .stat-ident{width:100%;text-align:center;align-items:center;padding:.9rem 1rem .4rem}
+  .stat-cell{flex:1;padding:.7rem .6rem}
+  .stat-ident + .stat-cell::before{display:none}
+}
+
+/* ---------- SECTION HEADINGS ---------- */
+.section{padding:3.5rem 0}
+.section-title{
+  display:flex;align-items:center;gap:1rem;margin-bottom:2rem;
+}
+.section-title h2{font-weight:700;font-size:1.6rem;margin:0}
+.section-title::before,.section-title.center::after{
+  content:"";height:1px;background:linear-gradient(90deg,transparent,var(--legendary),transparent);flex:0 0 3rem;
+}
+.section-title.center{justify-content:center;text-align:center}
+.section-title.center::after{content:""}
+.section-sub{color:var(--muted);max-width:640px;margin:-1.2rem auto 2rem;text-align:center}
+
+/* ---------- BOSS PROGRESS (raid-frame style) ---------- */
+.tier-card{
+  background:var(--panel);border:1px solid var(--line);border-radius:14px;
+  padding:1.5rem;height:100%;
+}
+.tier-card .tier-name{font-family:var(--font-display);font-weight:700;font-size:1.05rem}
+.tier-card .tier-meta{font-family:var(--font-data);font-size:.75rem;color:var(--muted);letter-spacing:.1em}
+.prog-badge{
+  font-family:var(--font-data);font-weight:600;font-size:.9rem;
+  padding:.2rem .65rem;border-radius:6px;
+}
+.prog-badge.mythic{background:rgba(41,196,104,.18);color:var(--epic-soft);border:1px solid rgba(41,196,104,.5)}
+.prog-badge.heroic{background:rgba(240,194,75,.15);color:var(--legendary-soft);border:1px solid rgba(240,194,75,.45)}
+.bossbar{margin-top:.9rem}
+.bossbar .boss-row{display:flex;align-items:center;gap:.7rem;margin-bottom:.55rem}
+.bossbar .boss-name{font-size:.85rem;flex:0 0 40%;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hpbar{
+  flex:1;height:14px;border-radius:3px;position:relative;overflow:hidden;
+  background:#3a0d0d;border:1px solid #000;
+  box-shadow:inset 0 2px 4px rgba(0,0,0,.6);
+}
+.hpbar .fill{
+  position:absolute;inset:0;
+  background:linear-gradient(180deg,#c0392b,#7a1f16);
+  transform-origin:left;transition:transform 1s ease;
+}
+.boss-row.dead .hpbar .fill{transform:scaleX(0)}
+.boss-row.dead .boss-name{color:var(--muted);text-decoration:line-through}
+.boss-row .kill-tag{
+  font-family:var(--font-data);font-size:.65rem;letter-spacing:.15em;color:var(--kill);
+  flex:0 0 auto;opacity:0;transition:opacity .5s ease .6s;
+}
+.boss-row.dead .kill-tag{opacity:1}
+.pull-count{font-family:var(--font-data);font-size:.7rem;color:var(--muted)}
+.boss-banner{position:relative;height:58px;border-radius:8px;overflow:hidden;margin-bottom:.55rem;border:1px solid var(--line);background:linear-gradient(120deg,var(--panel-2),#080D09);background-size:cover;background-position:center 25%;display:flex;align-items:center;padding:0 1rem;transition:filter .6s ease,opacity .6s ease}
+.boss-banner::before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(5,8,6,.88),rgba(5,8,6,.3) 55%,rgba(5,8,6,.05))}
+.boss-banner .bname{position:relative;font-family:var(--font-display);font-weight:700;font-size:.95rem;text-shadow:0 1px 3px #000;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.boss-banner .bbest{position:relative;margin-left:auto;margin-right:.6rem;flex-shrink:0;font-family:var(--font-data);font-size:.6rem;letter-spacing:.16em;color:var(--legendary-soft);background:rgba(0,0,0,.55);border:1px solid rgba(240,194,75,.4);border-radius:5px;padding:.15rem .5rem;backdrop-filter:blur(3px);white-space:nowrap}
+.boss-banner .bbest ~ .bstate{margin-left:0;padding-left:0}
+.boss-banner .bstate{position:relative;margin-left:auto;padding-left:.8rem;font-family:var(--font-data);font-size:.62rem;letter-spacing:.2em;flex-shrink:0}
+.boss-banner.upcoming{opacity:.7}
+.boss-banner.upcoming .bstate{color:var(--muted)}
+.boss-banner.current{border-color:var(--legendary);box-shadow:0 0 14px rgba(240,194,75,.35);animation:progPulse 2.4s infinite}
+.boss-banner.current .bstate{color:var(--legendary)}
+.boss-banner.killed{filter:grayscale(1) brightness(.5)}
+.boss-banner.killed .bname{color:var(--muted)}
+.boss-banner.killed .bstate{color:var(--kill)}
+@keyframes progPulse{50%{box-shadow:0 0 26px rgba(240,194,75,.6)}}
+@media (prefers-reduced-motion:reduce){.boss-banner.current{animation:none}}
+.tier-stage{display:flex;align-items:stretch;gap:0}
+.tier-feature{flex:0 0 46%;max-width:560px;position:relative;z-index:2}
+.tier-feature .tier-card{border-color:var(--legendary);box-shadow:0 0 26px rgba(240,194,75,.18);height:100%}
+.tier-ribbon{position:absolute;top:-11px;left:1.2rem;z-index:3;font-family:var(--font-data);font-size:.62rem;letter-spacing:.25em;padding:.2rem .7rem;border-radius:5px;background:linear-gradient(135deg,var(--legendary),#FFD97A);color:#141000;font-weight:700}
+.tier-carousel{flex:1;overflow:hidden;position:relative;z-index:1;margin-left:-46px;padding:.4rem 0 .4rem 66px;align-self:stretch}
+.tier-carousel::before{content:"";position:absolute;left:0;top:0;bottom:0;width:110px;z-index:2;pointer-events:none;background:linear-gradient(90deg,var(--void) 30%,transparent)}
+.tier-carousel::after{content:"";position:absolute;inset:0;z-index:2;pointer-events:none;background:linear-gradient(180deg,var(--void),transparent 52px,transparent calc(100% - 52px),var(--void))}
+.tc-track{display:flex;flex-direction:column;gap:1rem;transition:transform .7s cubic-bezier(.4,0,.2,1)}
+.tier-past{flex:0 0 auto;width:100%;max-width:320px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:1rem 1.1rem;filter:saturate(.55) brightness(.9)}
+.tier-past .tier-name{font-family:var(--font-display);font-weight:700;font-size:.92rem}
+.tier-past .archived{font-family:var(--font-data);font-size:.6rem;letter-spacing:.2em;color:var(--muted);margin-top:.15rem}
+.tier-pips{display:flex;gap:4px;margin-top:.7rem;flex-wrap:wrap}
+.tier-pips .pip{width:14px;height:14px;border-radius:3px;background:var(--void-2);border:1px solid var(--line)}
+.tier-pips .pip.dead{background:linear-gradient(135deg,var(--epic),#17804A);border-color:var(--epic)}
+@media (max-width: 991px){
+  .tier-stage{flex-direction:column;gap:1.2rem}
+  .tier-feature{flex:none;max-width:none}
+  .tier-carousel{margin-left:0;padding:.4rem 0;align-self:stretch;max-height:380px}
+  .tier-carousel::before{display:none}
+  .tier-past{max-width:none}
+}
+
+/* ---------- ACHIEVEMENT LOOT-TOOLTIP CARDS (signature) ---------- */
+.loot-card{
+  background:linear-gradient(180deg,#0B110C,#060A07);
+  border:1px solid var(--epic);
+  border-radius:8px;
+  padding:1.1rem 1.2rem;
+  height:100%;
+  position:relative;
+  box-shadow:0 0 0 1px rgba(0,0,0,.8), 0 0 22px rgba(41,196,104,.18);
+  transition:transform .18s ease, box-shadow .18s ease;
+}
+.loot-card:hover{transform:translateY(-4px);box-shadow:0 0 0 1px rgba(0,0,0,.8),0 0 32px rgba(41,196,104,.4)}
+.loot-card.legendary{border-color:var(--legendary);box-shadow:0 0 0 1px rgba(0,0,0,.8),0 0 22px rgba(240,194,75,.22)}
+.loot-card.legendary:hover{box-shadow:0 0 0 1px rgba(0,0,0,.8),0 0 34px rgba(240,194,75,.45)}
+.loot-card .loot-name{font-weight:700;font-size:1rem;color:var(--epic-soft)}
+.loot-card.legendary .loot-name{color:var(--legendary)}
+.loot-card .loot-bind{font-family:var(--font-data);font-size:.68rem;color:var(--muted);letter-spacing:.08em;margin-bottom:.5rem}
+.loot-card .loot-desc{font-size:.85rem;color:#D5D2C6}
+.loot-card .loot-flavor{font-size:.8rem;font-style:italic;color:var(--legendary-soft);margin-top:.55rem}
+.loot-card .loot-date{font-family:var(--font-data);font-size:.68rem;color:var(--muted);margin-top:.55rem}
+
+/* ---------- LEADERSHIP ---------- */
+.leader-card{
+  background:var(--panel);border:1px solid var(--line);border-radius:14px;
+  padding:1.4rem;text-align:center;height:100%;
+  transition:border-color .2s ease;
+}
+.leader-card:hover{border-color:var(--epic)}
+.leader-card .avatar{
+  width:84px;height:84px;border-radius:50%;margin:0 auto .8rem;
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--font-display);font-weight:900;font-size:1.6rem;
+  background:radial-gradient(circle at 30% 30%, var(--panel-2), #080D09);
+  border:2px solid var(--epic);color:var(--epic-soft);
+}
+.leader-card.gm .avatar{border-color:var(--legendary);color:var(--legendary)}
+.leader-card .avatar.has-img{background-size:cover;background-position:center 20%;color:transparent;text-shadow:none}
+.leader-card .role{font-family:var(--font-data);font-size:.7rem;letter-spacing:.25em;text-transform:uppercase;color:var(--legendary)}
+.leader-card h5{font-family:var(--font-display);margin:.2rem 0 .4rem}
+.leader-card p{font-size:.83rem;color:var(--muted);margin:0}
+
+/* ---------- SCHEDULE ---------- */
+.sched-table{border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.sched-table .row-i{display:grid;grid-template-columns:1.1fr 1.3fr 1.1fr;align-items:center;padding: .85rem 1.2rem;background:var(--panel)}
+.sched-table .row-i .time{text-align:center}
+.sched-table .row-i .what{text-align:right}
+@media (max-width:575px){.sched-table .row-i{grid-template-columns:1fr auto}.sched-table .row-i .time{text-align:right}}
+.sched-table .row-i:nth-child(even){background:var(--panel-2)}
+.sched-table .day{font-family:var(--font-display);font-weight:700}
+.sched-table .time{font-family:var(--font-data);color:var(--legendary)}
+.sched-table .what{color:var(--muted);font-size:.85rem}
+.rule-list li{margin-bottom:.7rem;color:#D5D2C6}
+.rule-list li::marker{color:var(--legendary)}
+
+/* ---------- ROSTER ---------- */
+.roster-table{width:100%;font-size:.9rem}
+.roster-table th{
+  font-family:var(--font-data);font-size:.7rem;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--muted);border-bottom:1px solid var(--line);padding:.6rem .8rem;
+}
+.roster-table td{padding:.65rem .8rem;border-bottom:1px solid rgba(38,50,41,.5)}
+.roster-table tr:hover td{background:rgba(41,196,104,.06)}
+.rank-pill{font-family:var(--font-data);font-size:.68rem;padding:.15rem .5rem;border-radius:5px;letter-spacing:.1em}
+.rank-0{background:rgba(240,194,75,.18);color:var(--legendary)}
+.rank-1{background:rgba(41,196,104,.18);color:var(--epic-soft)}
+.rank-x{background:rgba(153,162,155,.12);color:var(--muted)}
+
+/* ---------- STREAMS ---------- */
+.stream-card{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden;height:100%}
+.stream-card .embed{aspect-ratio:16/9;background:#000;display:flex;align-items:center;justify-content:center;color:var(--muted);font-family:var(--font-data);font-size:.8rem}
+.stream-card iframe{width:100%;height:100%;border:0}
+.stream-card .body{padding:1rem 1.2rem}
+.live-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#e91e63;box-shadow:0 0 8px #e91e63;margin-right:.4rem;animation:pulse 1.4s infinite}
+@keyframes pulse{50%{opacity:.35}}
+
+/* ---------- APPLICATION ---------- */
+.app-panel{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:2rem}
+.form-label{font-family:var(--font-data);font-size:.72rem;letter-spacing:.2em;text-transform:uppercase;color:var(--muted)}
+.form-control,.form-select{
+  background:var(--void-2);border:1px solid var(--line);color:var(--text);
+}
+.form-control:focus,.form-select:focus{
+  background:var(--void-2);border-color:var(--epic);color:var(--text);
+  box-shadow:0 0 0 .2rem rgba(41,196,104,.2);
+}
+.need-card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:1rem 1.2rem;height:100%}
+.need-card .cls{font-weight:700}
+.need-hot{border-color:var(--legendary);box-shadow:0 0 16px rgba(240,194,75,.15)}
+.need-hot .demand{color:var(--legendary)}
+.demand{font-family:var(--font-data);font-size:.7rem;letter-spacing:.2em;text-transform:uppercase;color:var(--epic-soft)}
+
+/* ---------- FORUMS ---------- */
+.forum-gate{max-width:420px;margin:0 auto;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:2rem;text-align:center}
+.forum-cat{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:1rem 1.3rem;margin-bottom:.8rem;display:flex;justify-content:space-between;align-items:center;cursor:pointer;transition:border-color .2s}
+.forum-cat:hover{border-color:var(--epic)}
+
+.thread-row{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding: .9rem 1.2rem;margin-bottom:.6rem;cursor:pointer;transition:border-color .2s}
+.thread-row:hover{border-color:var(--epic)}
+.post-card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:1rem 1.2rem;margin-bottom:.7rem}
+.post-card.op{border-color:var(--epic)}
+.post-meta{font-family:var(--font-data);font-size:.7rem;color:var(--muted);letter-spacing:.1em;margin-bottom:.4rem}
+.post-meta b{color:var(--legendary)}
+.post-body{font-size:.9rem;color:#D5D2C6;white-space:pre-wrap;margin:0}
+footer{border-top:1px solid var(--line);padding:2.5rem 0;color:var(--muted);font-size:.85rem}
+.footer-mark{font-family:var(--font-display);font-weight:900;color:var(--text)}
+.badge-note{background:rgba(41,196,104,.12);border:1px solid rgba(41,196,104,.4);color:var(--epic-soft);font-weight:500}
 </style>
 </head>
-<body>
+<body class="booting">
 
-<!-- ============ LOGIN GATE ============ -->
-<div id="gate" class="gate panel text-center">
-  <h1 style="font-size:1.4rem"><span class="text-legendary">W</span>AI Command Deck</h1>
-  <p class="note mb-3">Admin access only. All actions are enforced server-side.</p>
-  <input class="form-control mb-2" id="gUser" placeholder="Username or email" autocomplete="username">
-  <input class="form-control mb-3" id="gPass" type="password" placeholder="Password" autocomplete="current-password">
-  <button class="btn btn-apply w-100" id="gBtn">Log In</button>
-  <div class="data-font mt-2 note" id="gStatus"></div>
+<!-- ============ SPLASH ============ -->
+<div id="splash" class="d-none">
+  <video id="splashVid" muted playsinline preload="auto"></video>
+  <button id="splashSkip">Skip ›</button>
 </div>
 
-<!-- ============ DECK ============ -->
-<div id="deck" class="container py-4 d-none" style="max-width:1000px">
-  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
-    <h1 style="font-size:1.4rem;margin:0"><span class="text-legendary">W</span>AI Command Deck</h1>
-    <div class="d-flex align-items-center gap-2">
-      <span class="note data-font">Signed in as <b class="text-legendary" id="whoAmI"></b></span>
-      <button class="btn btn-outline-epic btn-sm" id="outBtn">Log Out</button>
+<!-- ============ NAV ============ -->
+<nav class="navbar navbar-expand-lg fixed-top">
+  <div class="container">
+    <a class="navbar-brand" href="#home" data-page="home">
+      <span id="navName"><span class="wordmark">Intent</span></span>
+      <small id="navSub">Mythic Raiding Guild</small>
+    </a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="mainNav">
+      <ul class="navbar-nav ms-auto align-items-lg-center gap-lg-1">
+        <li class="nav-item"><a class="nav-link" href="#home" data-page="home">Progress</a></li>
+        <li class="nav-item"><a class="nav-link" href="#about" data-page="about">About</a></li>
+        <li class="nav-item"><a class="nav-link" href="#roster" data-page="roster">Roster</a></li>
+        <li class="nav-item"><a class="nav-link" href="#streams" data-page="streams">Streams</a></li>
+        <li class="nav-item"><a class="nav-link" href="#raids" data-page="raids">Raids</a></li>
+        <li class="nav-item"><a class="nav-link" href="#loot" data-page="loot">Loot</a></li>
+        <li class="nav-item d-none"><a class="nav-link" href="#forums" data-page="forums">Forums</a></li>
+        <li class="nav-item ms-lg-2 mt-2 mt-lg-0">
+          <a class="btn btn-apply btn-sm px-3" href="#apply" data-page="apply">Apply Now</a>
+        </li>
+        <li class="nav-item ms-lg-2 mt-2 mt-lg-0 d-flex align-items-center" id="navAuth"></li>
+      </ul>
     </div>
   </div>
+</nav>
 
-  <ul class="nav deck-tabs mb-4 flex-wrap" role="tablist">
-    <li class="nav-item"><button class="nav-link active" data-tab="site">Site</button></li>
-    <li class="nav-item"><button class="nav-link" data-tab="content">Content</button></li>
-    <li class="nav-item"><button class="nav-link" data-tab="apps">Applications <span class="pill pill-new d-none" id="appCount"></span></button></li>
-    <li class="nav-item"><button class="nav-link" data-tab="members">Members</button></li>
-    <li class="nav-item"><button class="nav-link" data-tab="integrations">Integrations</button></li>
-  </ul>
-
-  <!-- ---- SITE TAB ---- -->
-  <div class="tabpane" id="tab-site">
-    <div class="panel mb-3">
-      <h5 class="mb-3">Identity</h5>
-      <div class="row g-3">
-        <div class="col-md-6"><label class="form-label">Guild Name</label><input class="form-control" id="cfg_name"></div>
-        <div class="col-md-6"><label class="form-label">Realm Line (hero)</label><input class="form-control" id="cfg_realmLine"></div>
-        <div class="col-md-6"><label class="form-label">Nav Subtitle</label><input class="form-control" id="cfg_navSub"></div>
-        <div class="col-md-6"><label class="form-label">Hero Eyebrow</label><input class="form-control" id="cfg_eyebrow"></div>
-        <div class="col-md-6"><label class="form-label">Hero Keyart URL</label><input class="form-control" id="cfg_heroImageUrl" placeholder="Full-bleed backdrop behind the homepage hero — a raid screenshot works great"></div>
-        <div class="col-md-6"><label class="form-label">Progression Screenshot URL</label><input class="form-control" id="cfg_progShotUrl" placeholder="Shown beside the tier card — blank hides the frame"></div>
-        <div class="col-md-6"><label class="form-label">Progression Screenshot Caption</label><input class="form-control" id="cfg_progShotCaption" placeholder="e.g. Week 1 · First Pulls"></div>
-        <div class="col-md-6"><label class="form-label">Banner Image URL (hero art)</label><input class="form-control" id="cfg_bannerUrl" placeholder="img/brand/banner.png"></div>
-        <div class="col-md-6"><label class="form-label">Icon URL (crest — nav, favicon, forum gate, footer)</label><input class="form-control" id="cfg_iconUrl" placeholder="img/brand/icon.png"></div>
-        <div class="col-md-6"><label class="form-label">Splash Video URL (homepage intro)</label><input class="form-control" id="cfg_splashUrl" placeholder="img/brand/intro.mp4 — blank disables"></div>
-        <div class="col-md-6"><label class="form-label">Splash Cooldown (days between showings)</label><input class="form-control" id="cfg_splashDays" placeholder="7"></div>
-      </div>
-    </div>
-    <div class="panel mb-3">
-      <h5 class="mb-3">About / Bio</h5>
-      <label class="form-label">Paragraphs (blank line between them — **bold**, *italic*, ==gold== supported)</label>
-      <textarea class="form-control mb-3" id="cfg_about" rows="7"></textarea>
-      <label class="form-label">"At a Glance" items (one per line, emoji included — **bold**, *italic*, ==gold== supported)</label>
-      <textarea class="form-control" id="cfg_glance" rows="5"></textarea>
-    </div>
-    <div class="panel mb-3">
-      <h5 class="mb-3">Stream Overlay <span class="pill" style="background:rgba(41,196,104,.15);color:var(--epic-soft);font-size:.6rem;letter-spacing:.1em">TWITCH / OBS</span></h5>
-      <p class="note mb-3">Feeds the recruiting overlay's browser source. Progression, next-pull, and recruiting needs pull automatically from your live config — these fields control the wording and which stats show.</p>
-      <div class="row g-3">
-        <div class="col-md-6"><label class="form-label">Headline</label><input class="form-control" id="cfg_ovHeadline" placeholder="Recruiting"></div>
-        <div class="col-md-6"><label class="form-label">Site URL (shown on overlay)</label><input class="form-control" id="cfg_ovSiteUrl" placeholder="intent.gg"></div>
-        <div class="col-md-12"><label class="form-label">Recruiting Pitch (one short line)</label><input class="form-control" id="cfg_ovPitch" placeholder="Mythic prog · building toward Cutting Edge"></div>
-        <div class="col-md-12"><label class="form-label">Tagline (corner bug footer)</label><input class="form-control" id="cfg_ovTagline" placeholder="Mon–Thu · 9–11 CT"></div>
-      </div>
-      <label class="form-label mt-3 mb-2">Stats shown on overlay</label>
-      <div class="d-flex gap-4 flex-wrap">
-        <label class="d-flex align-items-center gap-2" style="cursor:pointer"><input type="checkbox" id="cfg_ovMythic" checked> Mythic kill count</label>
-        <label class="d-flex align-items-center gap-2" style="cursor:pointer"><input type="checkbox" id="cfg_ovNext" checked> Next pull (boss)</label>
-        <label class="d-flex align-items-center gap-2" style="cursor:pointer"><input type="checkbox" id="cfg_ovNights" checked> Raid nights / week</label>
-      </div>
-    </div>
-    <div class="panel mb-3">
-      <h5 class="mb-3">Raid Schedule</h5>
-      <div id="list_schedule"></div>
-      <button class="btn btn-outline-epic btn-sm" data-add="schedule">+ Add Row</button>
-      <div class="mt-3"><label class="form-label">Schedule Footnote</label><input class="form-control" id="cfg_schedNote"></div>
-    </div>
-    <div class="panel mb-3">
-      <h5 class="mb-3">Raider Expectations (Rules)</h5>
-      <div id="list_rules"></div>
-      <button class="btn btn-outline-epic btn-sm" data-add="rules">+ Add Rule</button>
-    </div>
-  </div>
-
-  <!-- ---- CONTENT TAB ---- -->
-  <div class="tabpane d-none" id="tab-content">
-    <div class="panel mb-3"><h5 class="mb-3">Progression Tiers</h5>
-      <p class="note">Bosses: one per line, in kill order — <code>Name | image URL</code> (image optional — blank auto-uses the Warcraft Logs boss image once the guild has logged pulls on it, or paste <code>assets.rpglogs.com/img/warcraft/bosses/{id}-icon.jpg</code> using the id from any WCL rankings URL (<code>boss=1234</code>); no image data yet = styled gradient). Kill counts sync live from Raider.io when the slug matches; the numeric fields only cover offline fallback.</p>
-      <div id="list_tiers"></div><button class="btn btn-outline-epic btn-sm" data-add="tiers">+ Add Tier</button></div>
-    <div class="panel mb-3"><h5 class="mb-3">Why Raid With Us</h5><p class="note">The three pitch cards on the homepage — **bold**, *italic*, ==gold== work in the text.</p><div id="list_why"></div><button class="btn btn-outline-epic btn-sm" data-add="why">+ Add Card</button></div>
-    <div class="panel mb-3"><h5 class="mb-3">Trophy Case</h5><div id="list_trophies"></div><button class="btn btn-outline-epic btn-sm" data-add="trophies">+ Add Trophy</button></div>
-    <div class="panel mb-3"><h5 class="mb-3">Leadership</h5><div id="list_leaders"></div><button class="btn btn-outline-epic btn-sm" data-add="leaders">+ Add Leader</button></div>
-    <div class="panel mb-3"><h5 class="mb-3">Streamers</h5><div id="list_streamers"></div><button class="btn btn-outline-epic btn-sm" data-add="streamers">+ Add Streamer</button></div>
-    <div class="panel mb-3"><h5 class="mb-3">Kill VODs</h5><div id="list_vods"></div><button class="btn btn-outline-epic btn-sm" data-add="vods">+ Add VOD</button></div>
-    <div class="panel mb-3"><h5 class="mb-3">Recruitment Needs</h5><div id="list_needs"></div><button class="btn btn-outline-epic btn-sm" data-add="needs">+ Add Need</button></div>
-  </div>
-
-  <!-- ---- APPLICATIONS TAB ---- -->
-  <div class="tabpane d-none" id="tab-apps">
-    <div class="panel">
-      <div class="d-flex justify-content-between align-items-center mb-3">
-        <h5 class="m-0">Application Inbox</h5>
-        <button class="btn btn-outline-epic btn-sm" id="appRefresh">Refresh</button>
-      </div>
-      <div id="appList"><p class="note">Loading…</p></div>
-    </div>
-  </div>
-
-  <!-- ---- MEMBERS TAB ---- -->
-  <div class="tabpane d-none" id="tab-members">
-    <div class="panel mb-3">
-      <h5 class="mb-3">Create Member Account</h5>
-      <div class="row g-3 align-items-end">
-        <div class="col-md-3"><label class="form-label">Username</label><input class="form-control" id="nuUser" placeholder="e.g. Voidbrand"></div>
-        <div class="col-md-3"><label class="form-label">Password</label><input class="form-control" id="nuPass" placeholder="Temp password"></div>
-        <div class="col-md-3"><label class="form-label">Role</label>
-          <select class="form-select" id="nuRole"><option value="member">Member</option><option value="officer">Officer</option><option value="admin">Admin</option></select>
+<!-- ============ PAGE: HOME / PROGRESS ============ -->
+<main>
+<section class="page" id="page-home">
+  <div class="hero-wrap">
+    <div class="hero-keyart" id="heroKeyart"></div>
+    <div class="hero-scrim"></div>
+    <div class="hero-glow"></div>
+    <div class="hero-embers" id="heroEmbers"></div>
+    <div class="hero container">
+      <div class="eyebrow mb-2" id="heroEyebrow">Intent on Pushing Limits</div>
+      <h1 id="heroName">INTENT</h1>
+      <div class="realm-line data-font" id="heroRealm">VEK'NILASH · US · CROSS-FACTION</div>
+      <div class="stat-bar" id="rankStrip">
+        <div class="stat-ident">
+          <span class="realm-name" id="statTier">Season 1 · Midnight</span>
+          <span class="realm-sub">Guild Standing</span>
         </div>
-        <div class="col-md-3"><button class="btn btn-apply w-100" id="nuBtn">Create &amp; Activate</button></div>
+        <div class="stat-cell"><div class="num" id="rankRealm">UNRANKED</div><div class="lbl" id="rankRealmLbl">Realm · New Tag</div></div>
+        <div class="stat-cell"><div class="num" id="memberCount">—</div><div class="lbl">Members</div></div>
+        <div class="stat-cell"><div class="num" id="raidNights">4</div><div class="lbl">Raid Nights</div></div>
       </div>
-      <div class="note mt-2" id="nuStatus">New accounts log in with their username + temp password, then are forced to set their own password on first login.</div>
-    </div>
-    <div class="panel">
-      <div class="d-flex justify-content-between align-items-center mb-3">
-        <h5 class="m-0">Member Accounts</h5>
-        <button class="btn btn-outline-epic btn-sm" id="memRefresh">Refresh</button>
+      <div class="mt-4 d-flex gap-2 justify-content-center flex-wrap">
+        <a href="#apply" data-page="apply" class="btn btn-apply px-4 py-2">Join the Roster</a>
+        <a href="#about" data-page="about" class="btn btn-outline-epic px-4 py-2">Raid Schedule</a>
       </div>
-      <div class="table-responsive"><table class="table m-0">
-        <thead><tr><th>Username</th><th>Role</th><th>Status</th><th>Created</th><th></th></tr></thead>
-        <tbody id="memBody"></tbody>
-      </table></div>
-      <p class="note mt-2 mb-0">Deactivating an account instantly locks it out of the forums (enforced by the database, not the page). Full deletion is done in the Supabase dashboard → Authentication.</p>
+      <div class="sync-line data-font mt-3" id="syncStatus">SYNCING…</div>
     </div>
   </div>
 
-  <!-- ---- INTEGRATIONS TAB ---- -->
-  <div class="tabpane d-none" id="tab-integrations">
-    <div class="panel mb-3">
-      <h5 class="mb-3">Application Delivery</h5>
-      <label class="form-label">Discord Webhook URL</label>
-      <input class="form-control mb-1" id="cfg_discordWebhook" placeholder="https://discord.com/api/webhooks/…">
-      <p class="note mb-3">Applications always land in the inbox above regardless. The webhook additionally pings your officer channel. ⚠ Because the public site sends this ping from the visitor's browser, the URL is technically extractable from the site config — if it ever gets spammed, just regenerate the webhook in Discord and paste the new one here.</p>
-      <label class="form-label">Google Apps Script URL (Sheet logging)</label>
-      <input class="form-control mb-3" id="cfg_googleScriptUrl" placeholder="https://script.google.com/macros/s/…/exec">
-      <label class="form-label">Discord Server ID (live online widget)</label>
-      <input class="form-control mb-3" id="cfg_discordServerId" placeholder="e.g. 1535182760023564381">
-      <label class="form-label">Raid Signups Webhook URL</label>
-      <input class="form-control mb-3" id="cfg_signupWebhook" placeholder="Create a webhook inside your #raid-signups channel and paste it here">
-      <div class="row g-2">
-        <div class="col-md-6">
-          <label class="form-label">Keys Feed — Minimum Key Level</label>
-          <input class="form-control" id="cfg_keysMinLevel" placeholder="e.g. 8 — runs below this never show">
+  <!-- Current Progression -->
+  <div class="container section pt-2">
+    <div class="section-title center"><h2>Current Progression</h2></div>
+    <p class="section-sub">Midnight · Season 1 — live boss-by-boss status across the active tier. The Venomous Abyss opens with Season 2 on August 18.</p>
+    <div class="prog-grid">
+      <div id="tierGrid"><!-- populated by JS (live Raider.io or fallback) --></div>
+      <div class="prog-side">
+        <div class="prog-shot d-none" id="progShotWrap">
+          <div class="prog-shot-img" id="progShotImg"></div>
+          <span class="prog-shot-cap data-font" id="progShotCap"></span>
         </div>
-        <div class="col-md-6">
-          <label class="form-label">Keys Feed — Watch Guild Ranks Up To</label>
-          <input class="form-control" id="cfg_keysMaxRank" placeholder="e.g. 3 — 0 is GM; bot re-reads within ~45 min">
+        <div class="app-panel" style="padding:1.3rem 1.4rem">
+          <div class="data-font" style="font-size:.62rem;letter-spacing:.25em;text-transform:uppercase;color:var(--epic-soft);margin-bottom:.5rem">Live Data</div>
+          <p style="margin:0;font-size:.88rem;color:#D5D2C6">Progression, roster, and rankings sync automatically from <a href="https://raider.io" target="_blank" rel="noopener">Raider.io</a> and <a href="https://www.warcraftlogs.com" target="_blank" rel="noopener">Warcraft Logs</a>.</p>
         </div>
       </div>
-      <p class="note mb-0 mt-1">Requires Server Settings → Widget → Enable Server Widget in Discord (with an Invite Channel picked so the Join button works). This is the Server ID from that same page — safe to publish; it only exposes what the widget setting shares.</p>
-    </div>
-    <div class="panel">
-      <h5 class="mb-3">Data Sources</h5>
-      <div class="row g-3">
-        <div class="col-md-4"><label class="form-label">Raider.io Region</label><input class="form-control" id="cfg_region"></div>
-        <div class="col-md-4"><label class="form-label">Realm (slug)</label><input class="form-control" id="cfg_realm"></div>
-        <div class="col-md-4"><label class="form-label">Guild Name (exact)</label><input class="form-control" id="cfg_rioGuild"></div>
-      </div>
-      <p class="note mt-2 mb-0">Used for live progression, rankings, and the roster. The Raider.io API is public — no key required.</p>
     </div>
   </div>
 
-  <div class="savebar mt-4">
-    <div class="container d-flex justify-content-between align-items-center flex-wrap gap-2" style="max-width:1000px">
-      <span class="note" id="saveStatus">Changes publish to the live site the moment you save.</span>
-      <button class="btn btn-apply px-4" id="saveBtn">💾 Save &amp; Publish</button>
+  <!-- Recent keys -->
+  <div class="container section d-none" id="keysSection">
+    <div class="section-title center"><h2>Recent Keystones</h2></div>
+    <div class="keys-feed" id="keysFeed"></div>
+  </div>
+
+  <!-- Achievements -->
+  <div class="container section">
+    <div class="section-title center"><h2>Trophy Case</h2></div>
+    <p class="section-sub">Every trophy here was a guild-wide effort. The empty frames are next.</p>
+    <div class="row g-4" id="trophyGrid"></div>
+  </div>
+
+  <!-- Recruitment band -->
+  <div class="recruit-band" id="recruitBand">
+    <div class="recruit-inner">
+      <div class="eyebrow">Recruitment</div>
+      <h2 class="display-font" style="font-size:1.9rem;margin:.5rem 0 0">Every Kill Under This Tag Is a First</h2>
+      <p style="color:var(--muted);margin:1rem auto 0;font-size:.95rem;max-width:540px">Ground-floor spots on a Cutting Edge push don't stay open long.</p>
+      <div class="d-flex gap-3 justify-content-center flex-wrap mt-4" id="recruitNeeds"></div>
+      <div class="mt-4 d-flex gap-2 justify-content-center flex-wrap">
+        <a href="#apply" data-page="apply" class="btn btn-apply px-4 py-2" id="recruitApplyBtn">Apply to Intent</a>
+        <a href="#" target="_blank" rel="noopener" class="btn btn-outline-epic px-4 py-2 d-none" id="recruitDiscord">Join Discord</a>
+      </div>
+      <div class="data-font mt-3" style="font-size:.66rem;letter-spacing:.14em;color:var(--muted)">APPLICATIONS ANSWERED WITHIN 48 HOURS — USUALLY FASTER</div>
+    </div>
+  </div>
+
+  <!-- Why us -->
+  <div class="container section">
+    <div class="section-title center"><h2>Why Raid With Us</h2></div>
+    <div class="row g-4" id="whyCards">
+      <div class="col-md-4">
+        <div class="tier-card">
+          <div class="tier-name text-legendary">Veteran Core</div>
+          <p class="mt-2 mb-0" style="color:#D5D2C6;font-size:.9rem">A new tag, not new raiders. Our core has years of Mythic progression together — and in the guilds that collapsed around us. We split off to build it right, and we know exactly which mistakes we're not repeating.</p>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="tier-card">
+          <div class="tier-name text-epic">Standards From Pull One</div>
+          <p class="mt-2 mb-0" style="color:#D5D2C6;font-size:.9rem">Four focused nights with assignments posted before the first pull. Logs get reviewed between raids, prep is expected, and the standard is the same for officers and trials.</p>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="tier-card">
+          <div class="tier-name text-legendary">Ground Floor</div>
+          <p class="mt-2 mb-0" style="color:#D5D2C6;font-size:.9rem">Every kill under this tag is a first. Shape the roster and the culture instead of slotting into someone else's history. Progression matters — but so does wanting to log in.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ PAGE: ABOUT ============ -->
+<section class="page" id="page-about">
+  <div class="container section" style="padding-top:6.5rem">
+    <div class="section-title"><h2>About the Guild</h2></div>
+    <div class="row g-4">
+      <div class="col-lg-7" id="aboutParas"></div>
+      <div class="col-lg-5">
+        <div class="tier-card" style="height:auto">
+          <div class="tier-name mb-2">Guild at a Glance</div>
+          <ul class="list-unstyled mb-0" style="font-size:.9rem;color:#D5D2C6" id="glanceList"></ul>
+        </div>
+        <div id="discordWidget" class="mt-4"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="container section pt-0">
+    <div class="section-title"><h2>Raid Schedule</h2></div>
+    <div class="row g-4">
+      <div class="col-lg-6">
+        <div class="sched-table" id="schedTable"></div>
+        <p class="mt-2 mb-0" style="font-size:.8rem;color:var(--muted)" id="schedNote"></p>
+      </div>
+      <div class="col-lg-6">
+        <h5 class="display-font mb-3" style="font-size:1.05rem">Raider Expectations</h5>
+        <ol class="rule-list ps-3" id="ruleList"></ol>
+      </div>
+    </div>
+  </div>
+
+  <div class="container section pt-0">
+    <div class="section-title"><h2>Founders &amp; Leadership</h2></div>
+    <div class="row g-4" id="leaderGrid"></div>
+  </div>
+</section>
+
+<!-- ============ PAGE: ROSTER ============ -->
+<section class="page" id="page-roster">
+  <div class="container section" style="padding-top:6.5rem">
+    <div class="section-title"><h2>Guild Roster</h2></div>
+    <p class="section-sub" style="text-align:left;margin-left:0">Pulled live from Raider.io. Click any raider to open their full profile — score, gear, and parse history.</p>
+    <div class="d-flex gap-2 mb-3 flex-wrap">
+      <input id="rosterFilter" class="form-control" style="max-width:260px" placeholder="Search raider...">
+      <select id="rosterRank" class="form-select" style="max-width:200px">
+        <option value="">All ranks</option>
+        <option value="0">Guild Master</option>
+        <option value="1">Officers</option>
+        <option value="raider">Raiders</option>
+      </select>
+    </div>
+    <div class="table-responsive">
+      <table class="roster-table">
+        <thead><tr><th>Name</th><th>Rank</th><th class="d-none d-md-table-cell">Realm</th><th>Raider.io</th></tr></thead>
+        <tbody id="rosterBody"><tr><td colspan="4" class="text-center py-4 data-font" style="color:var(--muted)">Loading roster…</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ============ PAGE: STREAMS ============ -->
+<section class="page" id="page-streams">
+  <div class="container section" style="padding-top:6.5rem">
+    <div class="section-title"><h2>Guild Streamers</h2></div>
+    <p class="section-sub" style="text-align:left;margin-left:0">Watch progression live, catch kill VODs, or just hang out in chat on off-nights.</p>
+    <div class="row g-4" id="streamGrid"></div>
+    <div class="section-title mt-5"><h2>Kill VOD Library</h2></div>
+    <div class="row g-3" id="vodGrid"></div>
+  </div>
+</section>
+
+<!-- ============ PAGE: APPLY ============ -->
+<section class="page" id="page-apply">
+  <div class="container section" style="padding-top:6.5rem">
+    <div class="section-title"><h2>Recruitment Needs</h2></div>
+    <div class="row g-3 mb-5" id="needsGrid"></div>
+
+    <div class="section-title"><h2>Apply to Intent</h2></div>
+    <p class="section-sub" style="text-align:left;margin-left:0">Applications go straight to the officer channel. We respond within 48 hours — usually faster.</p>
+    <div class="row justify-content-center">
+      <div class="col-lg-9">
+        <div class="app-panel">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label">Character Name *</label>
+              <input class="form-control" id="appChar" placeholder="e.g. Voidbrand">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Realm *</label>
+              <input class="form-control" id="appRealm" value="Vek'Nilash">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Class *</label>
+              <select class="form-select" id="appClass">
+                <option value="">Select…</option>
+                <option>Death Knight</option><option>Demon Hunter</option><option>Druid</option>
+                <option>Evoker</option><option>Hunter</option><option>Mage</option><option>Monk</option>
+                <option>Paladin</option><option>Priest</option><option>Rogue</option><option>Shaman</option>
+                <option>Warlock</option><option>Warrior</option>
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Main Spec *</label>
+              <input class="form-control" id="appSpec" placeholder="e.g. Demonology">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Discord Tag *</label>
+              <input class="form-control" id="appDiscord" placeholder="username">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Battle.net (optional)</label>
+              <input class="form-control" id="appBnet" placeholder="Name#1234">
+            </div>
+            <div class="col-12">
+              <label class="form-label">Warcraft Logs / Raider.io Links *</label>
+              <input class="form-control" id="appLogs" placeholder="Paste your logs — we will look">
+            </div>
+            <div class="col-12">
+              <label class="form-label">Raid Experience *</label>
+              <textarea class="form-control" id="appExp" rows="3" placeholder="Recent tiers, CE history, notable prog moments…"></textarea>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Off-specs (Mythic-viable, and willing?)</label>
+              <input class="form-control" id="appOffspec" placeholder="e.g. Resto viable, happy to flex for prog">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Known conflicts in the next 2 months?</label>
+              <input class="form-control" id="appConflicts" placeholder="Travel, work seasons, exams — anything scheduled">
+            </div>
+            <div class="col-12">
+              <label class="form-label">How did you find us? Referred by anyone?</label>
+              <input class="form-control" id="appFound" placeholder="Guild finder, wowprogress, a friend's name…">
+            </div>
+            <div class="col-12">
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="appSched">
+                <label class="form-check-label" style="font-size:.9rem;color:#D5D2C6">I can make the posted raid schedule with 95%+ attendance</label>
+              </div>
+              <div class="form-check mt-1">
+                <input class="form-check-input" type="checkbox" id="appBench">
+                <label class="form-check-label" style="font-size:.9rem;color:#D5D2C6">I understand Intent rosters more raiders than fight spots, and I may sit some pulls *</label>
+              </div>
+            </div>
+            <div class="col-12 d-flex align-items-center gap-3 flex-wrap">
+              <button class="btn btn-apply px-4 py-2" id="appSubmit">Submit Application</button>
+              <span id="appStatus" class="data-font" style="font-size:.8rem;color:var(--muted)"></span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ PAGE: RAIDS ============ -->
+<section class="page" id="page-raids">
+  <div class="container section" style="padding-top:6.5rem">
+    <div class="section-title"><h2>Raid Signups</h2></div>
+    <div id="raidGate" class="forum-gate">
+      <div class="display-font mb-1" style="font-size:1.2rem">Members Only</div>
+      <p style="font-size:.85rem;color:var(--muted)">Log in with your guild account to see upcoming raids and rosters.</p>
+      <button class="btn btn-apply w-100" id="raidLoginBtn">Log In</button>
+    </div>
+    <div id="raidHome" class="d-none">
+
+      <div class="row g-4 mb-4">
+        <div class="col-lg-7">
+          <div class="app-panel" style="padding:1.2rem 1.2rem 1rem">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <button class="btn btn-outline-epic btn-sm" id="calPrev">‹</button>
+              <h5 class="display-font m-0" id="calTitle" style="font-size:1.05rem"></h5>
+              <button class="btn btn-outline-epic btn-sm" id="calNext">›</button>
+            </div>
+            <div id="calGrid"></div>
+            <p id="calHint" class="mb-0 mt-2 d-none" style="font-size:.72rem;color:var(--muted)">Click a day to schedule a raid · click an event pill to edit it</p>
+          </div>
+        </div>
+        <div class="col-lg-5">
+          <h5 class="display-font mb-2" style="font-size:1.05rem">Upcoming Raids</h5>
+          <div id="raidUpcoming" class="raid-scroll"></div>
+        </div>
+      </div>
+
+      <div id="raidBuilder" class="app-panel mb-4 d-none" style="padding:1.4rem">
+        <h5 class="display-font mb-1" style="font-size:1.05rem">Build a Raid Event <span class="data-font" style="font-size:.65rem;color:var(--muted);letter-spacing:.15em">OFFICERS</span></h5>
+        <div class="row g-2 mb-2">
+          <div class="col-md-4"><label class="form-label">Title *</label><input class="form-control form-control-sm" id="reTitle" placeholder="e.g. Mythic Prog — Week 4"></div>
+          <div class="col-md-3"><label class="form-label">Date *</label><input class="form-control form-control-sm" id="reDate" type="date"></div>
+          <div class="col-md-2"><label class="form-label">Time</label><input class="form-control form-control-sm" id="reTime" placeholder="8:00 PM CT"></div>
+          <div class="col-md-3"><label class="form-label">Note</label><input class="form-control form-control-sm" id="reNote" placeholder="Flask up. Vaelgor dies tonight."></div>
+        </div>
+        <label class="form-label">Roster — tick from the live guild roster</label>
+        <div class="d-flex gap-2 mb-2 flex-wrap">
+          <input class="form-control form-control-sm" id="rbFilter" style="max-width:220px" placeholder="Filter names…">
+          <select class="form-select form-select-sm" id="rbRank" style="max-width:180px"><option value="">All ranks</option></select>
+        </div>
+        <div class="data-font mb-2" id="rbSource" style="font-size:.68rem;letter-spacing:.12em;color:var(--muted)"></div>
+        <div id="rbList" class="mb-2"></div>
+        <label class="form-label">Manual additions (comma separated)</label>
+        <input class="form-control form-control-sm mb-2" id="rbManual" placeholder="PuggerOne, TrialTwo">
+        <label class="form-label">Roles — pre-guessed from class; tap to correct</label>
+        <div id="rbAssign" class="mb-3"></div>
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+          <button class="btn btn-apply btn-sm px-3" id="reCreate">Create Event</button>
+          <button class="btn btn-outline-epic btn-sm d-none" id="reCancel">Cancel Edit</button>
+          <span class="data-font" id="reStatus" style="font-size:.75rem;color:var(--muted)"></span>
+        </div>
+        <p class="mt-2 mb-0" style="font-size:.75rem;color:var(--muted)">After posting to Discord, tap ✅ ❌ ❓ 🕐 on the message once to seed the reactions — webhooks can post but can't react.</p>
+      </div>
+
+      <div id="raidPastWrap" class="d-none">
+        <h5 class="display-font mb-2 mt-4" style="font-size:.95rem;color:var(--muted)">Recent</h5>
+        <div id="raidPast"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ PAGE: LOOT ============ -->
+<section class="page" id="page-loot">
+  <div class="container section" style="padding-top:6.5rem">
+    <div class="section-title"><h2>Loot Tracker</h2></div>
+    <div id="lootGate" class="forum-gate">
+      <div class="display-font mb-1" style="font-size:1.2rem">Members Only</div>
+      <p style="font-size:.85rem;color:var(--muted)">Log in with your guild account to view the loot tracker and manage your wishlist.</p>
+      <button class="btn btn-apply w-100" id="lootLoginBtn">Log In</button>
+    </div>
+    <div id="lootHome" class="d-none">
+      <div class="app-panel" style="padding:1.3rem">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+          <h5 class="display-font mb-0" style="font-size:1.05rem">Boss Loot Sheet</h5>
+          <div class="d-flex align-items-center gap-2 flex-wrap">
+            <div class="bls-toggle" role="group">
+              <button class="bls-mode on" data-blsscope="me">Personal</button>
+              <button class="bls-mode" data-blsscope="team">Team</button>
+            </div>
+            <div class="bls-toggle" role="group" id="blsModeGroup"></div>
+            <button class="btn btn-apply btn-sm" id="dtOpen">Import Droptimizer</button>
+          </div>
+        </div>
+        <p class="mt-1" style="font-size:.78rem;color:var(--muted)">Wanted items from Droptimizer imports, biggest gains first.</p>
+        <div class="lp-legend">
+          <span class="lpill lp-tier">Tier</span><span class="lpill lp-weapon">Weapon</span><span class="lpill lp-jewelry">Jewelry</span><span class="lpill lp-trinket">Trinket</span><span class="lpill lp-other">Other</span>
+        </div>
+        <div id="bsSections" class="bls-scroll"></div>
+      </div>
+
+      <div class="modal fade" id="dtModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" style="max-width:440px">
+          <div class="modal-content" style="background:var(--panel);border:1px solid var(--line);border-radius:16px">
+            <div class="modal-body p-4">
+              <div class="display-font mb-1" style="font-size:1.15rem">Droptimizer Import</div>
+              <p style="font-size:.8rem;color:var(--muted)">Run a Droptimizer on <a href="https://www.raidbots.com" target="_blank" rel="noopener">Raidbots</a>, then paste the report link. Re-import any time — the newest sim replaces the old.</p>
+              <div id="dtMeta" class="mb-2"></div>
+              <div class="d-flex gap-2">
+                <input class="form-control form-control-sm" id="dtUrl" placeholder="https://www.raidbots.com/simbot/report/…">
+                <button class="btn btn-apply btn-sm flex-shrink-0" id="dtImport">Import</button>
+              </div>
+              <div class="data-font mt-2" id="dtStatus" style="font-size:.72rem;color:var(--muted)"></div>
+              <textarea class="form-control form-control-sm mt-2 d-none" id="dtPaste" rows="3" placeholder="Paste the report's data.json contents here, then press Import again."></textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ PAGE: FORUMS ============ -->
+<section class="page" id="page-forums">
+  <div class="container section" style="padding-top:6.5rem">
+    <div class="section-title"><h2>Guild Forums</h2></div>
+    <div id="forumLogin" class="forum-gate">
+      <div class="display-font mb-1" style="font-size:1.2rem">Members Only</div>
+      <p style="font-size:.85rem;color:var(--muted)">Log in with your guild account to access strategy threads, loot discussion, and off-topic chaos.</p>
+      <input class="form-control mb-2" id="loginUser" placeholder="Username" autocomplete="username">
+      <input class="form-control mb-3" id="loginPass" type="password" placeholder="Password" autocomplete="current-password">
+      <button class="btn btn-apply w-100" id="loginBtn">Log In</button>
+      <div class="data-font mt-2" id="loginStatus" style="font-size:.75rem;color:var(--muted)"></div>
+      <hr style="border-color:var(--line)">
+      <p class="mb-0" style="font-size:.78rem;color:var(--muted)">No account? Accounts are issued by officers once your trial begins — ask on Discord.</p>
+    </div>
+
+    <div id="pwGate" class="forum-gate d-none">
+      <div class="display-font mb-1" style="font-size:1.2rem">Set Your Password</div>
+      <p style="font-size:.85rem;color:var(--muted)" id="pwGateMsg"></p>
+      <input class="form-control mb-2" id="pwNew" type="password" placeholder="New password (6+ characters)" autocomplete="new-password">
+      <input class="form-control mb-3" id="pwNew2" type="password" placeholder="Confirm new password" autocomplete="new-password">
+      <button class="btn btn-apply w-100 mb-2" id="pwSave">Save Password</button>
+      <button class="btn btn-outline-epic w-100" id="pwAlt">Cancel</button>
+      <div class="data-font mt-2" id="pwStatus" style="font-size:.75rem;color:var(--muted)"></div>
+    </div>
+
+    <div id="forumHome" class="d-none">
+      <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+        <span class="data-font" style="color:var(--muted);font-size:.85rem">Logged in as <b id="forumWho" class="text-legendary"></b></span>
+        <div class="d-flex gap-2">
+          <button class="btn btn-outline-epic btn-sm" id="pwChangeBtn">Change Password</button>
+          <button class="btn btn-outline-epic btn-sm" id="logoutBtn">Log Out</button>
+        </div>
+      </div>
+
+      <!-- category list -->
+      <div id="forumCats"></div>
+
+      <!-- thread list -->
+      <div id="forumThreads" class="d-none">
+        <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+          <button class="btn btn-outline-epic btn-sm" data-fnav="cats">← Categories</button>
+          <h5 class="display-font m-0" id="threadsCatTitle" style="font-size:1.05rem"></h5>
+          <button class="btn btn-apply btn-sm" id="newThreadBtn">+ New Thread</button>
+        </div>
+        <div id="composer" class="app-panel mb-3 d-none" style="padding:1.2rem">
+          <input class="form-control mb-2" id="ctTitle" placeholder="Thread title">
+          <textarea class="form-control mb-2" id="ctBody" rows="4" placeholder="Say your piece…"></textarea>
+          <div class="d-flex gap-2">
+            <button class="btn btn-apply btn-sm" id="ctPost">Post Thread</button>
+            <button class="btn btn-outline-epic btn-sm" id="ctCancel">Cancel</button>
+          </div>
+        </div>
+        <div id="threadList"></div>
+      </div>
+
+      <!-- single thread -->
+      <div id="forumThread" class="d-none">
+        <button class="btn btn-outline-epic btn-sm mb-3" data-fnav="threads">← Back to threads</button>
+        <div id="threadView"></div>
+        <div class="app-panel mt-3" style="padding:1.2rem">
+          <textarea class="form-control mb-2" id="replyBody" rows="3" placeholder="Write a reply…"></textarea>
+          <button class="btn btn-apply btn-sm" id="replyPost">Post Reply</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+</main>
+
+<!-- ============ UNIVERSAL LOGIN MODAL ============ -->
+<div class="modal fade" id="loginModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" style="max-width:390px">
+    <div class="modal-content" style="background:var(--panel);border:1px solid var(--line);border-radius:16px">
+      <div class="modal-body p-4 text-center">
+        <div class="display-font mb-1" style="font-size:1.2rem">Member Login</div>
+        <p style="font-size:.82rem;color:var(--muted)">One login for the forums, loot tracker, and all member areas.</p>
+        <input class="form-control mb-2" id="mUser" placeholder="Username" autocomplete="username">
+        <input class="form-control mb-3" id="mPass" type="password" placeholder="Password" autocomplete="current-password">
+        <button class="btn btn-apply w-100" id="mLoginBtn">Log In</button>
+        <div class="data-font mt-2" id="mStatus" style="font-size:.75rem;color:var(--muted)"></div>
+      </div>
     </div>
   </div>
 </div>
 
-<div class="toastbox" id="toastbox"></div>
+<footer>
+  <div class="container">
+    <div class="foot-grid">
+      <div class="foot-brand">
+        <div class="footer-mark" id="footName"><span class="wordmark">Intent</span></div>
+        <div class="data-font" style="font-size:.68rem;letter-spacing:.22em;color:var(--muted)" id="footSub">VEK'NILASH · US</div>
+      </div>
+      <div class="foot-links">
+        <a href="#home">Progress</a>
+        <a href="#roster">Roster</a>
+        <a href="#apply">Apply</a>
+      </div>
+      <div class="foot-links">
+        <a id="footDiscord" class="d-none" href="#" target="_blank" rel="noopener">Join Discord</a>
+        <a id="footWcl" href="https://www.warcraftlogs.com" target="_blank" rel="noopener">Warcraft Logs</a>
+        <a id="footRio" href="https://raider.io" target="_blank" rel="noopener">Raider.io</a>
+      </div>
+    </div>
+    <div class="foot-legal">
+      © <span id="footYear">2026</span> <span id="footLegalName">Intent</span> · Progression data via Raider.io &amp; Warcraft Logs · Not affiliated with Blizzard Entertainment
+    </div>
+  </div>
+</footer>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/js/bootstrap.bundle.min.js"></script>
 <script>
-/* ============================================================
-   SUPABASE KEYS — paste the same two values into both this file
-   and the main site (Project Settings → API in Supabase).
-   The anon key is safe to publish; the database rules (RLS)
-   are what actually protect your data.
-   ============================================================ */
-const SB = {
-  url: "https://nuwvesmpjxekdmtqcuui.supabase.co",        // e.g. https://abcd1234.supabase.co
-  anonKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im51d3Zlc21wanhla2RtdHFjdXVpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYwNTQ4MDEsImV4cCI6MjEwMTYzMDgwMX0.1M4jBv6SNm-XEACcugx8VUYTzQp2uH47zyL23edwIKA"     // the "anon public" key
-};
+/* =====================================================================
+   SUPABASE — paste the same two values here and in admin.html
+   (Supabase → Project Settings → API). The anon key is safe to
+   publish; database rules protect the data. Leave blank to run the
+   site in standalone mode (no live config, demo forums).
+   ===================================================================== */
+const SB = { url: "https://nuwvesmpjxekdmtqcuui.supabase.co", anonKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im51d3Zlc21wanhla2RtdHFjdXVpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYwNTQ4MDEsImV4cCI6MjEwMTYzMDgwMX0.1M4jBv6SNm-XEACcugx8VUYTzQp2uH47zyL23edwIKA" };
+const MEMBER_EMAIL_DOMAIN = "members.wai.gg"; // must match admin.html
 
-const MEMBER_EMAIL_DOMAIN = "members.wai.gg"; // usernames become username@this — never actually emailed
-
-/* ---------------- defaults (used until first save) ---------------- */
-const DEFAULTS = {
-  site: { name:"SlimJim Oafs", realmLine:"ILLIDAN · US · HORDE", navSub:"Illidan · US · Mythic", eyebrow:"Mythic Raiding Guild", bannerUrl:"", iconUrl:"" },
+/* =====================================================================
+   CONFIG — defaults. Once you save from the Command Deck, values from
+   the database override everything in this block automatically.
+   ===================================================================== */
+const CONFIG = {
+  site: { name:"Intent", realmLine:"VEK'NILASH · US · CROSS-FACTION", navSub:"Mythic Raiding Guild", eyebrow:"Intent on Pushing Limits" },
   about: {
     paragraphs: [
-      "Working as Intended is a Mythic progression guild on Illidan-US. We formed around a simple idea: serious progression doesn't require a toxic environment or a 4-night schedule — it requires preparation, consistency, and a roster that trusts each other.",
-      "We raid two nights a week and aim for Cutting Edge every tier. Outside raid, the guild runs nightly Mythic+ groups, weekly sales/alt runs, and a Discord that never sleeps. Whether you're a hardcore parse-chaser or a keystone enjoyer, there's a seat at the table.",
-      "The name? Every wipe is a feature, not a bug — until it's a kill."
+      "Intent is a new Mythic progression guild, founded by a group of friends who've raided Mythic together — and apart — for years. We've all been in the guilds that fell apart mid-tier: the ones that burned people out with five-night schedules, or let a toxic core rot the roster from the inside. We started this one to do it right from pull one.",
+      "We're building for Cutting Edge, and we're honest that we haven't earned it under this tag yet. What we bring is experience, a clear standard, and officers who've done the work before. We raid four nights a week, review our own logs, and expect everyone to show up prepared.",
+      "If you want to be part of a roster from the ground floor rather than slot into someone else's, this is that opportunity. So.. Are you Intent on Pushing Limits?"
     ],
-    glance: ["⚔️ Faction: Horde · Illidan (US)","🗓️ Raid nights: Tue / Thu","🎯 Goal: Cutting Edge every tier","🔑 M+: Nightly key groups, KSM+ push teams","🎙️ Comms: Discord (required on raid nights)"]
+    glance: ["Est. | August 8, 2026","Raid | Mon / Tue / Wed / Thu","M+ | Keys, KSM+ push teams","Goals | Cutting Edge every tier","Comms | Discord (required on raid nights)"]
   },
   schedule: [
-    {day:"Tuesday", time:"8:00 – 11:00 PM CT", what:"Mythic Progression"},
-    {day:"Thursday", time:"8:00 – 11:00 PM CT", what:"Mythic Progression"},
-    {day:"Sunday", time:"7:00 – 9:00 PM CT", what:"Optional Heroic / Alt / Sales"},
-    {day:"Nightly", time:"Evenings", what:"Mythic+ Key Groups"}
-  ],
-  schedNote: "Invites go out 15 minutes before start. First pull is on time.",
-  rules: [
-    {title:"Come prepared.", body:"Know the fights, bring full consumables (bank covers feasts/cauldrons), gear enchanted and gemmed before pull one."},
-    {title:"95% attendance.", body:"Life happens — post absences in Discord ahead of time. No-shows without notice cost your spot."},
-    {title:"Own your mistakes.", body:"We review logs, not to shame, but to fix. \"My bad, adjusting\" beats excuses every time."},
-    {title:"Sitting happens.", body:"Roster is 24–26 deep for a reason. Benched raiders stay on Discord and stay ready."},
-    {title:"Loot is council-lite.", body:"RCLootCouncil, prioritizing throughput upgrades for progression. No drama, no exceptions."},
-    {title:"Be someone people want to raid with.", body:"Banter yes, toxicity no. This one is non-negotiable."}
+    {day:"Monday", time:"9:00 – 11:00 PM CT", what:"Mythic Progression"},
+    {day:"Tuesday", time:"9:00 – 11:00 PM CT", what:"Mythic Progression"},
+    {day:"Wednesday", time:"9:00 – 11:00 PM CT", what:"Mythic Progression"},
+    {day:"Thursday", time:"9:00 – 11:00 PM CT", what:"Mythic Progression"}
   ],
   why: [
     { title:"Veteran Core", text:"A new tag, not new raiders. Our core has years of Mythic progression together — and in the guilds that collapsed around us. We split off to build it right, and we know exactly which mistakes we're not repeating." },
     { title:"Standards From Pull One", text:"Four focused nights with assignments posted before the first pull. Logs get reviewed between raids, prep is expected, and the standard is the same for officers and trials." },
     { title:"Ground Floor", text:"Every kill under this tag is a first. Shape the roster and the culture instead of slotting into someone else's history. Progression matters — but so does wanting to log in." }
   ],
-  trophies: [
-    { name:"Cutting Edge: Midnight Falls", legendary:true, desc:"Defeated Midnight Falls on Mythic difficulty before the season's end.", flavor:"\"The Sunwell holds. Barely.\"", date:"Season 1 · Midnight" },
-    { name:"Realm-Competitive Progression", legendary:false, desc:"Consistent top-bracket finishes on one of the most competitive servers in NA.", flavor:"\"Illidan is not a casual address.\"", date:"Ongoing" },
-    { name:"Two Nights, Full Clear", legendary:true, desc:"Achieved full Mythic clears on a 6-hour weekly schedule.", flavor:"\"Efficiency is a raid buff.\"", date:"Guild philosophy" },
-    { name:"Keystone Hero Squad", legendary:false, desc:"Multiple in-guild title-range Mythic+ teams pushing every season.", flavor:"\"The route is contested.\"", date:"Every season" },
-    { name:"Zero Roster Collapses", legendary:false, desc:"Core roster retained across every tier since founding.", flavor:"\"People stay where they're valued.\"", date:"Since founding" },
-    { name:"Ahead of the Curve: Every Tier", legendary:false, desc:"AOTC secured within the opening weeks of every raid since founding.", flavor:"\"Heroic is the warm-up.\"", date:"Every tier" }
+  schedNote: "Invites go out 15 minutes before start. First pull is on time.",
+  rules: [
+    {title:"Own your mistakes.", body:"We review logs, not to shame, but to improve. \"My bad, adjusting\" beats excuses every time."},
+    {title:"Be someone people want to raid with.", body:"Banter yes, toxicity no. This one is non-negotiable."},
+    {title:"Come prepared.", body:"Know the fights, bring consumables, have your gear enchanted and gemmed."},
+    {title:"Sitting happens.", body:"Benched raiders stay on Discord and stay ready."},
+    {title:"Loot is council-lite.", body:"RCLootCouncil, prioritizing throughput upgrades for progression. No drama, no exceptions."},
+    {title:"Attendance.", body:"Life happens — post absences in Discord ahead of time if possible."}
   ],
-  leaders: [
-    { name:"YourGM", role:"Guild Master · Founder", gm:true, blurb:"Founded WAI to prove CE is possible on two nights. Handles vision, roster, and the checkbook." },
-    { name:"RaidLead", role:"Raid Leader", gm:false, blurb:"Voice on comms. Turns 300 pulls of chaos into one clean kill. Reviews every log so you don't have to." },
-    { name:"RecruitO", role:"Recruitment Officer", gm:false, blurb:"First person you'll talk to. Runs trials, tracks the bench, and answers apps within 48 hours." },
-    { name:"KeyLead", role:"M+ Officer", gm:false, blurb:"Organizes nightly keys and the title push team. Knows every route, contests every route." }
-  ],
+  rio: { region:"us", realm:"veknilash", guildName:"Intent" },
+  integrations: { discordWebhook:"", googleScriptUrl:"" },
   streamers: [
-    { twitch:"yourgm", name:"GM", bio:"Guild Master. Streams every raid night from the tank seat. Expect calm calls and loud deaths.", schedule:"Tue/Thu raid + weekend keys" },
-    { twitch:"yourhealer", name:"Heals", bio:"Healing officer. Educational healer POV, log reviews, and unhinged M+ pug stories.", schedule:"Most weeknights" },
-    { twitch:"yourdps", name:"Parselord", bio:"Resident parse gremlin. If it can be padded, it will be padded.", schedule:"Weekends" }
+    { twitch: "wowbibidi", name: "Bibidi", bio: "Raid Lead. Streams every raid night from ranged PoV. Expect calm calls and loud deaths.", schedule: "Mon-Thur raid + weekend keys" }
   ],
   vods: [
-    { title:"Midnight Falls — Mythic First Kill", url:"#", note:"March on Quel'Danas" },
-    { title:"Belo'ren, Child of Al'ar — Mythic", url:"#", note:"March on Quel'Danas" },
-    { title:"The Dreamrift — Full Mythic Clear", url:"#", note:"Season 1" }
+    { title: "Nothing Here Yet", url: "#", note: "Let's make memories." }
+  ],
+  leaders: [
+    { name: "YourGM",   role: "Guild Master · Founder", gm: true, blurb: "Founded Intent to build the roster we always wanted to raid in." },
+    { name: "RaidLead", role: "Raid Leader", blurb: "Voice on comms. Turns 300 pulls of chaos into one clean kill. Reviews every log so you don't have to." },
+    { name: "RecruitO", role: "Recruitment Officer", blurb: "First person you'll talk to. Runs trials, tracks the bench, and answers apps within 48 hours." },
+    { name: "KeyLead",  role: "M+ Officer", blurb: "Organizes nightly keys and the title push team. Knows every route, contests every route." }
   ],
   needs: [
-    { cls:"Demonology Warlock", role:"Ranged DPS", demand:"HIGH", hot:true },
-    { cls:"Elemental Shaman", role:"Ranged DPS", demand:"HIGH", hot:true },
-    { cls:"Holy Paladin", role:"Healer", demand:"MEDIUM", hot:false },
-    { cls:"Augmentation Evoker", role:"Ranged DPS", demand:"MEDIUM", hot:false },
-    { cls:"All exceptional players", role:"Any", demand:"ALWAYS", hot:false }
+    { cls: "All exceptional players", role: "Any",   demand: "ALWAYS" }
+  ],
+  trophies: [
+    { name: "New Guild Created", legendary: true, desc: "New guild registered and begin forming initial roster.", flavor: "\"New Guild Who Dis?\"", date: "August 08, 2026" }
   ],
   tiers: [
-    { slug: "tier-mn-1", name: "Voidspire · Dreamrift · Quel'Danas", meta: "MIDNIGHT · SEASON 1", current: true,
-      mythicKilled: "8", heroicKilled: "9",
-      bosses: "Boss 1\nBoss 2\nBoss 3\nBoss 4\nBoss 5\nBoss 6\nBoss 7\nBoss 8\nBoss 9" }
+    { slug: "tier-mn-1", name: "Voidspire · Dreamrift · Quel'Danas", meta: "MIDNIGHT · SEASON 1",
+      mythicKilled: 0, heroicKilled: 0,
+      bosses: "Imperator Averzian/Vorasius/Fallen-King Salhadaar/Chimaerus/Vaelgor & Ezzorak/Lightblinded Vanguard/Crown of the Cosmos/Belo'Ren, Child of Al'Ar/Midnight Falls" }
   ],
-  rio: { region:"us", realm:"illidan", guildName:"Working as Intended" },
-  integrations: { discordWebhook:"", googleScriptUrl:"" }
 };
 
-/* ---------------- list editor schemas ---------------- */
-const SCHEMAS = {
-  schedule:  [{k:"day",l:"Day",w:3},{k:"time",l:"Time",w:4},{k:"what",l:"Activity",w:5}],
-  tiers:     [{k:"name",l:"Display name",w:5},{k:"slug",l:"Raider.io slug",w:3},{k:"current",l:"Current tier",w:2,t:"check"},{k:"meta",l:"Small label",w:2},{k:"mythicKilled",l:"Mythic kills (offline fallback)",w:3},{k:"heroicKilled",l:"Heroic kills (offline fallback)",w:3},{k:"bosses",l:"Bosses — one per line: Name | image URL",w:12,t:"text"}],
-  rules:     [{k:"title",l:"Rule",w:4},{k:"body",l:"Details",w:8,t:"text"}],
-  why:       [{k:"title",l:"Card Title",w:12},{k:"text",l:"Card Text",w:12,t:"text"}],
-  trophies:  [{k:"name",l:"Title",w:6},{k:"legendary",l:"Legendary",w:2,t:"check"},{k:"date",l:"Date/Tier",w:4},{k:"desc",l:"Description",w:12,t:"text"},{k:"flavor",l:"Flavor line",w:12}],
-  leaders:   [{k:"name",l:"Name",w:3},{k:"role",l:"Role",w:4},{k:"character",l:"WoW character (portrait)",w:3},{k:"gm",l:"GM style",w:2,t:"check"},{k:"img",l:"Custom image URL (optional, overrides)",w:12},{k:"blurb",l:"Blurb",w:12,t:"text"}],
-  streamers: [{k:"name",l:"Display name",w:4},{k:"twitch",l:"Twitch channel",w:4},{k:"schedule",l:"Schedule",w:4},{k:"bio",l:"Bio",w:12,t:"text"}],
-  vods:      [{k:"title",l:"Title",w:6},{k:"url",l:"Link",w:4},{k:"note",l:"Note",w:2}],
-  needs:     [{k:"cls",l:"Class/Spec",w:4},{k:"role",l:"Role",w:3},{k:"demand",l:"Demand",w:3},{k:"hot",l:"Highlight",w:2,t:"check"}]
-};
-
-let cfg = null, sb = null, sbProvision = null, configVersionExists = true;
-
-function toast(msg, ok=true){
-  const t = document.createElement("div");
-  t.className = "panel mb-2"; t.style.borderColor = ok ? "var(--kill)" : "var(--danger)";
-  t.style.padding = ".6rem 1rem"; t.style.fontSize = ".85rem"; t.textContent = msg;
-  document.getElementById("toastbox").appendChild(t);
-  setTimeout(()=>t.remove(), 4000);
+/* ================= SUPABASE CLIENT ================= */
+let sb = null;
+if (SB.url && SB.anonKey && typeof window.supabase !== "undefined") {
+  let canStore = true; try { window.localStorage.getItem("x"); } catch(e){ canStore = false; }
+  sb = window.supabase.createClient(SB.url, SB.anonKey, { auth: { persistSession: canStore } });
 }
-const $ = id => document.getElementById(id);
-const esc = s => String(s??"").replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-
-/* ---------------- auth ---------------- */
-function initClients(){
-  if(!SB.url || !SB.anonKey){ $("gStatus").textContent = "⚠ Supabase keys not set — open this file and fill in the SB block at the top."; return false; }
-  let canStore = true; try{ window.localStorage.getItem("x"); }catch(e){ canStore = false; }
-  sb = window.supabase.createClient(SB.url, SB.anonKey, { auth:{ persistSession: canStore } });
-  sbProvision = window.supabase.createClient(SB.url, SB.anonKey, { auth:{ persistSession:false, autoRefreshToken:false } });
-  return true;
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function mdLite(s){
+  return esc(s)
+    .replace(/\*\*([^*]+)\*\*/g, "<b>$1</b>")
+    .replace(/==([^=]+)==/g, '<span class="text-legendary">$1</span>')
+    .replace(/\*([^*]+)\*/g, "<i>$1</i>");
 }
-function toEmail(u){ return u.includes("@") ? u : `${u.toLowerCase()}@${MEMBER_EMAIL_DOMAIN}`; }
 
-async function tryResume(){
-  const { data } = await sb.auth.getSession();
-  if(data?.session) await enterDeck();
+/* ================= PAGE ROUTER ================= */
+const pages = ["home","about","roster","streams","apply","raids","loot","forums"];
+// Rollout gate: these tabs are visible to ADMIN accounts only. Empty the list to make them public again.
+const ADMIN_ONLY_PAGES = ["forums"];
+function showPage(id){
+  if(!pages.includes(id)) id = "home";
+  if(ADMIN_ONLY_PAGES.includes(id) && me?.role !== "admin") id = "home";
+  document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+  document.getElementById("page-"+id).classList.add("active");
+  document.querySelectorAll(".nav-link").forEach(l=>l.classList.toggle("active", l.dataset.page===id));
+  if(id === "loot" && typeof lootRefresh === "function") lootRefresh();
+  if(id === "raids" && typeof raidsRefresh === "function") raidsRefresh();
+  window.scrollTo({top:0, behavior:"instant"});
+  const nav = document.getElementById("mainNav");
+  if(nav.classList.contains("show")) bootstrap.Collapse.getInstance(nav)?.hide();
 }
-$("gBtn").addEventListener("click", async ()=>{
-  const u = $("gUser").value.trim(), p = $("gPass").value;
-  if(!u || !p) return $("gStatus").textContent = "Enter username and password.";
-  $("gStatus").textContent = "Checking…";
-  const { error } = await sb.auth.signInWithPassword({ email: toEmail(u), password: p });
-  if(error) return $("gStatus").textContent = "❌ " + error.message;
-  await enterDeck();
+document.querySelectorAll("[data-page]").forEach(el=>{
+  el.addEventListener("click", e=>{ e.preventDefault(); const p = el.dataset.page; history.pushState(null,"","#"+p); showPage(p); });
 });
-async function enterDeck(){
-  const { data:{ user } } = await sb.auth.getUser();
-  const { data: prof, error } = await sb.from("profiles").select("username, role, active").eq("id", user.id).single();
-  if(error || !prof || prof.role !== "admin" || !prof.active){
-    $("gStatus").textContent = "⛔ This account does not have admin access.";
-    await sb.auth.signOut(); return;
+window.addEventListener("popstate", ()=>showPage(location.hash.replace("#","")||"home"));
+showPage(location.hash.replace("#","")||"home");
+
+/* ================= RENDER EVERYTHING FROM CONFIG ================= */
+function renderAll(){
+  const S = CONFIG.site;
+  document.title = `${S.name} — ${S.navSub} | Raiding Guild`;
+  // Favicon from the crest icon
+  if(S.iconUrl){
+    let fav = document.querySelector("link[rel='icon']");
+    if(!fav){ fav = document.createElement("link"); fav.rel = "icon"; document.head.appendChild(fav); }
+    fav.href = S.iconUrl;
   }
-  $("whoAmI").textContent = prof.username;
-  $("gate").classList.add("d-none"); $("deck").classList.remove("d-none");
-  makeCollapsible();
-  await loadConfig(); loadApplications(); loadMembers();
-}
-$("outBtn").addEventListener("click", async ()=>{ await sb.auth.signOut(); location.reload(); });
-
-/* ---------------- collapsible panels ---------------- */
-function makeCollapsible(){
-  document.querySelectorAll("#tab-site .panel, #tab-content .panel, #tab-integrations .panel").forEach(p=>{
-    const h = p.querySelector("h5");
-    if(!h || h.parentElement !== p || p.dataset.coll) return;
-    p.dataset.coll = "1";
-    const body = document.createElement("div");
-    body.className = "panel-body-collapse d-none";
-    while(h.nextSibling) body.appendChild(h.nextSibling);
-    p.appendChild(body);
-    const chev = document.createElement("span");
-    chev.className = "coll-chev"; chev.textContent = "▸";
-    h.prepend(chev);
-    h.classList.add("coll-head");
-    h.addEventListener("click", ()=>{
-      const opening = body.classList.contains("d-none");
-      body.classList.toggle("d-none", !opening);
-      chev.textContent = opening ? "▾" : "▸";
-    });
-  });
-}
-function updateCounts(){
-  document.querySelectorAll('[id^="list_"]').forEach(host=>{
-    const p = host.closest(".panel");
-    const h = p ? p.querySelector("h5") : null;
-    if(!h) return;
-    let b = h.querySelector(".coll-count");
-    if(!b){ b = document.createElement("span"); b.className = "coll-count"; h.appendChild(b); }
-    b.textContent = host.querySelectorAll(".item-card").length + " items";
-  });
-}
-
-/* ---------------- tabs ---------------- */
-document.querySelectorAll("[data-tab]").forEach(b=>b.addEventListener("click", ()=>{
-  document.querySelectorAll("[data-tab]").forEach(x=>x.classList.toggle("active", x===b));
-  document.querySelectorAll(".tabpane").forEach(p=>p.classList.add("d-none"));
-  $("tab-"+b.dataset.tab).classList.remove("d-none");
-}));
-
-/* ---------------- config load / render ---------------- */
-async function loadConfig(){
-  const { data, error } = await sb.from("site_config").select("data").eq("id", 1).single();
-  configVersionExists = !error;
-  const remote = data?.data || {};
-  cfg = structuredClone(DEFAULTS);
-  for(const k in remote) cfg[k] = remote[k];
-  renderForms();
-}
-function renderForms(){
-  $("cfg_name").value = cfg.site.name; $("cfg_realmLine").value = cfg.site.realmLine;
-  $("cfg_navSub").value = cfg.site.navSub; $("cfg_eyebrow").value = cfg.site.eyebrow;
-  $("cfg_heroImageUrl").value = cfg.site.heroImageUrl || ""; $("cfg_progShotUrl").value = cfg.site.progShotUrl || ""; $("cfg_progShotCaption").value = cfg.site.progShotCaption || "";
-  const ov = cfg.overlay || {};
-  $("cfg_ovHeadline").value = ov.headline || ""; $("cfg_ovSiteUrl").value = ov.siteUrl || ""; $("cfg_ovPitch").value = ov.pitch || ""; $("cfg_ovTagline").value = ov.tagline || "";
-  $("cfg_ovMythic").checked = ov.showMythic !== false; $("cfg_ovNext").checked = ov.showNext !== false; $("cfg_ovNights").checked = ov.showNights !== false;
-  $("cfg_bannerUrl").value = cfg.site.bannerUrl || ""; $("cfg_iconUrl").value = cfg.site.iconUrl || "";
-  $("cfg_splashUrl").value = cfg.site.splashUrl || ""; $("cfg_splashDays").value = cfg.site.splashDays ?? "7";
-  $("cfg_about").value = cfg.about.paragraphs.join("\n\n");
-  $("cfg_glance").value = cfg.about.glance.join("\n");
-  $("cfg_schedNote").value = cfg.schedNote;
-  $("cfg_discordWebhook").value = cfg.integrations.discordWebhook || "";
-  $("cfg_googleScriptUrl").value = cfg.integrations.googleScriptUrl || "";
-  $("cfg_discordServerId").value = cfg.integrations.discordServerId || "";
-  $("cfg_signupWebhook").value = cfg.integrations.signupWebhook || "";
-  const kf = cfg.keysFeed || {};
-  $("cfg_keysMinLevel").value = kf.minLevel ?? "2";
-  $("cfg_keysMaxRank").value = kf.maxRank ?? "3";
-  $("cfg_region").value = cfg.rio.region; $("cfg_realm").value = cfg.rio.realm; $("cfg_rioGuild").value = cfg.rio.guildName;
-  for(const key of Object.keys(SCHEMAS)) renderList(key);
-}
-function renderList(key){
-  const host = $("list_"+key);
-  host.innerHTML = (cfg[key]||[]).map((item,i)=>`
-    <div class="item-card" data-list="${key}" data-i="${i}">
-      <div class="tools">
-        <button class="btn mv" data-mv="${key}:${i}:u" title="Move up" ${i===0?"disabled":""}>▲</button>
-        <button class="btn mv" data-mv="${key}:${i}:d" title="Move down" ${i===(cfg[key].length-1)?"disabled":""}>▼</button>
-        <button class="btn btn-ghost-danger" data-rm="${key}:${i}">✕</button>
-      </div>
-      <div class="row g-2" style="padding-right:120px">
-        ${SCHEMAS[key].map(f=>{
-          if(f.t==="check") return `<div class="col-md-${f.w} d-flex align-items-end pb-1"><div class="form-check"><input class="form-check-input" type="checkbox" data-f="${f.k}" ${item[f.k]?"checked":""}><label class="form-check-label note">${f.l}</label></div></div>`;
-          if(f.t==="text") return `<div class="col-md-${f.w}"><label class="form-label">${f.l}</label><textarea class="form-control form-control-sm" rows="2" data-f="${f.k}">${esc(item[f.k])}</textarea></div>`;
-          return `<div class="col-md-${f.w}"><label class="form-label">${f.l}</label><input class="form-control form-control-sm" data-f="${f.k}" value="${esc(item[f.k])}"></div>`;
-        }).join("")}
-      </div>
-    </div>`).join("");
-  updateCounts();
-}
-document.addEventListener("click", e=>{
-  const mv = e.target.dataset.mv;
-  if(mv){
-    const [key, i, dir] = mv.split(":");
-    const a = +i, b = a + (dir === "u" ? -1 : 1);
-    if(b >= 0 && b < cfg[key].length){
-      harvest();
-      [cfg[key][a], cfg[key][b]] = [cfg[key][b], cfg[key][a]];
-      renderList(key);
+  const crest = S.iconUrl ? `<img src="${esc(S.iconUrl)}" alt="" class="brand-icon">` : "";
+  document.getElementById("navName").innerHTML = crest + `<span class="wordmark">${esc(S.name)}</span>`;
+  document.getElementById("navSub").textContent = S.navSub;
+  document.getElementById("heroEyebrow").textContent = S.eyebrow;
+  // Hero: banner art replaces the typographic title when set
+  const h1 = document.getElementById("heroName");
+  if(S.bannerUrl){ h1.innerHTML = `<img src="${esc(S.bannerUrl)}" alt="${esc(S.name)}" class="hero-banner">`; }
+  else { h1.textContent = S.name.toUpperCase(); }
+  document.getElementById("heroRealm").textContent = S.realmLine;
+  document.getElementById("footName").innerHTML = crest + `<span class="wordmark">${esc(S.name)}</span>`;
+  const kart = document.getElementById("heroKeyart");
+  if(kart) kart.style.backgroundImage = S.heroImageUrl ? `url('${esc(S.heroImageUrl)}')` : "";
+  const psw = document.getElementById("progShotWrap");
+  if(psw){
+    psw.classList.toggle("d-none", !S.progShotUrl);
+    if(S.progShotUrl){
+      document.getElementById("progShotImg").style.backgroundImage = `url('${esc(S.progShotUrl)}')`;
+      document.getElementById("progShotCap").textContent = S.progShotCaption || "";
     }
   }
-  const rm = e.target.dataset.rm;
-  if(rm){ const [key,i] = rm.split(":"); harvest(); cfg[key].splice(+i,1); renderList(key); }
-  const add = e.target.dataset.add;
-  if(add){ harvest(); const blank = {}; SCHEMAS[add].forEach(f=>blank[f.k] = f.t==="check" ? false : ""); cfg[add].push(blank); renderList(add); }
-});
-function harvest(){
-  cfg.site = { name:$("cfg_name").value, realmLine:$("cfg_realmLine").value, navSub:$("cfg_navSub").value, eyebrow:$("cfg_eyebrow").value, bannerUrl:$("cfg_bannerUrl").value.trim(), iconUrl:$("cfg_iconUrl").value.trim(), splashUrl:$("cfg_splashUrl").value.trim(), splashDays:$("cfg_splashDays").value.trim(), heroImageUrl:$("cfg_heroImageUrl").value.trim(), progShotUrl:$("cfg_progShotUrl").value.trim(), progShotCaption:$("cfg_progShotCaption").value.trim() };
-  cfg.about = {
-    paragraphs: $("cfg_about").value.split(/\n\s*\n/).map(s=>s.trim()).filter(Boolean),
-    glance: $("cfg_glance").value.split("\n").map(s=>s.trim()).filter(Boolean)
-  };
-  cfg.schedNote = $("cfg_schedNote").value;
-  cfg.overlay = {
-    headline: $("cfg_ovHeadline").value.trim(),
-    siteUrl: $("cfg_ovSiteUrl").value.trim(),
-    pitch: $("cfg_ovPitch").value.trim(),
-    tagline: $("cfg_ovTagline").value.trim(),
-    showMythic: $("cfg_ovMythic").checked,
-    showNext: $("cfg_ovNext").checked,
-    showNights: $("cfg_ovNights").checked
-  };
-  cfg.integrations = { discordWebhook:$("cfg_discordWebhook").value.trim(), googleScriptUrl:$("cfg_googleScriptUrl").value.trim(), discordServerId:$("cfg_discordServerId").value.trim(), signupWebhook:$("cfg_signupWebhook").value.trim() };
-  cfg.rio = { region:$("cfg_region").value.trim()||"us", realm:$("cfg_realm").value.trim(), guildName:$("cfg_rioGuild").value.trim() };
-  cfg.keysFeed = { minLevel:$("cfg_keysMinLevel").value.trim(), maxRank:$("cfg_keysMaxRank").value.trim() };
-  for(const key of Object.keys(SCHEMAS)){
-    cfg[key] = [...document.querySelectorAll(`.item-card[data-list="${key}"]`)].map(card=>{
-      const o = {};
-      card.querySelectorAll("[data-f]").forEach(el=>{ o[el.dataset.f] = el.type==="checkbox" ? el.checked : el.value; });
-      return o;
-    });
+  const curT = (CONFIG.tiers || []).find(t=>t.current) || (CONFIG.tiers || [])[0];
+  if(curT) document.getElementById("statTier").textContent = String(curT.meta || curT.name || "").split("·").reverse().map(s=>s.trim()).filter(Boolean).join(" · ") || curT.name;
+  document.getElementById("raidNights").textContent = (CONFIG.schedule || []).length || 4;
+  const emb = document.getElementById("heroEmbers");
+  if(emb && !emb.children.length){
+    for(let i = 0; i < 14; i++){
+      const sp = document.createElement("span");
+      const sz = i % 3 ? 3 : 4;
+      sp.style.cssText = `left:${4 + (i * 67) % 92}%;width:${sz}px;height:${sz}px;background:${i % 4 === 0 ? "#7FE6A4" : "#FFDF8A"};box-shadow:0 0 6px ${i % 4 === 0 ? "rgba(41,196,104,.8)" : "rgba(240,194,75,.8)"};animation-duration:${(7 + (i * 1.7) % 6).toFixed(1)}s;animation-delay:${((i * 1.13) % 7).toFixed(1)}s`;
+      emb.appendChild(sp);
+    }
   }
-}
-$("saveBtn").addEventListener("click", async ()=>{
-  harvest();
-  $("saveStatus").textContent = "Publishing…";
-  const { error } = await sb.from("site_config").upsert({ id:1, data: cfg, updated_at: new Date().toISOString() });
-  if(error){ $("saveStatus").textContent = "❌ " + error.message; toast("Save failed: "+error.message, false); }
-  else { $("saveStatus").textContent = "✅ Published — the live site now serves these values."; toast("Published"); }
-});
+  const rn = document.getElementById("recruitNeeds");
+  if(rn) rn.innerHTML = (CONFIG.needs || []).map(n=>`<span class="need-chip"><b>${esc(n.cls)}</b><span class="nd">${esc(((n.demand || "OPEN") + " · " + (n.role || "ANY ROLE")).toUpperCase())}</span></span>`).join("");
+  const rab = document.getElementById("recruitApplyBtn");
+  if(rab) rab.textContent = "Apply to " + S.name;
+  document.getElementById("footYear").textContent = new Date().getFullYear();
+  document.getElementById("footLegalName").textContent = S.name;
+  const R = CONFIG.rio || {};
+  if(R.region && R.realm && R.guildName){
+    document.getElementById("footRio").href = `https://raider.io/guilds/${encodeURIComponent(R.region)}/${encodeURIComponent(R.realm)}/${encodeURIComponent(R.guildName)}`;
+    document.getElementById("footWcl").href = `https://www.warcraftlogs.com/guild/${encodeURIComponent(R.region)}/${encodeURIComponent(R.realm)}/${encodeURIComponent(R.guildName.toLowerCase())}`;
+  }
+  document.getElementById("footSub").textContent = S.realmLine;
+  // Crest above the forum login gate
+  const gateTitle = document.querySelector("#forumLogin .display-font");
+  if(gateTitle && S.iconUrl && !document.getElementById("gateCrest")){
+    gateTitle.insertAdjacentHTML("beforebegin", `<img id="gateCrest" src="${esc(S.iconUrl)}" alt="" class="gate-crest">`);
+  }
 
-/* ---------------- applications ---------------- */
-async function loadApplications(){
-  const { data, error } = await sb.from("applications").select("*").order("created_at",{ascending:false});
-  const host = $("appList");
-  if(error) return host.innerHTML = `<p class="note">❌ ${esc(error.message)}</p>`;
-  const fresh = data.filter(a=>a.status==="new").length;
-  $("appCount").textContent = fresh; $("appCount").classList.toggle("d-none", !fresh);
-  if(!data.length) return host.innerHTML = `<p class="note">No applications yet. The inbox fills automatically when someone applies on the site.</p>`;
-  host.innerHTML = data.map(a=>{
-    const d = a.data||{};
-    return `<div class="item-card">
-      <div class="d-flex justify-content-between align-items-center app-row" data-toggle="${a.id}">
-        <div><b>${esc(d.character)}</b> <span class="note">— ${esc(d.spec)} ${esc(d.cls)}${d.role ? " · " + esc(d.role) : ""}</span></div>
-        <div class="d-flex gap-2 align-items-center"><span class="pill pill-${a.status}">${a.status.toUpperCase()}</span><span class="note data-font">${new Date(a.created_at).toLocaleDateString()}</span></div>
+  document.getElementById("aboutParas").innerHTML = CONFIG.about.paragraphs.map(p=>`<p style="color:#D5D2C6">${mdLite(p)}</p>`).join("");
+  const whyHost = document.getElementById("whyCards");
+  if(whyHost && Array.isArray(CONFIG.why) && CONFIG.why.length){
+    whyHost.innerHTML = CONFIG.why.map((c,i)=>`
+      <div class="col-md-4">
+        <div class="tier-card why-card ${i % 2 ? "why-epic" : "why-gold"}">
+          <div class="why-num data-font">${String(i + 1).padStart(2, "0")}</div>
+          <div class="tier-name ${i % 2 ? "text-epic" : "text-legendary"}">${esc(c.title)}</div>
+          <p class="mt-2 mb-0" style="color:#D5D2C6;font-size:.9rem">${mdLite(c.text)}</p>
+        </div>
+      </div>`).join("");
+  }
+  document.getElementById("glanceList").innerHTML = CONFIG.about.glance.map((g,i,a)=>`<li class="${i===a.length-1?"mb-0":"mb-2"}">${mdLite(g)}</li>`).join("");
+
+  document.getElementById("schedTable").innerHTML = CONFIG.schedule.map(r=>`
+    <div class="row-i"><span class="day">${esc(r.day)}</span><span class="time">${esc(r.time)}</span><span class="what d-none d-sm-inline">${esc(r.what)}</span></div>`).join("");
+  document.getElementById("schedNote").textContent = CONFIG.schedNote;
+  document.getElementById("ruleList").innerHTML = CONFIG.rules.map(r=>`<li><b>${esc(r.title)}</b> ${esc(r.body)}</li>`).join("");
+
+  const lockedHints = ["First Mythic Kill", "Ahead of the Curve", "Cutting Edge"];
+  const lockedCount = Math.min(lockedHints.length, Math.max(1, 4 - CONFIG.trophies.length));
+  document.getElementById("trophyGrid").innerHTML = CONFIG.trophies.map(t=>`
+    <div class="col-lg-4 col-md-6">
+      <div class="loot-card ${t.legendary?"legendary":""}">
+        <div class="loot-name">${esc(t.name)}</div>
+        <div class="loot-bind">GUILD ACHIEVEMENT · ${t.legendary?"LEGENDARY":"EPIC"}</div>
+        <div class="loot-desc">${esc(t.desc)}</div>
+        <div class="loot-flavor">${esc(t.flavor)}</div>
+        <div class="loot-date">${esc(t.date)}</div>
       </div>
-      <div class="app-detail mt-2 d-none" id="appd-${a.id}">
-        <dl class="m-0">
-          <dt>Discord</dt><dd>${esc(d.discord)}</dd>
-          <dt>Battle.net</dt><dd>${esc(d.bnet)||"—"}</dd>
-          <dt>Logs</dt><dd>${esc(d.logs)}</dd>
-          <dt>Schedule OK</dt><dd>${esc(d.schedule_ok)}</dd>
-          <dt>Bench OK</dt><dd>${esc(d.bench_ok)||"—"}</dd>
-          <dt>Experience</dt><dd>${esc(d.experience)||"—"}</dd>
-          ${d.prev_guilds ? `<dt>Prev Guilds</dt><dd>${esc(d.prev_guilds)}</dd>` : ""}
-          ${d.underperformed ? `<dt>Underperformed</dt><dd>${esc(d.underperformed)}</dd>` : ""}
-          ${d.why ? `<dt>Why Intent</dt><dd>${esc(d.why)}</dd>` : ""}
-          <dt>Off-specs</dt><dd>${esc(d.offspecs)||"—"}</dd>
-          <dt>Conflicts</dt><dd>${esc(d.conflicts)||"—"}</dd>
-          <dt>Found via</dt><dd>${esc(d.found_us)||"—"}</dd>
-        </dl>
-        <div class="d-flex gap-2 flex-wrap mt-2">
-          ${["reviewing","accepted","declined"].map(s=>`<button class="btn btn-outline-epic btn-sm" data-status="${a.id}:${s}">Mark ${s}</button>`).join("")}
-          <button class="btn btn-ghost-danger btn-sm" data-appdel="${a.id}">Delete</button>
+    </div>`).join("") + lockedHints.slice(0, lockedCount).map(h=>`
+    <div class="col-lg-4 col-md-6">
+      <div class="locked-trophy">
+        <div class="lt-q display-font">???</div>
+        <div class="lt-hint data-font">${esc(h)}</div>
+        <div class="lt-tag data-font">LOCKED</div>
+      </div>
+    </div>`).join("");
+
+  document.getElementById("leaderGrid").innerHTML = CONFIG.leaders.map((l,i)=>`
+    <div class="col-lg-3 col-md-6">
+      <div class="leader-card ${l.gm?"gm":""}" data-leader="${i}">
+        <div class="avatar">${esc((l.name||"?")[0])}</div>
+        <div class="role">${esc(l.role)}</div>
+        <h5>${esc(l.name)}</h5>
+        <p>${esc(l.blurb)}</p>
+      </div>
+    </div>`).join("");
+
+  document.getElementById("needsGrid").innerHTML = CONFIG.needs.map(n=>`
+    <div class="col-lg-3 col-md-6 col-sm-6">
+      <div class="need-card ${n.hot?"need-hot":""}">
+        <div class="cls">${esc(n.cls)}</div>
+        <div style="font-size:.8rem;color:var(--muted)">${esc(n.role)}</div>
+        <div class="demand mt-1">${esc(n.demand)} DEMAND</div>
+      </div>
+    </div>`).join("");
+
+  const parent = location.hostname || "localhost";
+  document.getElementById("streamGrid").innerHTML = CONFIG.streamers.map(s=>`
+    <div class="col-lg-4 col-md-6">
+      <div class="stream-card">
+        <div class="embed">
+          <iframe src="https://player.twitch.tv/?channel=${encodeURIComponent(s.twitch)}&parent=${parent}&muted=true" allowfullscreen loading="lazy" title="${esc(s.name)} on Twitch"></iframe>
+        </div>
+        <div class="body">
+          <div class="d-flex justify-content-between align-items-center">
+            <b>${esc(s.name)}</b>
+            <a class="data-font" style="font-size:.75rem" href="https://twitch.tv/${encodeURIComponent(s.twitch)}" target="_blank" rel="noopener"><span class="live-dot"></span>twitch.tv/${esc(s.twitch)}</a>
+          </div>
+          <p class="mt-2 mb-1" style="font-size:.85rem;color:#D5D2C6">${esc(s.bio)}</p>
+          <div class="data-font" style="font-size:.72rem;color:var(--muted)">📅 ${esc(s.schedule)}</div>
         </div>
       </div>
+    </div>`).join("");
+
+  document.getElementById("vodGrid").innerHTML = CONFIG.vods.map(v=>`
+    <div class="col-lg-4 col-md-6">
+      <a href="${esc(v.url)}" target="_blank" rel="noopener" class="text-decoration-none">
+        <div class="need-card" style="border-color:var(--line)">
+          <div class="cls" style="color:var(--epic-soft)">▶ ${esc(v.title)}</div>
+          <div style="font-size:.78rem;color:var(--muted)">${esc(v.note)}</div>
+        </div>
+      </a>
+    </div>`).join("");
+  loadLeaderPortraits();
+}
+
+/* ================= LEADER PORTRAITS ================= */
+function setLeaderImg(i, url){
+  const av = document.querySelector(`#leaderGrid [data-leader="${i}"] .avatar`);
+  if(!av) return;
+  av.classList.add("has-img");
+  av.style.backgroundImage = `url('${url}')`;
+}
+function loadLeaderPortraits(){
+  const R = CONFIG.rio;
+  CONFIG.leaders.forEach(async (l, i)=>{
+    if(l.img){ setLeaderImg(i, l.img); return; }          // manual image wins
+    if(!l.character) return;                               // no lookup requested
+    const parts = l.character.split("-");
+    const name = parts[0].trim();
+    const realm = (parts[1] || R.realm).trim().toLowerCase().replace(/ /g,"-");
+    try{
+      const res = await fetch(`https://raider.io/api/v1/characters/profile?region=${R.region}&realm=${realm}&name=${encodeURIComponent(name)}`);
+      if(!res.ok) return;                                  // silently keep the letter
+      const c = await res.json();
+      if(c.thumbnail_url) setLeaderImg(i, c.thumbnail_url);
+    }catch(e){ /* keep the letter fallback */ }
+  });
+}
+
+/* ================= DISCORD WIDGET ================= */
+async function loadDiscordWidget(){
+  const id = (CONFIG.integrations || {}).discordServerId;
+  const host = document.getElementById("discordWidget");
+  if(!id || !host) return;
+  try{
+    const res = await fetch(`https://discord.com/api/guilds/${encodeURIComponent(id)}/widget.json`);
+    if(!res.ok) return;
+    const d = await res.json();
+    const members = d.members || [];
+    const shown = members.slice(0, 11);
+    const extra = Math.max(0, (d.presence_count || members.length) - shown.length);
+    const avatars = shown.map(m => `<img src="${esc(m.avatar_url)}" title="${esc(m.username)}" alt="" loading="lazy">`).join("")
+      + (extra ? `<span class="disc-more">+${extra}</span>` : "");
+    host.innerHTML = `
+      <div class="disc-card">
+        <div class="d-flex justify-content-between align-items-center gap-2">
+          <div class="disc-name">${esc(d.name)}</div>
+          <div class="disc-online"><span class="live-dot" style="background:var(--kill);box-shadow:0 0 8px var(--kill)"></span>${d.presence_count || 0} ONLINE</div>
+        </div>
+        <div class="disc-avatars">${avatars}</div>
+        ${d.instant_invite ? `<a class="btn btn-apply w-100 mt-3" href="${esc(d.instant_invite)}" target="_blank" rel="noopener">Join the Discord</a>` : ""}
+      </div>`;
+    const rd = document.getElementById("recruitDiscord");
+    if(rd && w.instant_invite){ rd.href = w.instant_invite; rd.classList.remove("d-none"); }
+    const fd = document.getElementById("footDiscord");
+    if(fd && d.instant_invite){ fd.href = d.instant_invite; fd.classList.remove("d-none"); }
+  }catch(e){ /* widget disabled or unreachable — section stays hidden */ }
+}
+
+/* ================= REMOTE CONFIG ================= */
+async function loadRemoteConfig(){
+  if(!sb) return;
+  try{
+    const { data } = await sb.from("site_config").select("data").eq("id",1).single();
+    if(data?.data){ for(const k in data.data) CONFIG[k] = data.data[k]; window.__cfgSynced = true; }
+  }catch(e){ console.warn("Remote config unavailable", e); }
+}
+
+/* ================= RAIDER.IO LIVE DATA ================= */
+function parseBosses(t){
+  const raw = Array.isArray(t.bosses) ? t.bosses.map(String) : String(t.bosses||"").split("\n");
+  return raw.map(s=>s.trim()).filter(Boolean).map(line=>{
+    const bits = line.split("|").map(x=>(x||"").trim());
+    return { name: bits[0], img: bits[1] || "" };
+  });
+}
+let WCL_BEST = {};   // lowercased boss name -> { m:{best,pulls}, h:{best,pulls} }
+let WCL_ENC_NAMES = {};  // encounter id -> proper boss name (from wcl_progress)
+async function loadWclProgress(){
+  if(!sb) return;
+  try{
+    const { data } = await sb.from("wcl_progress").select("*");
+    WCL_BEST = {};
+    (data || []).forEach(r=>{
+      const k = r.name.toLowerCase();
+      WCL_BEST[k] = WCL_BEST[k] || {};
+      WCL_BEST[k].id = r.encounter_id;
+      WCL_ENC_NAMES[r.encounter_id] = r.name;
+      WCL_BEST[k][r.difficulty === 5 ? "m" : "h"] = { best: +r.best_pct, pulls: r.pulls };
+    });
+    if(Object.keys(WCL_BEST).length) renderTiers();
+  }catch(e){ console.warn("wcl progress", e); }
+}
+function wclFor(bossName){
+  const n = bossName.toLowerCase();
+  if(WCL_BEST[n]) return WCL_BEST[n];
+  const key = Object.keys(WCL_BEST).find(k => k.includes(n) || n.includes(k));
+  return key ? WCL_BEST[key] : null;
+}
+function renderTier(t){
+  const bosses = parseBosses(t);
+  const mk = +t.mythicKilled || 0, hk = +t.heroicKilled || 0;
+  const total = t.totalBosses || bosses.length;
+  const rows = bosses.map((b,i)=>{
+    const cls = i < mk ? "killed" : i === mk ? "current" : "upcoming";
+    const label = cls === "killed" ? "DEFEATED" : cls === "current" ? "PROGRESSING" : "";
+    let drain = "", bestChip = "";
+    if(t.current && cls !== "killed"){
+      const w = wclFor(b.name);
+      const e = w && (w.m && w.m.best < 100 ? { ...w.m, d: "M" } : (w.h && w.h.best < 100 ? { ...w.h, d: "H" } : null));
+      if(e){
+        const g = Math.round(100 * (1 - Math.pow(e.best / 100, 1.5)));   // perceptual: visible by mid-prog, full gray at the kill
+        const br = (cls === "current" ? (0.85 + 0.15 * e.best / 100) : 0.8).toFixed(2);
+        drain = `filter:grayscale(${g}%) brightness(${br});`;
+        bestChip = `<span class="bbest">${e.d} BEST ${e.best}%</span>`;
+      }
+    }
+    let bgUrl = b.img;
+    if(!bgUrl){
+      const w0 = wclFor(b.name);
+      if(w0?.id) bgUrl = `https://assets.rpglogs.com/img/warcraft/bosses/${w0.id}-icon.jpg`;
+    }
+    const bg = bgUrl ? `background-image:url('${esc(bgUrl)}');` : "";
+    return `
+    <div class="boss-banner ${cls}"${bg || drain ? ` style="${bg}${drain}"` : ""}>
+      <span class="bname">${esc(b.name)}</span>
+      ${bestChip}
+      <span class="bstate">${label}</span>
     </div>`;
   }).join("");
+  return `
+    <div class="tier-ribbon">CURRENT TIER</div>
+    <div class="tier-card">
+      <div class="d-flex justify-content-between align-items-start mb-1">
+        <div><div class="tier-name">${esc(t.name)}</div><div class="tier-meta">${esc(t.meta || "")}</div></div>
+        <span class="prog-badge mythic">${mk}/${total} M</span>
+      </div>
+      <div class="tier-meta mb-2">Heroic ${hk}/${total} · Mythic ${mk}/${total}</div>
+      ${rows}
+    </div>`;
 }
-$("appRefresh").addEventListener("click", loadApplications);
-document.addEventListener("click", async e=>{
-  const t = e.target.closest("[data-toggle]");
-  if(t) $("appd-"+t.dataset.toggle).classList.toggle("d-none");
-  if(e.target.dataset.status){
-    const [id, s] = e.target.dataset.status.split(":");
-    const { error } = await sb.from("applications").update({ status:s }).eq("id", id);
-    if(error) toast(error.message,false); else { toast("Marked "+s); loadApplications(); }
+function renderPastCard(t){
+  const bosses = parseBosses(t);
+  const mk = +t.mythicKilled || 0, hk = +t.heroicKilled || 0;
+  const total = t.totalBosses || bosses.length;
+  const pips = Array.from({length: total}, (_,i)=>`<span class="pip ${i < mk ? "dead":""}"></span>`).join("");
+  return `
+  <div class="tier-past">
+    <div class="d-flex justify-content-between align-items-start gap-2">
+      <div class="tier-name">${esc(t.name)}</div>
+      <span class="prog-badge mythic" style="flex-shrink:0">${mk}/${total} M</span>
+    </div>
+    <div class="archived">${esc(t.meta || "")} · SEASON ARCHIVED</div>
+    <div class="tier-pips">${pips}</div>
+    <div class="tier-meta mt-2">Heroic ${hk}/${total} · Mythic ${mk}/${total}</div>
+  </div>`;
+}
+let tcIdx = 0, tcTimer = null;
+function renderTiers(tiers){
+  if(!tiers || !tiers.length) return;
+  const cur = tiers.find(t => t.current) || tiers[0];
+  const past = tiers.filter(t => t !== cur);
+  document.getElementById("tierGrid").innerHTML = `
+    <div class="tier-stage">
+      <div class="tier-feature">${renderTier(cur)}</div>
+      ${past.length ? `<div class="tier-carousel"><div class="tc-track">${past.map(renderPastCard).join("")}</div></div>` : ""}
+    </div>`;
+  startCarousel(past.length);
+}
+function startCarousel(n){
+  clearInterval(tcTimer); tcIdx = 0;
+  if(n < 2) return;
+  if(window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const wrap = document.querySelector(".tier-carousel");
+  const track = document.querySelector(".tc-track");
+  if(!wrap || !track) return;
+  let paused = false;
+  wrap.addEventListener("mouseenter", ()=>paused = true);
+  wrap.addEventListener("mouseleave", ()=>paused = false);
+  tcTimer = setInterval(()=>{
+    if(paused) return;
+    const step = (track.children[0]?.offsetHeight || 150) + 16;
+    const visible = Math.max(1, Math.floor(wrap.clientHeight / step));
+    const maxIdx = Math.max(0, n - visible);
+    tcIdx = tcIdx >= maxIdx ? 0 : tcIdx + 1;
+    track.style.transform = `translateY(-${tcIdx * step}px)`;
+  }, 4500);
+}
+function setNum(id,val){
+  const el2 = document.getElementById(id);
+  if(!el2 || val == null) return;
+  el2.textContent = "#" + Number(val).toLocaleString();
+  if(id === "rankRealm") document.getElementById("rankRealmLbl").textContent = "Realm Rank";
+}
+function countUp(id, target){
+  const el2 = document.getElementById(id);
+  if(!el2 || !Number.isFinite(target)) return;
+  if(window.matchMedia("(prefers-reduced-motion: reduce)").matches){ el2.textContent = target; return; }
+  const t0 = performance.now(), dur = 1400;
+  const tick = t => {
+    const p = Math.min(1, (t - t0) / dur);
+    el2.textContent = Math.round(target * (1 - Math.pow(1 - p, 3)));
+    if(p < 1) requestAnimationFrame(tick);
+  };
+  requestAnimationFrame(tick);
+}
+
+async function loadGuild(){
+  renderTiers(CONFIG.tiers || CONFIG.fallbackTiers);
+  const R = CONFIG.rio;
+  const RIO = `https://raider.io/api/v1/guilds/profile?region=${R.region}&realm=${R.realm}&name=${encodeURIComponent(R.guildName)}`;
+  try{
+    const res = await fetch(RIO + "&fields=raid_progression,raid_rankings,members");
+    if(!res.ok) throw new Error(res.status);
+    const g = await res.json();
+    // Your Command-Deck tier list is the source of truth for what displays
+    const norm = s => String(s).toLowerCase().replace(/[^a-z0-9]/g, "");
+    const tiers = CONFIG.tiers || CONFIG.fallbackTiers;
+    const tierKeys = tiers.flatMap(t => [t.slug ? norm(t.slug) : null, norm(t.name)]).filter(Boolean);
+    const rr = g.raid_rankings || {};
+    const keys = Object.keys(rr).filter(k => tierKeys.includes(norm(k)));
+    for(let i = keys.length - 1; i >= 0; i--){
+      const r = rr[keys[i]];
+      const best = (r.mythic?.world > 0) ? r.mythic
+                 : (r.heroic?.world > 0) ? r.heroic
+                 : (r.normal?.world > 0) ? r.normal : null;
+      if(best){ setNum("rankRealm", best.realm); break; }
+    }
+    if(g.members) countUp("memberCount", g.members.length);
+    const rp = g.raid_progression || {};
+    const shown = tiers.map(t=>{
+      const key = Object.keys(rp).find(k => (t.slug && norm(k) === norm(t.slug)) || norm(k) === norm(t.name));
+      if(key){
+        const d = rp[key];
+        return { ...t, mythicKilled: d.mythic_bosses_killed, heroicKilled: d.heroic_bosses_killed, totalBosses: d.total_bosses };
+      }
+      return t;   // no API match: manual counts only
+    });
+    renderTiers(shown);
+    document.getElementById("dataSource").textContent = "Live data · Raider.io · updated just now";
+    if(g.members) renderRoster(g.members);
+  }catch(err){
+    document.getElementById("dataSource").textContent = "Showing recent snapshot — live Raider.io sync activates once the site is hosted";
+    renderRoster(null);
   }
-  if(e.target.dataset.appdel){
-    if(!confirm("Delete this application permanently?")) return;
-    const { error } = await sb.from("applications").delete().eq("id", e.target.dataset.appdel);
-    if(error) toast(error.message,false); else { toast("Deleted"); loadApplications(); }
+}
+
+/* ================= ROSTER ================= */
+let rosterCache = [];
+function renderRoster(members){
+  const body = document.getElementById("rosterBody");
+  const R = CONFIG.rio;
+  if(!members){
+    body.innerHTML = `<tr><td colspan="4" class="text-center py-4" style="color:var(--muted)">
+      Roster loads live from Raider.io once the site is hosted on a domain.<br>
+      <a href="https://raider.io/guilds/${R.region}/${R.realm}/${encodeURIComponent(R.guildName)}" target="_blank" rel="noopener">View the roster on Raider.io →</a></td></tr>`;
+    return;
+  }
+  rosterCache = members.sort((a,b)=>a.rank-b.rank);
+  drawRoster();
+}
+function drawRoster(){
+  const R = CONFIG.rio;
+  const q = (document.getElementById("rosterFilter").value||"").toLowerCase();
+  const rf = document.getElementById("rosterRank").value;
+  const rows = rosterCache.filter(m=>{
+    const nameOk = m.character.name.toLowerCase().includes(q);
+    const rankOk = rf==="" || (rf==="raider" ? m.rank>1 : String(m.rank)===rf);
+    return nameOk && rankOk;
+  }).map(m=>{
+    const c = m.character;
+    const pill = m.rank===0?`<span class="rank-pill rank-0">GM</span>`
+              : m.rank===1?`<span class="rank-pill rank-1">OFFICER</span>`
+              : `<span class="rank-pill rank-x">RANK ${m.rank}</span>`;
+    const url = c.profile_url || `https://raider.io/characters/${R.region}/${c.realm||R.realm}/${encodeURIComponent(c.name)}`;
+    return `<tr><td><a href="${url}" target="_blank" rel="noopener"><b>${esc(c.name)}</b></a> <span style="color:var(--muted);font-size:.78rem">${esc(c.class||"")}</span></td>
+      <td>${pill}</td><td class="d-none d-md-table-cell" style="color:var(--muted)">${esc(c.realm||R.realm)}</td>
+      <td><a href="${url}" target="_blank" rel="noopener" class="data-font" style="font-size:.78rem">PROFILE →</a></td></tr>`;
+  }).join("");
+  document.getElementById("rosterBody").innerHTML = rows || `<tr><td colspan="4" class="text-center py-4" style="color:var(--muted)">No raiders match.</td></tr>`;
+}
+document.getElementById("rosterFilter").addEventListener("input", drawRoster);
+document.getElementById("rosterRank").addEventListener("change", drawRoster);
+
+/* ================= APPLICATION → SUPABASE INBOX (+ optional Discord/Sheet) ================= */
+document.getElementById("appSubmit").addEventListener("click", async ()=>{
+  const f = id=>document.getElementById(id).value.trim();
+  const status = document.getElementById("appStatus");
+  const data = {
+    character: f("appChar"), realm: f("appRealm"), cls: f("appClass"), spec: f("appSpec"),
+    discord: f("appDiscord"), bnet: f("appBnet"), logs: f("appLogs"),
+    experience: f("appExp"),
+    offspecs: f("appOffspec"), conflicts: f("appConflicts"), found_us: f("appFound"),
+    schedule_ok: document.getElementById("appSched").checked ? "Yes" : "No",
+    bench_ok: document.getElementById("appBench").checked ? "Yes" : "No",
+    submitted: new Date().toISOString()
+  };
+  const fail = msg => { status.textContent = msg; status.style.color = "var(--legendary)"; };
+  if(!data.character || !data.cls || !data.discord || !data.logs)
+    return fail("⚠ Fill in every required field (*) — logs included. We always look.");
+  if(data.experience.length < 30)
+    return fail("⚠ Raid Experience needs more than a line — give us the actual history.");
+  if(!document.getElementById("appBench").checked)
+    return fail("⚠ Please acknowledge the roster/bench policy — it matters that we agree on this now.");
+  status.textContent = "Sending…"; status.style.color = "var(--muted)";
+  let sent = false;
+
+  // → Supabase applications inbox (reviewed in the Command Deck)
+  if(sb){
+    const { error } = await sb.from("applications").insert({ data });
+    if(!error) sent = true; else console.error("Inbox insert failed", error);
+  }
+
+  // → optional Discord ping
+  const I = CONFIG.integrations || {};
+  if(I.discordWebhook){
+    const clip = s => (s && s.length > 1000) ? s.slice(0, 1000) + "…" : (s || "—");
+    try{
+      await fetch(I.discordWebhook, {
+        method:"POST", headers:{"Content-Type":"application/json"},
+        body: JSON.stringify({
+          username: "Guild Applications",
+          embeds: [{
+            title: `📜 New Application: ${data.character} — ${data.spec} ${data.cls}`,
+            color: 0xF0C24B,
+            fields: [
+              { name:"Realm", value:data.realm, inline:true },
+              { name:"Discord", value:data.discord, inline:true },
+              { name:"Battle.net", value:data.bnet||"—", inline:true },
+              { name:"Schedule OK", value:data.schedule_ok, inline:true },
+              { name:"Bench OK", value:data.bench_ok, inline:true },
+              { name:"Found via", value:data.found_us||"—", inline:true },
+              { name:"Logs", value:clip(data.logs) },
+              { name:"Experience", value:clip(data.experience) }
+            ],
+            timestamp: data.submitted
+          }]
+        })
+      });
+      sent = true;
+    }catch(e){ console.error("Discord webhook failed", e); }
+  }
+
+  // → optional Google Sheet
+  if(I.googleScriptUrl){
+    try{
+      await fetch(I.googleScriptUrl, { method:"POST", mode:"no-cors", headers:{"Content-Type":"text/plain"}, body: JSON.stringify(data) });
+      sent = true;
+    }catch(e){ console.error("Sheet post failed", e); }
+  }
+
+  if(sent){
+    status.textContent = "✅ Application received! An officer will reach out on Discord within 48 hours.";
+    status.style.color = "var(--kill)";
+  } else {
+    status.textContent = "⚠ Delivery not configured yet — connect Supabase or add a webhook (see SETUP guide).";
+    status.style.color = "var(--legendary)";
   }
 });
 
-/* ---------------- members ---------------- */
-async function loadMembers(){
-  const { data, error } = await sb.from("profiles").select("*").order("created_at");
-  const body = $("memBody");
-  if(error) return body.innerHTML = `<tr><td colspan="5" class="note">❌ ${esc(error.message)}</td></tr>`;
-  body.innerHTML = data.map(m=>`
-    <tr>
-      <td><b>${esc(m.username)}</b></td>
-      <td><select class="form-select form-select-sm" style="max-width:130px" data-role="${m.id}">
-        ${["member","officer","admin"].map(r=>`<option ${m.role===r?"selected":""}>${r}</option>`).join("")}
-      </select></td>
-      <td><span class="pill ${m.active?"pill-member":"pill-inactive"}">${m.active?"ACTIVE":"INACTIVE"}</span></td>
-      <td class="note data-font">${new Date(m.created_at).toLocaleDateString()}</td>
-      <td><button class="btn btn-outline-epic btn-sm" data-flip="${m.id}:${m.active?0:1}">${m.active?"Deactivate":"Activate"}</button></td>
-    </tr>`).join("");
+/* ================= FORUMS ================= */
+const FORUM_CATS = [
+  { slug:"announcements", icon:"📣", name:"Announcements", desc:"Officer posts, tier goals, roster updates" },
+  { slug:"strategy",      icon:"⚔️", name:"Strategy & Assignments", desc:"Boss breakdowns, WeakAuras, cooldown sheets" },
+  { slug:"loot",          icon:"💰", name:"Loot & Gearing", desc:"BiS lists, vault flexing, crafting orders" },
+  { slug:"mplus",         icon:"🔑", name:"Mythic+ Central", desc:"Key scheduling, route talk, title pushes" },
+  { slug:"tavern",        icon:"🍻", name:"The Tavern", desc:"Off-topic. Abandon hope." }
+];
+let me = null;           // { id, username }
+let currentCat = null, currentThread = null;
+
+function fShow(view){ // cats | threads | thread
+  document.getElementById("forumCats").classList.toggle("d-none", view!=="cats");
+  document.getElementById("forumThreads").classList.toggle("d-none", view!=="threads");
+  document.getElementById("forumThread").classList.toggle("d-none", view!=="thread");
 }
-$("memRefresh").addEventListener("click", loadMembers);
-document.addEventListener("click", async e=>{
-  if(e.target.dataset.flip){
-    const [id, to] = e.target.dataset.flip.split(":");
-    const { error } = await sb.from("profiles").update({ active: to==="1" }).eq("id", id);
-    if(error) toast(error.message,false); else { toast("Updated"); loadMembers(); }
-  }
+document.querySelectorAll("[data-fnav]").forEach(b=>b.addEventListener("click", ()=>{
+  if(b.dataset.fnav==="cats") fShow("cats");
+  else openCategory(currentCat);
+}));
+
+function renderCats(){
+  document.getElementById("forumCats").innerHTML = FORUM_CATS.map(c=>`
+    <div class="forum-cat" data-cat="${c.slug}">
+      <div><b>${c.icon} ${esc(c.name)}</b><div style="font-size:.8rem;color:var(--muted)">${esc(c.desc)}</div></div>
+      <span class="data-font" style="color:var(--muted)">→</span>
+    </div>`).join("");
+  document.querySelectorAll("[data-cat]").forEach(el=>el.addEventListener("click", ()=>openCategory(el.dataset.cat)));
+}
+async function openCategory(slug){
+  currentCat = slug;
+  const cat = FORUM_CATS.find(c=>c.slug===slug);
+  document.getElementById("threadsCatTitle").textContent = `${cat.icon} ${cat.name}`;
+  document.getElementById("composer").classList.add("d-none");
+  fShow("threads");
+  const host = document.getElementById("threadList");
+  host.innerHTML = `<p style="color:var(--muted)" class="data-font">Loading threads…</p>`;
+  const { data, error } = await sb.from("forum_threads").select("*").eq("category", slug).order("created_at",{ascending:false});
+  if(error) return host.innerHTML = `<p style="color:var(--muted)">❌ ${esc(error.message)}</p>`;
+  if(!data.length) return host.innerHTML = `<p style="color:var(--muted)">No threads yet — start the first one.</p>`;
+  host.innerHTML = data.map(t=>`
+    <div class="thread-row" data-thread="${t.id}">
+      <div class="d-flex justify-content-between align-items-center gap-2">
+        <b>${esc(t.title)}</b>
+        <span class="data-font" style="font-size:.7rem;color:var(--muted);flex-shrink:0">${esc(t.author_name)} · ${new Date(t.created_at).toLocaleDateString()}</span>
+      </div>
+    </div>`).join("");
+  host.querySelectorAll("[data-thread]").forEach(el=>el.addEventListener("click", ()=>openThread(+el.dataset.thread)));
+}
+async function openThread(id){
+  currentThread = id;
+  fShow("thread");
+  const view = document.getElementById("threadView");
+  view.innerHTML = `<p style="color:var(--muted)" class="data-font">Loading…</p>`;
+  const [{ data: t }, { data: posts }] = await Promise.all([
+    sb.from("forum_threads").select("*").eq("id", id).single(),
+    sb.from("forum_posts").select("*").eq("thread_id", id).order("created_at")
+  ]);
+  if(!t) return view.innerHTML = `<p style="color:var(--muted)">Thread not found.</p>`;
+  const post = (p, op=false)=>`
+    <div class="post-card ${op?"op":""}">
+      <div class="post-meta"><b>${esc(p.author_name)}</b> · ${new Date(p.created_at).toLocaleString()}${op?" · OP":""}</div>
+      <p class="post-body">${esc(p.body)}</p>
+    </div>`;
+  view.innerHTML = `<h5 class="display-font mb-3" style="font-size:1.15rem">${esc(t.title)}</h5>`
+    + post(t, true) + (posts||[]).map(p=>post(p)).join("");
+}
+document.getElementById("newThreadBtn").addEventListener("click", ()=>{
+  document.getElementById("composer").classList.toggle("d-none");
 });
-document.addEventListener("change", async e=>{
-  if(e.target.dataset.role){
-    const { error } = await sb.from("profiles").update({ role: e.target.value }).eq("id", e.target.dataset.role);
-    if(error) toast(error.message,false); else toast("Role updated");
-  }
+document.getElementById("ctCancel").addEventListener("click", ()=>document.getElementById("composer").classList.add("d-none"));
+document.getElementById("ctPost").addEventListener("click", async ()=>{
+  const title = document.getElementById("ctTitle").value.trim();
+  const body = document.getElementById("ctBody").value.trim();
+  if(!title || !body) return;
+  const { error } = await sb.from("forum_threads").insert({ category: currentCat, title, body, author_id: me.id, author_name: me.username });
+  if(error) return alert("Post failed: " + error.message);
+  document.getElementById("ctTitle").value = ""; document.getElementById("ctBody").value = "";
+  openCategory(currentCat);
 });
-$("nuBtn").addEventListener("click", async ()=>{
-  const u = $("nuUser").value.trim(), p = $("nuPass").value, role = $("nuRole").value;
-  const st = $("nuStatus");
-  if(!u || p.length < 6) return st.textContent = "⚠ Username required; password must be 6+ characters.";
-  st.textContent = "Creating…";
-  const { data, error } = await sbProvision.auth.signUp({ email: toEmail(u), password: p, options:{ data:{ username: u, must_change: true } } });
-  if(error) return st.textContent = "❌ " + error.message;
-  // activate + set role using the admin session
-  const uid = data.user?.id;
-  if(uid){
-    const { error: e2 } = await sb.from("profiles").update({ active:true, role }).eq("id", uid);
-    if(e2) return st.textContent = "Account created, but activation failed: " + e2.message;
-  }
-  st.textContent = `✅ ${u} created and activated. DM them the temp password — they will be required to replace it on first login.`;
-  $("nuUser").value = ""; $("nuPass").value = "";
-  loadMembers();
+document.getElementById("replyPost").addEventListener("click", async ()=>{
+  const body = document.getElementById("replyBody").value.trim();
+  if(!body) return;
+  const { error } = await sb.from("forum_posts").insert({ thread_id: currentThread, body, author_id: me.id, author_name: me.username });
+  if(error) return alert("Reply failed: " + error.message);
+  document.getElementById("replyBody").value = "";
+  openThread(currentThread);
 });
 
-/* ---------------- boot ---------------- */
-if(typeof window.supabase === "undefined"){
-  $("gStatus").textContent = "⚠ Could not load the Supabase library — check your internet connection.";
-} else if(initClients()){
-  tryResume();
-}
+/* ---- unified auth (nav + modal + forums + loot) ---- */
+function toEmail(u){ return u.includes("@") ? u : `${u.toLowerCase()}@${MEMBER_EMAIL_DOMAIN}`; }
+let pwForced = false;
+const el = id => document.getElementById(id);
+let loginModalObj = null;
 
+async function doLogin(u, p, statusEl){
+  if(!sb){ if(statusEl) statusEl.textContent = "⚠ Member accounts come online once Supabase is connected."; return false; }
+  if(!u || !p){ if(statusEl) statusEl.textContent = "Enter a username and password."; return false; }
+  if(statusEl) statusEl.textContent = "Checking…";
+  const { data, error } = await sb.auth.signInWithPassword({ email: toEmail(u), password: p });
+  if(error){ if(statusEl) statusEl.textContent = "❌ " + error.message; return false; }
+  return establishSession(data.user, statusEl);
+}
+async function establishSession(user, statusEl){
+  const { data: prof, error } = await sb.from("profiles").select("username, role, active").eq("id", user.id).single();
+  if(error || !prof || !prof.active){
+    if(statusEl) statusEl.textContent = "⛔ This account isn't active yet — poke an officer on Discord.";
+    await sb.auth.signOut(); return false;
+  }
+  me = { id: user.id, username: prof.username, role: prof.role };
+  if(me.role === "admin") loadDeckLink();
+  if(loginModalObj) loginModalObj.hide();
+  if(user.user_metadata?.must_change){
+    refreshAuthUI(true);   // skip forum-home render; the pw gate takes over
+    history.pushState(null, "", "#forums"); showPage("forums");
+    showPwGate(true);
+    return true;
+  }
+  refreshAuthUI();
+  return true;
+}
+let deckUrl = null;
+async function loadDeckLink(){
+  if(deckUrl !== null){ refreshAuthUI(); return; }
+  try{
+    const { data } = await sb.from("private_links").select("url").eq("key", "command_deck").maybeSingle();
+    deckUrl = data?.url || "";
+  }catch(e){ deckUrl = ""; }
+  refreshAuthUI();
+}
+function refreshAuthUI(skipForum){
+  const nav = el("navAuth");
+  document.querySelectorAll(".nav-link").forEach(l=>{
+    if(ADMIN_ONLY_PAGES.includes(l.dataset.page)) l.closest("li").classList.toggle("d-none", me?.role !== "admin");
+  });
+  const deck = (me?.role === "admin" && deckUrl) ? `<a class="deck-link data-font" href="${esc(deckUrl)}" target="_blank" rel="noopener">Deck</a>` : "";
+  if(nav) nav.innerHTML = me
+    ? `${deck}<span class="data-font me-2" style="font-size:.7rem;letter-spacing:.1em;color:var(--legendary)">${esc(me.username).toUpperCase()}</span><button class="btn btn-outline-epic btn-sm" id="navLogoutBtn">Log Out</button>`
+    : `<button class="btn btn-outline-epic btn-sm px-3" id="navLoginBtn">Log In</button>`;
+  if(!skipForum){
+    if(me){
+      el("forumWho").textContent = me.username;
+      el("forumLogin").classList.add("d-none");
+      el("pwGate").classList.add("d-none");
+      el("forumHome").classList.remove("d-none");
+      renderCats(); fShow("cats");
+    } else {
+      el("forumHome").classList.add("d-none");
+      el("pwGate").classList.add("d-none");
+      el("forumLogin").classList.remove("d-none");
+      el("loginStatus").textContent = "";
+    }
+  }
+  if(typeof lootRefresh === "function") lootRefresh();
+  if(typeof raidsRefresh === "function") raidsRefresh();
+}
+async function logoutAll(){
+  if(sb) await sb.auth.signOut();
+  me = null;
+  refreshAuthUI();
+}
+function openLoginModal(){
+  el("mStatus").textContent = ""; el("mPass").value = "";
+  if(!loginModalObj) loginModalObj = new bootstrap.Modal(el("loginModal"));
+  loginModalObj.show();
+  setTimeout(()=>el("mUser").focus(), 250);
+}
+el("mLoginBtn").addEventListener("click", ()=>doLogin(el("mUser").value.trim(), el("mPass").value, el("mStatus")));
+el("mPass").addEventListener("keydown", e=>{ if(e.key === "Enter") doLogin(el("mUser").value.trim(), el("mPass").value, el("mStatus")); });
+document.addEventListener("click", e=>{
+  if(e.target.id === "navLoginBtn" || e.target.id === "lootLoginBtn" || e.target.id === "raidLoginBtn") openLoginModal();
+  if(e.target.id === "navLogoutBtn") logoutAll();
+});
 function addPwToggles(ids){
   ids.forEach(id=>{
     const inp = document.getElementById(id);
@@ -670,7 +1781,769 @@ function addPwToggles(ids){
     wrap.appendChild(btn);
   });
 }
-addPwToggles(["gPass"]);
+addPwToggles(["mPass","loginPass","pwNew","pwNew2"]);
+
+function openForumHome(){ refreshAuthUI(); }
+function showPwGate(forced){
+  pwForced = forced;
+  el("forumLogin").classList.add("d-none");
+  el("forumHome").classList.add("d-none");
+  el("pwGate").classList.remove("d-none");
+  el("pwGateMsg").textContent = forced
+    ? "First login detected — replace your temp password with one only you know before entering."
+    : "Choose a new password for your guild account.";
+  el("pwAlt").textContent = forced ? "Log Out" : "Cancel";
+  el("pwNew").value = ""; el("pwNew2").value = ""; el("pwStatus").textContent = "";
+}
+el("pwSave").addEventListener("click", async ()=>{
+  const p1 = el("pwNew").value, p2 = el("pwNew2").value, st = el("pwStatus");
+  if(p1.length < 6) return st.textContent = "⚠ Password must be at least 6 characters.";
+  if(p1 !== p2)     return st.textContent = "⚠ Passwords don't match.";
+  st.textContent = "Saving…";
+  const { error } = await sb.auth.updateUser({ password: p1, data: { must_change: false } });
+  if(error) return st.textContent = "❌ " + error.message;
+  st.textContent = "✅ Password updated.";
+  setTimeout(openForumHome, 600);
+});
+el("pwAlt").addEventListener("click", async ()=>{
+  if(pwForced) logoutAll();
+  else openForumHome();
+});
+el("pwChangeBtn").addEventListener("click", ()=>showPwGate(false));
+document.getElementById("loginBtn").addEventListener("click", ()=>{
+  doLogin(document.getElementById("loginUser").value.trim(), document.getElementById("loginPass").value, document.getElementById("loginStatus"));
+});
+document.getElementById("logoutBtn").addEventListener("click", logoutAll);
+
+
+/* ================= LOOT TRACKER ================= */
+function lootEl(id){ return document.getElementById(id); }
+let lootWishlists = [], myWishlistExtra = {}, RB_ITEMDB = null, dtModalObj = null;
+let viewScope = "me", modeMe = "slot", modeTeam = "boss";
+
+async function lootRefresh(){
+  const gate = lootEl("lootGate"), home = lootEl("lootHome");
+  if(!gate) return;
+  if(!sb){ gate.querySelector("p").textContent = "The loot tracker comes online once Supabase is connected."; return; }
+  if(!me){ gate.classList.remove("d-none"); home.classList.add("d-none"); return; }
+  gate.classList.add("d-none"); home.classList.remove("d-none");
+  await loadLootData();
+}
+async function loadLootData(){
+  try{
+    const [mine, all] = await Promise.all([
+      sb.from("loot_wishlists").select("data").eq("user_id", me.id).maybeSingle(),
+      sb.from("loot_wishlists").select("user_id, data")
+    ]);
+    myWishlistExtra = {};
+    if(mine.data?.data?.droptimizer) myWishlistExtra.droptimizer = mine.data.data.droptimizer;
+    lootWishlists = (all.data || []).map(r => ({ ...(r.data || {}), _uid: r.user_id }));
+    drawSheet(); renderDtMeta();
+  }catch(e){ console.warn("loot load", e); }
+}
+async function persistWishlist(){
+  const { error } = await sb.from("loot_wishlists").upsert({ user_id: me.id, data: myWishlistExtra, updated_at: new Date().toISOString() });
+  if(error) console.warn("wishlist save", error);
+  return !error;
+}
+
+/* ---- droptimizer import ---- */
+async function rbItemNames(){
+  if(RB_ITEMDB) return RB_ITEMDB;
+  try{
+    const r = await fetch("https://www.raidbots.com/static/data/live/equippable-items.json");
+    if(!r.ok) throw 0;
+    const arr = await r.json();
+    RB_ITEMDB = {};
+    arr.forEach(i => { RB_ITEMDB[i.id] = i.name; });
+  }catch(e){ RB_ITEMDB = {}; }
+  return RB_ITEMDB;
+}
+function rawFormEncMap(json){
+  const map = {};
+  const scan = (o)=>{
+    if(Array.isArray(o)){ o.forEach(scan); return; }
+    if(o && typeof o === "object"){
+      const id = o.itemId ?? o.item_id ?? (o.item && (o.item.id ?? o.item.itemId));
+      const enc = o.encounterId ?? o.encounter_id ?? (o.encounter && o.encounter.id);
+      if(id && enc && +enc >= 2000 && +enc < 20000) map[String(id)] = +enc;
+      Object.values(o).forEach(v=>{ if(v && typeof v === "object") scan(v); });
+    }
+  };
+  try{ scan(json?.simbot?.meta?.rawFormData); }catch(e){}
+  return map;
+}
+function dtParse(json){
+  const player = json?.sim?.players?.[0];
+  const baseline = player?.collected_data?.dps?.mean;
+  const results = json?.sim?.profilesets?.results || [];
+  if(!baseline || !results.length) throw new Error("No Droptimizer results in that report — make sure it's a Droptimizer sim, not a regular one.");
+  const encMap = rawFormEncMap(json);
+  const best = {};
+  results.forEach(r=>{
+    const gain = r.mean - baseline;
+    // Format: {instanceId}/{encounterId}/{source}/{itemId}/{ilvl}/... trailing tokens may include a second item id
+    const toks = String(r.name).split("/");
+    const itemId = toks.find(t => /^\d{6,7}$/.test(t));
+    if(!itemId) return;
+    const iIdx = toks.indexOf(itemId);
+    const ilvl = toks.slice(iIdx + 1).find(t => /^\d{3}$/.test(t)) || "";
+    const slotTok = toks.slice(iIdx + 1).find(t => /^[a-z_]+\d?$/i.test(t)) || "";
+    const src = toks.slice(0, iIdx).find(t => /[a-z]/i.test(t)) || "";
+    let enc = encMap[itemId] || null;
+    if(!enc){
+      if(/dungeon|mplus/i.test(src)) enc = "mplus";
+      else if(/^\d{4}$/.test(toks[1])) enc = +toks[1];
+      else if(/vault/i.test(src)) enc = "vault";
+    }
+    if(!enc && !dtParse._warned){ dtParse._warned = true; console.warn("[droptimizer] couldn't map boss for profileset:", r.name); }
+    if(!best[itemId] || gain > best[itemId].gain) best[itemId] = { id: itemId, ilvl, gain, enc, slot: slotTok };
+  });
+  const ups = Object.values(best).filter(u => u.gain > 0).sort((a,b) => b.gain - a.gain).slice(0, 24);
+  return { character: player.name, spec: player.specialization || "", baseline, ups };
+}
+async function dtImport(){
+  const st = lootEl("dtStatus");
+  const raw = lootEl("dtUrl").value.trim();
+  const pasted = lootEl("dtPaste").value.trim();
+  try{
+    let json;
+    if(pasted){
+      json = JSON.parse(pasted);
+    } else {
+      const mm = raw.match(/([A-Za-z0-9_-]{16,})/);
+      if(!mm) throw new Error("Paste your Raidbots report link first.");
+      st.textContent = "Fetching report…";
+      let r;
+      try{ r = await fetch(`https://www.raidbots.com/reports/${mm[1]}/data.json`); }
+      catch(e){ throw new Error("fetch-blocked"); }
+      if(!r.ok) throw new Error(r.status === 404 ? "Report not found — check the link (reports also expire after a while)." : "fetch-blocked");
+      json = await r.json();
+    }
+    st.textContent = "Crunching results…";
+    const parsed = dtParse(json);
+    const names = await rbItemNames();
+    const upgrades = parsed.ups.map(u => ({
+      id: u.id, ilvl: u.ilvl, enc: u.enc || null, slot: u.slot || "",
+      name: names[u.id] || ("Item " + u.id),
+      pct: +((u.gain / parsed.baseline) * 100).toFixed(2)
+    }));
+    myWishlistExtra.droptimizer = {
+      character: parsed.character, spec: parsed.spec,
+      baseline: Math.round(parsed.baseline),
+      imported: new Date().toISOString().slice(0,10),
+      upgrades
+    };
+    await persistWishlist();
+    lootEl("dtPaste").classList.add("d-none"); lootEl("dtPaste").value = ""; lootEl("dtUrl").value = "";
+    st.textContent = `✅ Imported ${upgrades.length} upgrades for ${parsed.character} (baseline ${Math.round(parsed.baseline).toLocaleString()} DPS).`;
+    loadLootData();
+  }catch(e){
+    if(e.message === "fetch-blocked"){
+      lootEl("dtPaste").classList.remove("d-none");
+      st.textContent = "⚠ Couldn't fetch the report directly. Open your report link with /data.json added to the end, copy everything, paste it below, and press Import again.";
+    } else {
+      st.textContent = "⚠ " + e.message;
+    }
+  }
+}
+function renderDtMeta(){
+  const host = lootEl("dtMeta");
+  if(!host) return;
+  const d = myWishlistExtra.droptimizer;
+  host.innerHTML = d
+    ? `<div class="d-flex justify-content-between align-items-center">
+        <span class="data-font" style="font-size:.66rem;letter-spacing:.14em;color:var(--legendary-soft)">CURRENT: ${esc(d.character).toUpperCase()} · ${esc(d.imported)} · ${d.upgrades.length} ITEMS</span>
+        <button class="award-x" id="dtClear" title="Remove imported list">✕</button>
+      </div>`
+    : `<span class="data-font" style="font-size:.66rem;letter-spacing:.14em;color:var(--muted)">NO IMPORT YET</span>`;
+}
+
+/* ---- sheet views ---- */
+const SLOT_LABELS = { head:"Head", neck:"Neck", shoulder:"Shoulders", back:"Back", chest:"Chest", wrist:"Wrist", hands:"Hands", waist:"Waist", legs:"Legs", feet:"Feet", finger:"Rings", trinket:"Trinkets", main_hand:"Weapons", off_hand:"Off-hand" };
+const SLOT_ORDER = ["main_hand","off_hand","trinket","head","neck","shoulder","back","chest","wrist","hands","waist","legs","feet","finger"];
+function slotKey(s){ return String(s||"").toLowerCase().replace(/\d+$/,""); }
+function slotCat(s){
+  const k = slotKey(s);
+  if(["head","shoulder","chest","hands","legs"].includes(k)) return "tier";
+  if(["main_hand","off_hand"].includes(k)) return "weapon";
+  if(["neck","finger"].includes(k)) return "jewelry";
+  if(k === "trinket") return "trinket";
+  return "other";
+}
+function encLabel(enc){
+  if(enc === null || enc === undefined || enc === "null") return "Other Sources";
+  if(enc === "vault") return "Great Vault";
+  if(enc === "mplus") return "Mythic+ / Dungeons";
+  const n = +enc;
+  if(!Number.isFinite(n)) return "Other Sources";
+  return WCL_ENC_NAMES[n] || ("Boss #" + n);
+}
+function encOrder(k){
+  if(k === "null") return 4e9;
+  if(k === "vault") return 2e9;
+  if(k === "mplus") return 3e9;
+  return +k;
+}
+function itemPill(u){
+  return `<span class="lpill lp-${slotCat(u.slot)}">${esc(u.name)}</span> <span style="color:var(--muted);font-size:.75rem">${esc(u.ilvl||"")}</span>`;
+}
+const blsCollapsed = new Set();
+function sheetSection(title, count, bodyHtml, extra, key){
+  const collapsed = key && blsCollapsed.has(key);
+  return `<div class="bls-boss${collapsed ? " collapsed" : ""}"${key ? ` data-blskey="${esc(key)}"` : ""}>
+    <div class="bls-head bls-click">
+      <span class="bls-name"><span class="bls-chev">▾</span>${title}</span>
+      <span class="d-flex align-items-center gap-2">
+        <span class="bls-count data-font">${count} WANT${count === 1 ? "" : "S"}</span>${extra || ""}
+      </span>
+    </div>
+    <div class="bls-body">${bodyHtml}</div>
+  </div>`;
+}
+function groupRowsBySlot(list, rowFn){
+  const bySlot = {};
+  list.forEach(x => { (bySlot[slotKey(x.slot)] = bySlot[slotKey(x.slot)] || []).push(x); });
+  const keys = Object.keys(bySlot).sort((a,b)=>{
+    const ia = SLOT_ORDER.indexOf(a), ib = SLOT_ORDER.indexOf(b);
+    return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib);
+  });
+  return keys.map(k =>
+    `<div class="bls-slot data-font">${esc(SLOT_LABELS[k] || (k ? k[0].toUpperCase()+k.slice(1) : "Other"))}</div>` +
+    bySlot[k].map(rowFn).join("")
+  ).join("");
+}
+function drawSheet(){
+  const host = lootEl("bsSections");
+  if(!host) return;
+  // secondary toggle reflects scope
+  const mg = lootEl("blsModeGroup");
+  const modes = viewScope === "me" ? [["slot","By Slot"],["boss","By Boss"]] : [["boss","By Boss"],["raider","By Raider"]];
+  const active = viewScope === "me" ? modeMe : modeTeam;
+  mg.innerHTML = modes.map(([k,l]) => `<button class="bls-mode${active === k ? " on" : ""}" data-blsmode="${k}">${l}</button>`).join("");
+  document.querySelectorAll("[data-blsscope]").forEach(b => b.classList.toggle("on", b.dataset.blsscope === viewScope));
+
+  if(viewScope === "me"){
+    const d = myWishlistExtra.droptimizer;
+    if(!d || !d.upgrades?.length){
+      host.innerHTML = `<p class="py-4 text-center" style="color:var(--muted)">No sim imported yet — hit <b>Import Droptimizer</b> and paste your Raidbots report link.</p>`;
+      return;
+    }
+    if(modeMe === "slot"){
+      const bySlot = {};
+      d.upgrades.forEach(u => { (bySlot[slotKey(u.slot)] = bySlot[slotKey(u.slot)] || []).push(u); });
+      const keys = Object.keys(bySlot).sort((a,b)=>{
+        const ia = SLOT_ORDER.indexOf(a), ib = SLOT_ORDER.indexOf(b);
+        return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib);
+      });
+      host.innerHTML = keys.map(k=>{
+        const rows = [...bySlot[k]].sort((a,b)=>b.pct - a.pct);
+        return sheetSection(esc(SLOT_LABELS[k] || (k ? k[0].toUpperCase()+k.slice(1) : "Other")), rows.length,
+          rows.map(u=>`<div class="bls-item"><span class="bls-iname">${itemPill(u)}</span>
+            <span class="bls-wants"><span class="bls-chip" style="color:var(--muted)">${esc(encLabel(u.enc ?? null))}</span><span class="bls-chip text-legendary data-font">+${u.pct}%</span></span></div>`).join(""), "", "me-slot-" + k);
+      }).join("");
+    } else {
+      const byEnc = {};
+      d.upgrades.forEach(u => { const k = String(u.enc ?? "null"); (byEnc[k] = byEnc[k] || []).push(u); });
+      const encs = Object.keys(byEnc).sort((a,b) => encOrder(a) - encOrder(b));
+      host.innerHTML = encs.map(e=>{
+        const rows = [...byEnc[e]].sort((a,b)=>b.pct - a.pct);
+        return sheetSection(esc(encLabel(e)), rows.length,
+          groupRowsBySlot(rows, u=>`<div class="bls-item"><span class="bls-iname">${itemPill(u)}</span>
+            <span class="bls-wants"><span class="bls-chip text-legendary data-font">+${u.pct}%</span></span></div>`), "", "me-boss-" + e);
+      }).join("");
+    }
+    return;
+  }
+
+  // team scope
+  const officer = ["officer","admin"].includes(me?.role);
+  if(modeTeam === "raider"){
+    const byRaider = {};
+    lootWishlists.forEach(w=>{
+      const d = w.droptimizer;
+      if(!d || !d.upgrades) return;
+      const raider = d.character || w.character || "?";
+      const rec = byRaider[raider] = byRaider[raider] || { uid: w._uid, ups: [] };
+      rec.ups.push(...d.upgrades);
+    });
+    const names = Object.keys(byRaider).sort((a,b)=>a.localeCompare(b));
+    if(!names.length){ host.innerHTML = `<p class="py-4 text-center" style="color:var(--muted)">No imports on the team yet.</p>`; return; }
+    host.innerHTML = names.map(n=>{
+      const rec = byRaider[n];
+      const rows = [...rec.ups].sort((a,b)=>b.pct - a.pct);
+      const x = officer && rec.uid ? `<button class="award-x" data-wldel="${rec.uid}" title="Remove this raider's wishlist">✕</button>` : "";
+      return sheetSection(esc(n), rows.length,
+        rows.map(u=>`<div class="bls-item"><span class="bls-iname">${itemPill(u)}</span>
+          <span class="bls-wants"><span class="bls-chip" style="color:var(--muted)">${esc(encLabel(u.enc ?? null))}</span><span class="bls-chip text-legendary data-font">+${u.pct}%</span></span></div>`).join(""), x, "team-raider-" + n);
+    }).join("");
+  } else {
+    const byEnc = {};
+    lootWishlists.forEach(w=>{
+      const d = w.droptimizer;
+      if(!d || !d.upgrades) return;
+      const raider = d.character || w.character || "?";
+      d.upgrades.forEach(u=>{
+        const k = String(u.enc ?? "null");
+        const sec = byEnc[k] = byEnc[k] || { items: {} };
+        const it = sec.items[u.name] = sec.items[u.name] || { name: u.name, ilvl: u.ilvl, slot: u.slot, wants: [] };
+        it.wants.push({ raider, pct: u.pct });
+      });
+    });
+    const encs = Object.keys(byEnc).sort((a,b) => encOrder(a) - encOrder(b));
+    if(!encs.length){ host.innerHTML = `<p class="py-4 text-center" style="color:var(--muted)">No imports on the team yet.</p>`; return; }
+    host.innerHTML = encs.map(e=>{
+      const items = Object.values(byEnc[e].items);
+      items.forEach(it => it.wants.sort((a,b)=>b.pct - a.pct));
+      items.sort((a,b)=>b.wants[0].pct - a.wants[0].pct);
+      const wantCount = items.reduce((n,it)=>n + it.wants.length, 0);
+      return sheetSection(esc(encLabel(e)), wantCount,
+        groupRowsBySlot(items, it=>`<div class="bls-item"><span class="bls-iname">${itemPill(it)}</span>
+          <span class="bls-wants">${it.wants.map(x=>`<span class="bls-chip"><b>${esc(x.raider)}</b> <span class="text-legendary data-font">+${x.pct}%</span></span>`).join("")}</span></div>`), "", "team-boss-" + e);
+    }).join("");
+  }
+}
+
+/* ---- wiring ---- */
+document.addEventListener("click", async e=>{
+  if(e.target.id === "dtOpen"){
+    if(!dtModalObj) dtModalObj = new bootstrap.Modal(lootEl("dtModal"));
+    lootEl("dtStatus").textContent = "";
+    renderDtMeta();
+    dtModalObj.show();
+  }
+  if(e.target.id === "dtClear"){
+    if(!confirm("Remove your imported sim from the sheet?")) return;
+    delete myWishlistExtra.droptimizer;
+    await persistWishlist();
+    renderDtMeta(); loadLootData();
+  }
+  const blsHead = e.target.closest(".bls-head");
+  if(blsHead && !e.target.closest("button")){
+    const sec = blsHead.closest("[data-blskey]");
+    if(sec){
+      const k = sec.dataset.blskey;
+      blsCollapsed.has(k) ? blsCollapsed.delete(k) : blsCollapsed.add(k);
+      sec.classList.toggle("collapsed");
+    }
+  }
+  if(e.target.dataset.blsscope){ viewScope = e.target.dataset.blsscope; drawSheet(); }
+  if(e.target.dataset.blsmode){
+    if(viewScope === "me") modeMe = e.target.dataset.blsmode; else modeTeam = e.target.dataset.blsmode;
+    drawSheet();
+  }
+  if(e.target.dataset.wldel){
+    if(!confirm("Remove this raider's wishlist?")) return;
+    const { error } = await sb.from("loot_wishlists").delete().eq("user_id", e.target.dataset.wldel);
+    if(!error) loadLootData(); else alert(error.message);
+  }
+});
+lootEl("dtImport").addEventListener("click", dtImport);
+
+/* ================= RAID SIGNUPS ================= */
+const RAID_ROLES = { T: "🛡️ Tank", H: "💚 Heal", M: "⚔️ Melee", R: "🏹 Ranged", B: "🪑 Bench" };
+let rbChecked = new Set(), rbRoles = {}, editEventId = null, discordRaiders = [];
+
+function guessRole(name){
+  const hit = rosterCache.find(x => x.character.name.toLowerCase() === name.toLowerCase());
+  const c = (hit?.character?.class || "").toLowerCase();
+  return ["hunter","mage","warlock","evoker","shaman","druid","priest"].includes(c) ? "R" : "M";
+}
+async function raidsRefresh(){
+  const gate = el("raidGate"), home = el("raidHome");
+  if(!gate) return;
+  if(!sb){ gate.querySelector("p").textContent = "Raid signups come online once Supabase is connected."; return; }
+  if(!me){ gate.classList.remove("d-none"); home.classList.add("d-none"); return; }
+  gate.classList.add("d-none"); home.classList.remove("d-none");
+  const officer = ["officer","admin"].includes(me.role);
+  el("raidBuilder").classList.toggle("d-none", !officer);
+  if(officer){ await loadDiscordRaiders(); buildRosterPicker(); renderAssign(); }
+  loadRaidEvents();
+}
+async function loadDiscordRaiders(){
+  try{
+    const { data } = await sb.from("discord_raiders").select("display_name").order("display_name");
+    discordRaiders = (data || []).map(r => r.display_name);
+  }catch(e){ discordRaiders = []; }
+}
+function pickerSource(){
+  return discordRaiders.length
+    ? discordRaiders.map(n => ({ name: n, rank: null }))
+    : rosterCache.map(m => ({ name: m.character.name, rank: m.rank }));
+}
+function populateRankFilter(){
+  const sel = el("rbRank");
+  if(sel.options.length > 1 || !rosterCache.length) return;
+  const ranks = [...new Set(rosterCache.map(m => m.rank))].sort((a,b)=>a-b);
+  sel.innerHTML = `<option value="">All ranks</option>` + ranks.map(r =>
+    `<option value="${r}">${r === 0 ? "Guild Master" : r === 1 ? "Officers" : "Rank " + r}</option>`).join("");
+}
+function buildRosterPicker(){
+  const host = el("rbList");
+  const useDiscord = discordRaiders.length > 0;
+  el("rbRank").classList.toggle("d-none", useDiscord);   // the Raider role IS the filter
+  el("rbSource").textContent = useDiscord
+    ? `SOURCE: DISCORD RAIDER ROLE · ${discordRaiders.length} MEMBERS`
+    : `⚠ SOURCE: RAIDER.IO FALLBACK — DISCORD RAIDER LIST IS EMPTY (BOT NOT SYNCING?)`;
+  el("rbSource").style.color = useDiscord ? "var(--muted)" : "var(--legendary)";
+  if(!useDiscord) populateRankFilter();
+  const q = (el("rbFilter").value || "").toLowerCase();
+  const rf = el("rbRank").value;
+  const source = pickerSource();
+  if(!source.length){
+    host.innerHTML = `<p style="font-size:.8rem;color:var(--muted)">No roster source available — add names manually below.</p>`;
+    return;
+  }
+  host.innerHTML = source
+    .filter(m => m.name.toLowerCase().includes(q) && (useDiscord || rf === "" || String(m.rank) === rf))
+    .map(m => `<label class="rb-chip${rbChecked.has(m.name) ? " on" : ""}">
+      <input type="checkbox" value="${esc(m.name)}" ${rbChecked.has(m.name) ? "checked" : ""}>${esc(m.name)}</label>`).join("")
+    || `<p style="font-size:.8rem;color:var(--muted)">No members match that filter.</p>`;
+}
+function manualNames(){
+  return el("rbManual").value.split(",").map(s => s.trim()).filter(Boolean);
+}
+function currentPicked(){
+  return [...new Set([...rbChecked, ...manualNames()])];
+}
+function renderAssign(){
+  const picked = currentPicked();
+  const host = el("rbAssign");
+  if(!picked.length){ host.innerHTML = ""; return; }
+  host.innerHTML = picked.map(n=>{
+    const r = rbRoles[n] || (rbRoles[n] = guessRole(n));
+    return `<div class="role-row"><span class="role-name">${esc(n)}</span>
+      ${Object.keys(RAID_ROLES).map(k=>`<button class="role-btn${r===k?" on":""}" data-role="${esc(n)}::${k}">${RAID_ROLES[k].split(" ")[0]}</button>`).join("")}
+    </div>`;
+  }).join("");
+}
+function pickedRoster(){
+  return currentPicked().map(n => `${n}|${rbRoles[n] || guessRole(n)}`);
+}
+function parseEntry(s){
+  const i = s.lastIndexOf("|");
+  if(i === -1) return { name: s, role: null };
+  const r = s.slice(i+1);
+  return RAID_ROLES[r] ? { name: s.slice(0,i), role: r } : { name: s, role: null };
+}
+function resetBuilder(){
+  editEventId = null; rbChecked = new Set(); rbRoles = {};
+  el("reTitle").value = ""; el("reDate").value = ""; el("reTime").value = ""; el("reNote").value = ""; el("rbManual").value = "";
+  el("reCreate").textContent = "Create Event";
+  el("reCancel").classList.add("d-none");
+  buildRosterPicker(); renderAssign();
+}
+async function saveRaidEvent(){
+  const st = el("reStatus");
+  const ev = {
+    title: el("reTitle").value.trim(),
+    event_date: el("reDate").value,
+    event_time: el("reTime").value.trim(),
+    note: el("reNote").value.trim(),
+    roster: pickedRoster(),
+    created_by: me.username
+  };
+  if(!ev.title || !ev.event_date){ st.textContent = "⚠ Title and date are required."; return; }
+  st.textContent = "Saving…";
+  if(editEventId && botMode()){
+    const existing = raidEvents.find(e => e.id === editEventId);
+    if(existing?.discord_message_id) ev.post_requested = true;   // bot refreshes the live post
+  }
+  const q = editEventId
+    ? sb.from("raid_events").update(ev).eq("id", editEventId)
+    : sb.from("raid_events").insert(ev);
+  const { error } = await q;
+  if(error){ st.textContent = "❌ " + error.message; return; }
+  st.textContent = editEventId
+    ? "✅ Event updated — use Post/Update on the card to refresh the Discord message."
+    : "✅ Event created — post it to Discord from the list below.";
+  resetBuilder(); loadRaidEvents();
+}
+function loadEventIntoBuilder(id){
+  const ev = raidEvents.find(e => e.id === +id);
+  if(!ev) return;
+  editEventId = ev.id;
+  el("reTitle").value = ev.title; el("reDate").value = ev.event_date;
+  el("reTime").value = ev.event_time || ""; el("reNote").value = ev.note || "";
+  rbChecked = new Set(); rbRoles = {};
+  const manual = [];
+  (ev.roster || []).forEach(s=>{
+    const { name, role } = parseEntry(s);
+    if(role) rbRoles[name] = role;
+    if(pickerSource().some(m => m.name === name)) rbChecked.add(name);
+    else manual.push(name);
+  });
+  el("rbManual").value = manual.join(", ");
+  el("reCreate").textContent = "Update Event";
+  el("reCancel").classList.remove("d-none");
+  buildRosterPicker(); renderAssign();
+  el("raidBuilder").scrollIntoView({ behavior: "smooth", block: "start" });
+}
+let raidEvents = [], raidSignups = {};
+let calY = null, calM = null;
+function drawCalendar(){
+  if(calY === null){ const d = new Date(); calY = d.getFullYear(); calM = d.getMonth(); }
+  const grid = el("calGrid");
+  if(!grid) return;
+  const first = new Date(calY, calM, 1);
+  el("calTitle").textContent = first.toLocaleString("en-US", { month: "long", year: "numeric" });
+  const startDow = first.getDay();
+  const dayCount = new Date(calY, calM + 1, 0).getDate();
+  const today = new Date().toISOString().slice(0,10);
+  const byDate = {};
+  raidEvents.forEach(ev => { (byDate[ev.event_date] = byDate[ev.event_date] || []).push(ev); });
+  const officer = ["officer","admin"].includes(me?.role);
+  let cells = ["S","M","T","W","T","F","S"].map(d => `<div class="cal-dow">${d}</div>`).join("");
+  for(let i = 0; i < startDow; i++) cells += `<div class="cal-cell empty"></div>`;
+  for(let d = 1; d <= dayCount; d++){
+    const iso = `${calY}-${String(calM+1).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
+    const evs = byDate[iso] || [];
+    cells += `<div class="cal-cell${iso === today ? " today" : ""}${officer ? " clickable" : ""}"${officer ? ` data-calday="${iso}"` : ""}>
+      <span class="cal-num">${d}</span>
+      ${evs.map(ev => `<span class="cal-ev"${officer ? ` data-calev="${ev.id}"` : ""} title="${esc(ev.title)}">${esc(ev.title)}</span>`).join("")}
+    </div>`;
+  }
+  grid.innerHTML = `<div class="cal-grid">${cells}</div>`;
+  el("calHint").classList.toggle("d-none", !officer);
+}
+async function loadRaidEvents(){
+  try{
+    const { data } = await sb.from("raid_events").select("*").order("event_date", {ascending:true}).limit(50);
+    raidEvents = data || [];
+    raidSignups = {};
+    const ids = raidEvents.map(e => e.id);
+    if(ids.length){
+      const { data: sg } = await sb.from("raid_signups").select("*").in("event_id", ids);
+      (sg || []).forEach(s => { (raidSignups[s.event_id] = raidSignups[s.event_id] || []).push(s); });
+    }
+    drawRaidEvents();
+  }catch(e){ console.warn("raid events", e); }
+}
+function drawRaidEvents(){
+  const officer = ["officer","admin"].includes(me?.role);
+  const today = new Date().toISOString().slice(0,10);
+  const upcoming = raidEvents.filter(ev => ev.event_date >= today);
+  const past = raidEvents.filter(ev => ev.event_date < today).slice(-3);
+  const card = ev => {
+    const tags = (ev.roster || []).map(s=>{
+      const { name, role } = parseEntry(s);
+      return `<span class="rb-tag">${role ? RAID_ROLES[role].split(" ")[0] + " " : ""}${esc(name)}</span>`;
+    }).join("");
+    return `
+    <div class="raid-event${ev.event_date < today ? " past" : ""}">
+      <div class="d-flex justify-content-between align-items-start gap-2 flex-wrap">
+        <div>
+          <div class="re-title">${esc(ev.title)}</div>
+          <div class="re-when data-font">${esc(ev.event_date)}${ev.event_time ? " · " + esc(ev.event_time) : ""}</div>
+        </div>
+        <div class="d-flex gap-2 align-items-center flex-shrink-0">
+          ${ev.post_at ? `<span class="re-posted data-font" style="color:var(--legendary);border-color:rgba(240,194,75,.4)" title="Scheduled Discord post">🕐 ${new Date(ev.post_at).toLocaleString([], {month:"short",day:"numeric",hour:"numeric",minute:"2-digit"})}</span>` : ev.post_requested ? `<span class="re-posted data-font" style="color:var(--legendary);border-color:rgba(240,194,75,.4)">QUEUED</span>` : ev.posted_at ? `<span class="re-posted data-font">POSTED</span>` : ""}
+          ${officer ? `<button class="btn btn-outline-epic btn-sm" data-reedit="${ev.id}">Edit</button>
+          <button class="btn btn-apply btn-sm" data-repost="${ev.id}">${botMode() ? (ev.discord_message_id ? "Update via Bot" : "Post via Bot") : (ev.discord_message_id ? "Update Discord Post" : "Post to Discord")}</button>
+          ${botMode() ? (ev.post_at ? `<button class="btn btn-outline-epic btn-sm" data-unsched="${ev.id}">Unschedule</button>` : `<button class="btn btn-outline-epic btn-sm" data-resched="${ev.id}">Schedule…</button>`) : ""}
+          <button class="award-x" data-redel="${ev.id}">✕</button>` : ""}
+        </div>
+      </div>
+      ${ev.note ? `<p class="re-note">${esc(ev.note)}</p>` : ""}
+      ${(()=>{ const sgs = raidSignups[ev.id] || []; const SS = { A:"✅", X:"❌", T:"❓", L:"🕐" };
+        const line = Object.keys(SS).map(k=>{ const ns = sgs.filter(s=>s.status===k).map(s=>esc(s.discord_name));
+          return ns.length ? `<span class="sg-group">${SS[k]} <b>${ns.length}</b> <span class="sg-names">${ns.join(", ")}</span></span>` : ""; }).filter(Boolean).join("");
+        return line ? `<div class="sg-line">${line}</div>` : ""; })()}
+      <div class="re-roster">${tags || `<span style="color:var(--muted);font-size:.8rem">Open signups — no set roster</span>`}</div>
+      ${officer && botMode() ? `<div class="sched-row d-none" id="schedRow-${ev.id}">
+        <input type="datetime-local" class="form-control form-control-sm" id="schedAt-${ev.id}" style="max-width:230px">
+        <button class="btn btn-apply btn-sm" data-schedok="${ev.id}">Set</button>
+      </div>` : ""}
+    </div>`;
+  };
+  el("raidUpcoming").innerHTML = upcoming.map(card).join("") || `<p style="color:var(--muted)">No upcoming raids scheduled.</p>`;
+  el("raidPast").innerHTML = past.map(card).join("");
+  el("raidPastWrap").classList.toggle("d-none", !past.length);
+  drawCalendar();
+}
+function buildSignupEmbed(ev){
+  const groups = { T: [], H: [], M: [], R: [], B: [], X: [] };
+  (ev.roster || []).forEach(s=>{ const { name, role } = parseEntry(s); groups[role || "X"].push(name); });
+  const fields = [];
+  for(const k of ["T","H","M","R"]){
+    if(groups[k].length) fields.push({ name: `${RAID_ROLES[k]} (${groups[k].length})`, value: groups[k].join("\n"), inline: true });
+  }
+  if(groups.X.length) fields.push({ name: `Roster (${groups.X.length})`, value: groups.X.join("\n"), inline: true });
+  if(groups.B.length) fields.push({ name: `${RAID_ROLES.B} (${groups.B.length})`, value: groups.B.join("\n"), inline: false });
+  const total = (ev.roster || []).filter(s => parseEntry(s).role !== "B").length;
+  return {
+    username: "Raid Signups",
+    embeds: [{
+      title: `⚔️ ${ev.title}`,
+      color: 0xF0C24B,
+      description: `**${ev.event_date}**${ev.event_time ? ` · ${ev.event_time}` : ""}${ev.note ? "\n" + ev.note : ""}`,
+      fields: fields.length ? fields : [{ name: "Roster", value: "Open signups — all welcome" }],
+      footer: { text: `${total} expected · React: ✅ Attending · ❌ Absent · ❓ Tentative · 🕐 Late` }
+    }]
+  };
+}
+function botMode(){ return !(CONFIG.integrations || {}).signupWebhook; }
+async function postEventToDiscord(id){
+  const ev = raidEvents.find(e => e.id === +id);
+  if(!ev) return;
+  if(botMode()){
+    const { error } = await sb.from("raid_events").update({ post_requested: true, post_at: null }).eq("id", ev.id);
+    if(error) alert(error.message); else loadRaidEvents();
+    return;
+  }
+  const hook = CONFIG.integrations.signupWebhook;
+  const payload = JSON.stringify(buildSignupEmbed(ev));
+  try{
+    let messageId = ev.discord_message_id;
+    if(messageId){
+      const res = await fetch(`${hook}/messages/${messageId}`, { method: "PATCH", headers: {"Content-Type":"application/json"}, body: payload });
+      if(!res.ok) messageId = null;   // original deleted or unreachable — fall through to fresh post
+    }
+    if(!messageId){
+      const res = await fetch(hook + "?wait=true", { method: "POST", headers: {"Content-Type":"application/json"}, body: payload });
+      if(!res.ok) throw new Error("HTTP " + res.status);
+      const msg = await res.json();
+      messageId = msg.id;
+    }
+    await sb.from("raid_events").update({ posted_at: new Date().toISOString(), discord_message_id: messageId }).eq("id", ev.id);
+    loadRaidEvents();
+  }catch(e){ alert("Discord post failed: " + e.message); }
+}
+document.addEventListener("click", async e=>{
+  if(e.target.dataset.repost) postEventToDiscord(e.target.dataset.repost);
+  if(e.target.dataset.reedit) loadEventIntoBuilder(e.target.dataset.reedit);
+  if(e.target.dataset.calev){ loadEventIntoBuilder(e.target.dataset.calev); return; }
+  if(e.target.dataset.calday || (e.target.classList?.contains("cal-num") && e.target.closest("[data-calday]"))){
+    const day = e.target.dataset.calday || e.target.closest("[data-calday]").dataset.calday;
+    resetBuilder();
+    el("reDate").value = day;
+    el("raidBuilder").classList.remove("d-none");
+    el("raidBuilder").scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+  if(e.target.dataset.resched){
+    document.getElementById("schedRow-" + e.target.dataset.resched)?.classList.toggle("d-none");
+  }
+  if(e.target.dataset.schedok){
+    const id = e.target.dataset.schedok;
+    const v = document.getElementById("schedAt-" + id)?.value;
+    if(!v){ alert("Pick a date and time first."); return; }
+    const when = new Date(v);
+    if(when.getTime() < Date.now()){ alert("That time is in the past — use Post Now instead."); return; }
+    const { error } = await sb.from("raid_events").update({ post_at: when.toISOString(), post_requested: false }).eq("id", id);
+    if(!error) loadRaidEvents(); else alert(error.message);
+  }
+  if(e.target.dataset.unsched){
+    const { error } = await sb.from("raid_events").update({ post_at: null }).eq("id", e.target.dataset.unsched);
+    if(!error) loadRaidEvents(); else alert(error.message);
+  }
+  if(e.target.id === "reCancel") resetBuilder();
+  if(e.target.dataset.role){
+    const [name, k] = e.target.dataset.role.split("::");
+    rbRoles[name] = k; renderAssign();
+  }
+  if(e.target.dataset.redel){
+    if(!confirm("Delete this raid event? (The Discord post, if any, stays.)")) return;
+    const { error } = await sb.from("raid_events").delete().eq("id", e.target.dataset.redel);
+    if(!error){ if(editEventId === +e.target.dataset.redel) resetBuilder(); loadRaidEvents(); } else alert(error.message);
+  }
+});
+document.addEventListener("change", e=>{
+  if(e.target.closest && e.target.closest("#rbList")){
+    e.target.checked ? rbChecked.add(e.target.value) : rbChecked.delete(e.target.value);
+    e.target.closest(".rb-chip")?.classList.toggle("on", e.target.checked);
+    renderAssign();
+  }
+});
+el("calPrev").addEventListener("click", ()=>{ calM--; if(calM < 0){ calM = 11; calY--; } drawCalendar(); });
+el("calNext").addEventListener("click", ()=>{ calM++; if(calM > 11){ calM = 0; calY++; } drawCalendar(); });
+el("rbManual").addEventListener("input", renderAssign);
+el("rbFilter").addEventListener("input", buildRosterPicker);
+el("rbRank").addEventListener("change", buildRosterPicker);
+el("reCreate").addEventListener("click", saveRaidEvent);
+
+/* ================= RECENT KEYS FEED ================= */
+function agoLabel(iso){
+  const s = (Date.now() - new Date(iso).getTime()) / 1000;
+  if(s < 3600) return Math.max(1, Math.round(s / 60)) + "M AGO";
+  if(s < 86400) return Math.round(s / 3600) + "H AGO";
+  return Math.round(s / 86400) + "D AGO";
+}
+async function loadKeysFeed(){
+  const host = document.getElementById("keysFeed");
+  if(!host || !sb) return;
+  try{
+    const { data } = await sb.from("mplus_runs").select("*").order("completed_at", { ascending: false }).limit(40);
+    const minLevel = +((CONFIG.keysFeed || {}).minLevel || 0);
+    const rows = (data || []).filter(r => r.level >= minLevel).slice(0, 15);
+    if(!rows.length) return;   // section stays hidden until qualifying runs exist
+    document.getElementById("keysSection").classList.remove("d-none");
+    host.innerHTML = rows.map(r => `
+      <a class="key-row" href="${esc(r.run_url)}" target="_blank" rel="noopener" title="View this run on Raider.io">
+        <span class="key-lvl${r.upgrades > 0 ? "" : " dep"}">+${r.level}</span>
+        <span class="key-dun">${esc(r.dungeon)} ${r.upgrades > 0 ? `<span class="key-chev">${"▲".repeat(Math.min(r.upgrades, 3))}</span>` : `<span class="key-chev" style="color:var(--muted)">OVER TIMER</span>`}</span>
+        <span class="key-who">${(r.members || []).map(esc).join(", ")}</span>
+        <span class="key-ago">${agoLabel(r.completed_at)}</span>
+      </a>`).join("");
+  }catch(e){ /* table absent or unreachable — section stays hidden */ }
+}
+
+/* ================= SPLASH ================= */
+function maybeSplash(){
+  const url = (CONFIG.site || {}).splashUrl;
+  const days = Math.max(0, +((CONFIG.site || {}).splashDays ?? 7));
+  if(!url) return;
+  if(location.hash && location.hash !== "#home") return;                 // only on true homepage landings
+  if(window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  let last = 0;
+  try{ last = +localStorage.getItem("intent-splash") || 0; }catch(e){ return; }  // no storage → never nag repeatedly
+  if(days > 0 && Date.now() - last < days * 86400000) return;
+  const wrap = el("splash"), vid = el("splashVid");
+  let started = false, finished = false;
+  const bail = ()=>{ if(finished) return; finished = true; wrap.classList.add("d-none"); vid.removeAttribute("src"); vid.load(); };
+  const done = ()=>{
+    if(finished) return; finished = true;
+    try{ localStorage.setItem("intent-splash", Date.now()); }catch(e){}
+    wrap.classList.add("splash-out");
+    setTimeout(()=>{ wrap.classList.add("d-none"); vid.removeAttribute("src"); vid.load(); }, 750);
+  };
+  vid.addEventListener("canplay", ()=>{
+    if(finished) return;
+    started = true;
+    wrap.classList.remove("d-none");
+    vid.play().catch(done);
+  }, { once:true });
+  vid.addEventListener("ended", done, { once:true });
+  vid.addEventListener("error", ()=>{ started ? done() : bail(); }, { once:true });
+  el("splashSkip").addEventListener("click", done);
+  setTimeout(()=>{ if(!started) bail(); }, 2500);     // slow network: give up silently
+  setTimeout(()=>{ if(started) done(); }, 12000);     // hard cap regardless
+  vid.src = url;
+}
+
+/* ================= BOOT ================= */
+(async function(){
+  await loadRemoteConfig();  // DB values override defaults
+  renderAll();
+  const sy = document.getElementById("syncStatus");
+  if(sy){
+    if(window.__cfgSynced){ sy.textContent = ""; sy.style.color = "var(--kill)"; }
+    else sy.textContent = "OFFLINE — SHOWING BUILT-IN DEFAULTS";
+  }
+  document.body.classList.remove("booting");   // reveal identity only once real config is painted
+  loadWclProgress();
+  loadKeysFeed();
+  maybeSplash();
+  loadGuild();
+  loadDiscordWidget();
+  if(sb){
+    const { data } = await sb.auth.getSession();
+    if(data?.session) await establishSession(data.session.user, null);
+    else refreshAuthUI();
+  } else {
+    refreshAuthUI();
+  }
+})();
+
 </script>
 </body>
 </html>
