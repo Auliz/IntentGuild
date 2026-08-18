@@ -1464,10 +1464,9 @@ async function loadGuild(){
       return t;   // no API match: manual counts only
     });
     renderTiers(shown);
-    document.getElementById("dataSource").textContent = "Live data · Raider.io · updated just now";
     if(g.members) renderRoster(g.members);
   }catch(err){
-    document.getElementById("dataSource").textContent = "Showing recent snapshot — live Raider.io sync activates once the site is hosted";
+    console.warn("[rio] live sync unavailable", err);
     renderRoster(null);
   }
 }
