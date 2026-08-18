@@ -550,7 +550,7 @@ async function loadApplications(){
     const d = a.data||{};
     return `<div class="item-card">
       <div class="d-flex justify-content-between align-items-center app-row" data-toggle="${a.id}">
-        <div><b>${esc(d.character)}</b> <span class="note">— ${esc(d.spec)} ${esc(d.cls)} · ${esc(d.role)}</span></div>
+        <div><b>${esc(d.character)}</b> <span class="note">— ${esc(d.spec)} ${esc(d.cls)}${d.role ? " · " + esc(d.role) : ""}</span></div>
         <div class="d-flex gap-2 align-items-center"><span class="pill pill-${a.status}">${a.status.toUpperCase()}</span><span class="note data-font">${new Date(a.created_at).toLocaleDateString()}</span></div>
       </div>
       <div class="app-detail mt-2 d-none" id="appd-${a.id}">
@@ -561,9 +561,9 @@ async function loadApplications(){
           <dt>Schedule OK</dt><dd>${esc(d.schedule_ok)}</dd>
           <dt>Bench OK</dt><dd>${esc(d.bench_ok)||"—"}</dd>
           <dt>Experience</dt><dd>${esc(d.experience)||"—"}</dd>
-          <dt>Prev Guilds</dt><dd>${esc(d.prev_guilds)||"—"}</dd>
-          <dt>Underperformed</dt><dd>${esc(d.underperformed)||"—"}</dd>
-          <dt>Why Intent</dt><dd>${esc(d.why)||"—"}</dd>
+          ${d.prev_guilds ? `<dt>Prev Guilds</dt><dd>${esc(d.prev_guilds)}</dd>` : ""}
+          ${d.underperformed ? `<dt>Underperformed</dt><dd>${esc(d.underperformed)}</dd>` : ""}
+          ${d.why ? `<dt>Why Intent</dt><dd>${esc(d.why)}</dd>` : ""}
           <dt>Off-specs</dt><dd>${esc(d.offspecs)||"—"}</dd>
           <dt>Conflicts</dt><dd>${esc(d.conflicts)||"—"}</dd>
           <dt>Found via</dt><dd>${esc(d.found_us)||"—"}</dd>
