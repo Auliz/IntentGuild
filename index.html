@@ -145,6 +145,10 @@ a:hover{color:var(--legendary-soft)}
 .bls-scroll{max-height:600px;overflow-y:auto;padding-right:.4rem}
 .bls-scroll::-webkit-scrollbar{width:6px}
 .bls-scroll::-webkit-scrollbar-thumb{background:var(--line);border-radius:3px}
+.bonus-callout{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;background:linear-gradient(90deg,rgba(240,194,75,.1),rgba(240,194,75,.02));border:1px solid rgba(240,194,75,.45);border-left:3px solid var(--legendary);border-radius:9px;padding:.55rem .8rem;margin-bottom:1rem}
+.bc-dice{font-size:1.05rem}
+.bc-label{font-size:.64rem;letter-spacing:.2em;text-transform:uppercase;color:var(--legendary-soft)}
+.bc-mini{font-size:.8rem;cursor:default}
 .bls-toggle{display:flex;border:1px solid var(--line);border-radius:7px;overflow:hidden}
 .bls-mode{border:none;background:none;color:var(--muted);font-family:var(--font-data);font-size:.66rem;letter-spacing:.14em;text-transform:uppercase;padding:.35rem .8rem}
 .bls-mode.on{background:rgba(240,194,75,.14);color:var(--legendary)}
@@ -851,6 +855,12 @@ footer{border-top:1px solid var(--line);padding:2.5rem 0;color:var(--muted);font
               <p style="font-size:.8rem;color:var(--muted)">Run a Droptimizer on <a href="https://www.raidbots.com" target="_blank" rel="noopener">Raidbots</a>, then paste the report link. Re-import any time — the newest sim replaces the old.</p>
               <div id="dtMeta" class="mb-2"></div>
               <div class="d-flex gap-2">
+                <select class="form-select form-select-sm flex-shrink-0" id="dtSource" style="max-width:130px">
+                  <option value="auto">Auto-detect</option>
+                  <option value="raid">Raid</option>
+                  <option value="mplus">Mythic+</option>
+                  <option value="bonus">Bonus Rolls</option>
+                </select>
                 <input class="form-control form-control-sm" id="dtUrl" placeholder="https://www.raidbots.com/simbot/report/…">
                 <button class="btn btn-apply btn-sm flex-shrink-0" id="dtImport">Import</button>
               </div>
@@ -1818,7 +1828,51 @@ document.getElementById("logoutBtn").addEventListener("click", logoutAll);
 /* ================= LOOT TRACKER ================= */
 function lootEl(id){ return document.getElementById(id); }
 let lootWishlists = [], myWishlistExtra = {}, RB_ITEMDB = null, dtModalObj = null;
-let viewScope = "me", modeMe = "slot", modeTeam = "boss";
+let viewScope = "me", modeMe = "all", modeTeam = "boss";
+const SRC_LABELS = { raid: "Raid", mplus: "Mythic+", bonus: "Bonus Rolls" };
+function majoritySource(upgrades){
+  const c = { raid: 0, mplus: 0, bonus: 0 };
+  (upgrades || []).forEach(u=>{
+    if(u.enc === "mplus") c.mplus++;
+    else if(u.enc === "vault") c.bonus++;
+    else if(u.enc != null) c.raid++;
+  });
+  return c.mplus > c.raid && c.mplus > c.bonus ? "mplus" : c.bonus > c.raid ? "bonus" : "raid";
+}
+function normDrops(w){
+  if(!w) return {};
+  if(w.droptimizers) return w.droptimizers;
+  if(w.droptimizer) return { [majoritySource(w.droptimizer.upgrades)]: w.droptimizer };
+  return {};
+}
+function unionUpgrades(drops){
+  // merge all sources; same item id keeps its best-gain instance
+  const best = {};
+  Object.values(drops).forEach(d=>(d?.upgrades||[]).forEach(u=>{
+    if(!best[u.id] || u.pct > best[u.id].pct) best[u.id] = u;
+  }));
+  return Object.values(best);
+}
+function bonusTarget(drops){
+  const ups = drops.bonus?.upgrades || [];
+  if(!ups.length) return null;
+  return ups.reduce((a,b) => (b.pct > a.pct ? b : a), ups[0]);
+}
+function bestPerSlot(upgrades){
+  const bySlot = {};
+  (upgrades || []).forEach(u=>{ const k = slotKey(u.slot); (bySlot[k] = bySlot[k] || []).push(u); });
+  const out = {};
+  for(const k in bySlot){
+    const cap = (k === "finger" || k === "trinket") ? 2 : 1;
+    const seen = new Set(), take = [];
+    bySlot[k].sort((a,b)=>b.pct - a.pct).forEach(u=>{
+      if(take.length >= cap || seen.has(u.id)) return;
+      seen.add(u.id); take.push(u);
+    });
+    out[k] = take;
+  }
+  return out;
+}
 
 async function lootRefresh(){
   const gate = lootEl("lootGate"), home = lootEl("lootHome");
@@ -1835,7 +1889,9 @@ async function loadLootData(){
       sb.from("loot_wishlists").select("user_id, data")
     ]);
     myWishlistExtra = {};
-    if(mine.data?.data?.droptimizer) myWishlistExtra.droptimizer = mine.data.data.droptimizer;
+    const mdata = mine.data?.data || {};
+    if(mdata.droptimizers) myWishlistExtra.droptimizers = mdata.droptimizers;
+    else if(mdata.droptimizer) myWishlistExtra.droptimizers = { [majoritySource(mdata.droptimizer.upgrades)]: mdata.droptimizer };
     lootWishlists = (all.data || []).map(r => ({ ...(r.data || {}), _uid: r.user_id }));
     drawSheet(); renderDtMeta();
   }catch(e){ console.warn("loot load", e); }
@@ -1927,15 +1983,19 @@ async function dtImport(){
       name: names[u.id] || ("Item " + u.id),
       pct: +((u.gain / parsed.baseline) * 100).toFixed(2)
     }));
-    myWishlistExtra.droptimizer = {
+    let srcKey = document.getElementById("dtSource").value;
+    if(srcKey === "auto") srcKey = majoritySource(upgrades);
+    myWishlistExtra.droptimizers = myWishlistExtra.droptimizers || {};
+    myWishlistExtra.droptimizers[srcKey] = {
       character: parsed.character, spec: parsed.spec,
       baseline: Math.round(parsed.baseline),
       imported: new Date().toISOString().slice(0,10),
       upgrades
     };
+    delete myWishlistExtra.droptimizer;
     await persistWishlist();
     lootEl("dtPaste").classList.add("d-none"); lootEl("dtPaste").value = ""; lootEl("dtUrl").value = "";
-    st.textContent = `✅ Imported ${upgrades.length} upgrades for ${parsed.character} (baseline ${Math.round(parsed.baseline).toLocaleString()} DPS).`;
+    st.textContent = `✅ Imported ${upgrades.length} upgrades for ${parsed.character} → ${SRC_LABELS[srcKey]} (baseline ${Math.round(parsed.baseline).toLocaleString()} DPS).`;
     loadLootData();
   }catch(e){
     if(e.message === "fetch-blocked"){
@@ -1949,13 +2009,14 @@ async function dtImport(){
 function renderDtMeta(){
   const host = lootEl("dtMeta");
   if(!host) return;
-  const d = myWishlistExtra.droptimizer;
-  host.innerHTML = d
-    ? `<div class="d-flex justify-content-between align-items-center">
-        <span class="data-font" style="font-size:.66rem;letter-spacing:.14em;color:var(--legendary-soft)">CURRENT: ${esc(d.character).toUpperCase()} · ${esc(d.imported)} · ${d.upgrades.length} ITEMS</span>
-        <button class="award-x" id="dtClear" title="Remove imported list">✕</button>
-      </div>`
-    : `<span class="data-font" style="font-size:.66rem;letter-spacing:.14em;color:var(--muted)">NO IMPORT YET</span>`;
+  const drops = normDrops(myWishlistExtra);
+  const keys = ["raid","mplus","bonus"].filter(k => drops[k]);
+  host.innerHTML = keys.length
+    ? keys.map(k => `<div class="d-flex justify-content-between align-items-center mb-1">
+        <span class="data-font" style="font-size:.66rem;letter-spacing:.14em;color:var(--legendary-soft)">${SRC_LABELS[k].toUpperCase()}: ${esc(drops[k].character).toUpperCase()} · ${esc(drops[k].imported)} · ${drops[k].upgrades.length} ITEMS</span>
+        <button class="award-x" data-dtclear="${k}" title="Remove this import">✕</button>
+      </div>`).join("")
+    : `<span class="data-font" style="font-size:.66rem;letter-spacing:.14em;color:var(--muted)">NO IMPORTS YET</span>`;
 }
 
 /* ---- sheet views ---- */
@@ -2017,54 +2078,53 @@ function drawSheet(){
   if(!host) return;
   // secondary toggle reflects scope
   const mg = lootEl("blsModeGroup");
-  const modes = viewScope === "me" ? [["slot","By Slot"],["boss","By Boss"]] : [["boss","By Boss"],["raider","By Raider"]];
+  const modes = viewScope === "me" ? [["raid","Best · Raid"],["mplus","Best · M+"],["all","Best Overall"]] : [["boss","By Boss"],["raider","By Raider"]];
   const active = viewScope === "me" ? modeMe : modeTeam;
   mg.innerHTML = modes.map(([k,l]) => `<button class="bls-mode${active === k ? " on" : ""}" data-blsmode="${k}">${l}</button>`).join("");
   document.querySelectorAll("[data-blsscope]").forEach(b => b.classList.toggle("on", b.dataset.blsscope === viewScope));
 
   if(viewScope === "me"){
-    const d = myWishlistExtra.droptimizer;
-    if(!d || !d.upgrades?.length){
-      host.innerHTML = `<p class="py-4 text-center" style="color:var(--muted)">No sim imported yet — hit <b>Import Droptimizer</b> and paste your Raidbots report link.</p>`;
+    const drops = normDrops(myWishlistExtra);
+    let pool, poolLabel;
+    if(modeMe === "raid"){ pool = drops.raid?.upgrades; poolLabel = "Raid"; }
+    else if(modeMe === "mplus"){ pool = drops.mplus?.upgrades; poolLabel = "Mythic+"; }
+    else { pool = unionUpgrades({ raid: drops.raid, mplus: drops.mplus }); poolLabel = null; }
+    if(!pool || !pool.length){
+      host.innerHTML = `<p class="py-4 text-center" style="color:var(--muted)">${poolLabel ? `No ${poolLabel} Droptimizer imported yet` : "No sims imported yet"} — hit <b>Import Droptimizer</b> and paste your Raidbots report link.</p>`;
       return;
     }
-    if(modeMe === "slot"){
-      const bySlot = {};
-      d.upgrades.forEach(u => { (bySlot[slotKey(u.slot)] = bySlot[slotKey(u.slot)] || []).push(u); });
-      const keys = Object.keys(bySlot).sort((a,b)=>{
-        const ia = SLOT_ORDER.indexOf(a), ib = SLOT_ORDER.indexOf(b);
-        return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib);
-      });
-      host.innerHTML = keys.map(k=>{
-        const rows = [...bySlot[k]].sort((a,b)=>b.pct - a.pct);
-        return sheetSection(esc(SLOT_LABELS[k] || (k ? k[0].toUpperCase()+k.slice(1) : "Other")), rows.length,
-          rows.map(u=>`<div class="bls-item"><span class="bls-iname">${itemPill(u)}</span>
-            <span class="bls-wants"><span class="bls-chip" style="color:var(--muted)">${esc(encLabel(u.enc ?? null))}</span><span class="bls-chip text-legendary data-font">+${u.pct}%</span></span></div>`).join(""), "", "me-slot-" + k);
-      }).join("");
-    } else {
-      const byEnc = {};
-      d.upgrades.forEach(u => { const k = String(u.enc ?? "null"); (byEnc[k] = byEnc[k] || []).push(u); });
-      const encs = Object.keys(byEnc).sort((a,b) => encOrder(a) - encOrder(b));
-      host.innerHTML = encs.map(e=>{
-        const rows = [...byEnc[e]].sort((a,b)=>b.pct - a.pct);
-        return sheetSection(esc(encLabel(e)), rows.length,
-          groupRowsBySlot(rows, u=>`<div class="bls-item"><span class="bls-iname">${itemPill(u)}</span>
-            <span class="bls-wants"><span class="bls-chip text-legendary data-font">+${u.pct}%</span></span></div>`), "", "me-boss-" + e);
-      }).join("");
-    }
+    const best = bestPerSlot(pool);
+    const bt = bonusTarget(drops);
+    const keys2 = Object.keys(best).sort((a,b)=>{
+      const ia = SLOT_ORDER.indexOf(a), ib = SLOT_ORDER.indexOf(b);
+      return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib);
+    });
+    const callout = bt ? `<div class="bonus-callout">
+      <span class="bc-dice">🎲</span>
+      <span class="bc-label data-font">Bonus Roll Target</span>
+      <span class="bls-iname">${itemPill(bt)}</span>
+      <span class="bls-chip" style="color:var(--muted)">${esc(encLabel(bt.enc ?? null))}</span>
+      <span class="bls-chip text-legendary data-font">+${bt.pct}%</span>
+    </div>` : "";
+    host.innerHTML = callout + keys2.map(k=>{
+      const rows = best[k];
+      return sheetSection(esc(SLOT_LABELS[k] || (k ? k[0].toUpperCase()+k.slice(1) : "Other")), rows.length,
+        rows.map(u=>`<div class="bls-item"><span class="bls-iname">${itemPill(u)}${bt && u.id === bt.id ? ` <span class="bc-mini" title="Current bonus roll target">🎲</span>` : ""}</span>
+          <span class="bls-wants"><span class="bls-chip" style="color:var(--muted)">${esc(encLabel(u.enc ?? null))}</span><span class="bls-chip text-legendary data-font">+${u.pct}%</span></span></div>`).join(""), "", "me-" + modeMe + "-" + k);
+    }).join("");
     return;
   }
-
   // team scope
   const officer = ["officer","admin"].includes(me?.role);
   if(modeTeam === "raider"){
     const byRaider = {};
     lootWishlists.forEach(w=>{
-      const d = w.droptimizer;
-      if(!d || !d.upgrades) return;
-      const raider = d.character || w.character || "?";
+      const drops = normDrops(w);
+      const ups = unionUpgrades(drops);
+      if(!ups.length) return;
+      const raider = Object.values(drops)[0]?.character || w.character || "?";
       const rec = byRaider[raider] = byRaider[raider] || { uid: w._uid, ups: [] };
-      rec.ups.push(...d.upgrades);
+      rec.ups.push(...ups);
     });
     const names = Object.keys(byRaider).sort((a,b)=>a.localeCompare(b));
     if(!names.length){ host.innerHTML = `<p class="py-4 text-center" style="color:var(--muted)">No imports on the team yet.</p>`; return; }
@@ -2079,10 +2139,11 @@ function drawSheet(){
   } else {
     const byEnc = {};
     lootWishlists.forEach(w=>{
-      const d = w.droptimizer;
-      if(!d || !d.upgrades) return;
-      const raider = d.character || w.character || "?";
-      d.upgrades.forEach(u=>{
+      const drops = normDrops(w);
+      const ups = unionUpgrades(drops);
+      if(!ups.length) return;
+      const raider = Object.values(drops)[0]?.character || w.character || "?";
+      ups.forEach(u=>{
         const k = String(u.enc ?? "null");
         const sec = byEnc[k] = byEnc[k] || { items: {} };
         const it = sec.items[u.name] = sec.items[u.name] || { name: u.name, ilvl: u.ilvl, slot: u.slot, wants: [] };
@@ -2111,8 +2172,10 @@ document.addEventListener("click", async e=>{
     renderDtMeta();
     dtModalObj.show();
   }
-  if(e.target.id === "dtClear"){
-    if(!confirm("Remove your imported sim from the sheet?")) return;
+  if(e.target.dataset.dtclear){
+    const k = e.target.dataset.dtclear;
+    if(!confirm(`Remove your ${SRC_LABELS[k]} import from the sheet?`)) return;
+    if(myWishlistExtra.droptimizers) delete myWishlistExtra.droptimizers[k];
     delete myWishlistExtra.droptimizer;
     await persistWishlist();
     renderDtMeta(); loadLootData();
