@@ -2202,7 +2202,7 @@ function drawSheet(){
       ups.forEach(u=>{
         const k = String(u.enc ?? "null");
         const sec = byEnc[k] = byEnc[k] || { items: {} };
-        const it = sec.items[u.name] = sec.items[u.name] || { name: u.name, ilvl: u.ilvl, slot: u.slot, wants: [] };
+        const it = sec.items[u.name] = sec.items[u.name] || { id: u.id, name: u.name, ilvl: u.ilvl, slot: u.slot, wants: [] };
         it.wants.push({ raider, pct: u.pct });
       });
     });
