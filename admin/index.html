@@ -126,6 +126,21 @@ td,th{background:transparent!important;border-color:rgba(38,50,41,.5)!important;
       <textarea class="form-control" id="cfg_glance" rows="5"></textarea>
     </div>
     <div class="panel mb-3">
+      <h5 class="mb-3">Roster Rank Names</h5>
+      <p class="note mb-3">Displayed on the Roster tab's rank pills and filter. Rank 0 is always Guild Master and Rank 1 is always Officer — name the rest to match your in-game ranks. Blank = shows "Rank N".</p>
+      <div class="row g-2">
+        <div class="col-md-4"><label class="form-label">Rank 2</label><input class="form-control" id="cfg_rank2" placeholder="e.g. Raider"></div>
+        <div class="col-md-4"><label class="form-label">Rank 3</label><input class="form-control" id="cfg_rank3" placeholder="e.g. Trial"></div>
+        <div class="col-md-4"><label class="form-label">Rank 4</label><input class="form-control" id="cfg_rank4" placeholder="e.g. Alt"></div>
+        <div class="col-md-4"><label class="form-label">Rank 5</label><input class="form-control" id="cfg_rank5" placeholder="e.g. Member"></div>
+        <div class="col-md-4"><label class="form-label">Rank 6</label><input class="form-control" id="cfg_rank6" placeholder="e.g. Social"></div>
+        <div class="col-md-4"><label class="form-label">Rank 7</label><input class="form-control" id="cfg_rank7" placeholder="e.g. Friends & Family"></div>
+        <div class="col-md-4"><label class="form-label">Rank 8</label><input class="form-control" id="cfg_rank8" placeholder="e.g. Casual"></div>
+        <div class="col-md-4"><label class="form-label">Rank 9</label><input class="form-control" id="cfg_rank9" placeholder="e.g. Inactive"></div>
+        <div class="col-md-4"><label class="form-label">Rank 10</label><input class="form-control" id="cfg_rank10" placeholder="e.g. New"></div>
+      </div>
+    </div>
+    <div class="panel mb-3">
       <h5 class="mb-3">Stream Overlay <span class="pill" style="background:rgba(41,196,104,.15);color:var(--epic-soft);font-size:.6rem;letter-spacing:.1em">TWITCH / OBS</span></h5>
       <p class="note mb-3">Feeds the recruiting overlay's browser source. Progression, next-pull, and recruiting needs pull automatically from your live config — these fields control the wording and which stats show.</p>
       <div class="row g-3">
@@ -450,6 +465,8 @@ function renderForms(){
   $("cfg_name").value = cfg.site.name; $("cfg_realmLine").value = cfg.site.realmLine;
   $("cfg_navSub").value = cfg.site.navSub; $("cfg_eyebrow").value = cfg.site.eyebrow;
   $("cfg_heroImageUrl").value = cfg.site.heroImageUrl || ""; $("cfg_progShotUrl").value = cfg.site.progShotUrl || ""; $("cfg_progShotCaption").value = cfg.site.progShotCaption || "";
+  const rn = cfg.rankNames || {};
+  for(let i = 2; i <= 10; i++) $("cfg_rank" + i).value = rn[i] || rn[String(i)] || "";
   const ov = cfg.overlay || {};
   $("cfg_ovHeadline").value = ov.headline || ""; $("cfg_ovSiteUrl").value = ov.siteUrl || ""; $("cfg_ovPitch").value = ov.pitch || ""; $("cfg_ovTagline").value = ov.tagline || "";
   $("cfg_ovMythic").checked = ov.showMythic !== false; $("cfg_ovNext").checked = ov.showNext !== false; $("cfg_ovNights").checked = ov.showNights !== false;
@@ -510,6 +527,11 @@ function harvest(){
     glance: $("cfg_glance").value.split("\n").map(s=>s.trim()).filter(Boolean)
   };
   cfg.schedNote = $("cfg_schedNote").value;
+  cfg.rankNames = {};
+  for(let i = 2; i <= 10; i++){
+    const v = $("cfg_rank" + i).value.trim();
+    if(v) cfg.rankNames[i] = v;
+  }
   cfg.overlay = {
     headline: $("cfg_ovHeadline").value.trim(),
     siteUrl: $("cfg_ovSiteUrl").value.trim(),
