@@ -1487,6 +1487,12 @@ async function loadGuild(){
 
 /* ================= ROSTER ================= */
 let rosterCache = [];
+function rankLabel(r){
+  if(r === 0) return "GM";
+  if(r === 1) return "OFFICER";
+  const n = (CONFIG.rankNames || {})[r] || (CONFIG.rankNames || {})[String(r)];
+  return (n || ("RANK " + r)).toUpperCase();
+}
 function renderRoster(members){
   const body = document.getElementById("rosterBody");
   const R = CONFIG.rio;
@@ -1497,6 +1503,16 @@ function renderRoster(members){
     return;
   }
   rosterCache = members.sort((a,b)=>a.rank-b.rank);
+  const sel = document.getElementById("rosterRank");
+  if(sel){
+    const prev = sel.value;
+    const ranks = [...new Set(rosterCache.map(m=>m.rank))].filter(r=>r>1).sort((a,b)=>a-b);
+    sel.innerHTML = `<option value="">All ranks</option>
+      <option value="0">Guild Master</option>
+      <option value="1">Officers</option>` +
+      ranks.map(r=>`<option value="${r}">${esc(rankLabel(r).charAt(0) + rankLabel(r).slice(1).toLowerCase())}${(CONFIG.rankNames||{})[r] ? "" : ""}</option>`).join("");
+    if([...sel.options].some(o=>o.value===prev)) sel.value = prev;
+  }
   drawRoster();
 }
 function drawRoster(){
@@ -1509,9 +1525,7 @@ function drawRoster(){
     return nameOk && rankOk;
   }).map(m=>{
     const c = m.character;
-    const pill = m.rank===0?`<span class="rank-pill rank-0">GM</span>`
-              : m.rank===1?`<span class="rank-pill rank-1">OFFICER</span>`
-              : `<span class="rank-pill rank-x">RANK ${m.rank}</span>`;
+    const pill = `<span class="rank-pill rank-${m.rank<=1?m.rank:"x"}">${esc(rankLabel(m.rank))}</span>`;
     const url = c.profile_url || `https://raider.io/characters/${R.region}/${c.realm||R.realm}/${encodeURIComponent(c.name)}`;
     return `<tr><td><a href="${url}" target="_blank" rel="noopener"><b>${esc(c.name)}</b></a> <span style="color:var(--muted);font-size:.78rem">${esc(c.class||"")}</span></td>
       <td>${pill}</td><td class="d-none d-md-table-cell" style="color:var(--muted)">${esc(c.realm||R.realm)}</td>
