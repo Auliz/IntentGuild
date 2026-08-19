@@ -134,7 +134,9 @@ a:hover{color:var(--legendary-soft)}
 .re-note{font-size:.85rem;color:#D5D2C6;margin:.5rem 0 0}
 .re-roster{margin-top:.7rem}
 .dt-slot{font-family:var(--font-data);font-size:.62rem;letter-spacing:.18em;text-transform:uppercase;color:var(--legendary-soft);margin:.6rem 0 .1rem;border-bottom:1px solid rgba(240,194,75,.25);padding-bottom:.15rem}
-.lpill{display:inline-block;padding:.06rem .55rem;border-radius:20px;font-size:.8rem;border:1px solid;line-height:1.4}
+.lpill{display:inline-flex;align-items:center;gap:.32rem;padding:.06rem .55rem;border-radius:20px;font-size:.8rem;border:1px solid;line-height:1.4;text-decoration:none}
+a.lpill:hover{filter:brightness(1.2);text-decoration:none}
+.lpill ins{border-radius:3px;overflow:hidden}
 .lp-tier{color:#FFDF8A;border-color:rgba(240,194,75,.5);background:rgba(240,194,75,.09)}
 .lp-weapon{color:#F0917B;border-color:rgba(232,106,74,.5);background:rgba(232,106,74,.09)}
 .lp-jewelry{color:#9CC8EF;border-color:rgba(127,184,230,.5);background:rgba(127,184,230,.09)}
@@ -983,6 +985,8 @@ footer{border-top:1px solid var(--line);padding:2.5rem 0;color:var(--muted);font
   </div>
 </footer>
 
+<script>var whTooltips = { colorLinks: false, iconizeLinks: true, renameLinks: false, iconSize: "tiny" };</script>
+<script src="https://wow.zamimg.com/js/tooltips.js" defer></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/js/bootstrap.bundle.min.js"></script>
 <script>
@@ -1828,7 +1832,7 @@ document.getElementById("logoutBtn").addEventListener("click", logoutAll);
 /* ================= LOOT TRACKER ================= */
 function lootEl(id){ return document.getElementById(id); }
 let lootWishlists = [], myWishlistExtra = {}, RB_ITEMDB = null, dtModalObj = null;
-let viewScope = "me", modeMe = "all", modeTeam = "boss";
+let viewScope = "me", modeMe = "all", modeTeam = "boss", mpGroup = "slot";
 const SRC_LABELS = { raid: "Raid", mplus: "Mythic+", bonus: "Bonus Rolls" };
 function majoritySource(upgrades){
   const c = { raid: 0, mplus: 0, bonus: 0 };
@@ -1853,10 +1857,37 @@ function unionUpgrades(drops){
   }));
   return Object.values(best);
 }
+let RB_INSTANCES = null;
+let RB_INSTANCES_LOADING = false;
+function rbInstanceNames(){
+  if(RB_INSTANCES || RB_INSTANCES_LOADING) return;
+  RB_INSTANCES_LOADING = true;
+  fetch("https://www.raidbots.com/static/data/live/instances.json")
+    .then(r => r.ok ? r.json() : Promise.reject())
+    .then(arr => {
+      RB_INSTANCES = {};
+      (Array.isArray(arr) ? arr : []).forEach(inst => {
+        if(inst.id && inst.name) RB_INSTANCES[inst.id] = inst.name;
+        (inst.encounters || []).forEach(e => { if(e.id && inst.name) RB_INSTANCES[e.id] = inst.name; });
+      });
+      drawSheet();
+    })
+    .catch(() => { RB_INSTANCES = {}; });
+}
+function dunLabel(dun){
+  if(dun == null) return "Other Dungeons";
+  return (RB_INSTANCES && RB_INSTANCES[dun]) || ("Dungeon #" + dun);
+}
 function bonusTarget(drops){
   const ups = drops.bonus?.upgrades || [];
   if(!ups.length) return null;
   return ups.reduce((a,b) => (b.pct > a.pct ? b : a), ups[0]);
+}
+function mpToggleHtml(){
+  return `<div class="d-flex justify-content-end mb-2"><div class="bls-toggle" role="group">
+    <button class="bls-mode${mpGroup === "slot" ? " on" : ""}" data-mpgroup="slot">By Slot</button>
+    <button class="bls-mode${mpGroup === "dungeon" ? " on" : ""}" data-mpgroup="dungeon">By Dungeon</button>
+  </div></div>`;
 }
 function bestPerSlot(upgrades){
   const bySlot = {};
@@ -1945,14 +1976,17 @@ function dtParse(json){
     const ilvl = toks.slice(iIdx + 1).find(t => /^\d{3}$/.test(t)) || "";
     const slotTok = toks.slice(iIdx + 1).find(t => /^[a-z_]+\d?$/i.test(t)) || "";
     const src = toks.slice(0, iIdx).find(t => /[a-z]/i.test(t)) || "";
-    let enc = encMap[itemId] || null;
+    let enc = encMap[itemId] || null, dun = null;
     if(!enc){
-      if(/dungeon|mplus/i.test(src)) enc = "mplus";
+      if(/dungeon|mplus/i.test(src)){
+        enc = "mplus";
+        dun = /^\d{3,6}$/.test(toks[1]) ? +toks[1] : (/^\d{3,6}$/.test(toks[0]) ? +toks[0] : null);
+      }
       else if(/^\d{4}$/.test(toks[1])) enc = +toks[1];
       else if(/vault/i.test(src)) enc = "vault";
     }
     if(!enc && !dtParse._warned){ dtParse._warned = true; console.warn("[droptimizer] couldn't map boss for profileset:", r.name); }
-    if(!best[itemId] || gain > best[itemId].gain) best[itemId] = { id: itemId, ilvl, gain, enc, slot: slotTok };
+    if(!best[itemId] || gain > best[itemId].gain) best[itemId] = { id: itemId, ilvl, gain, enc, dun, slot: slotTok };
   });
   const ups = Object.values(best).filter(u => u.gain > 0).sort((a,b) => b.gain - a.gain).slice(0, 24);
   return { character: player.name, spec: player.specialization || "", baseline, ups };
@@ -1979,7 +2013,7 @@ async function dtImport(){
     const parsed = dtParse(json);
     const names = await rbItemNames();
     const upgrades = parsed.ups.map(u => ({
-      id: u.id, ilvl: u.ilvl, enc: u.enc || null, slot: u.slot || "",
+      id: u.id, ilvl: u.ilvl, enc: u.enc || null, dun: u.dun || null, slot: u.slot || "",
       name: names[u.id] || ("Item " + u.id),
       pct: +((u.gain / parsed.baseline) * 100).toFixed(2)
     }));
@@ -2046,7 +2080,8 @@ function encOrder(k){
   return +k;
 }
 function itemPill(u){
-  return `<span class="lpill lp-${slotCat(u.slot)}">${esc(u.name)}</span> <span style="color:var(--muted);font-size:.75rem">${esc(u.ilvl||"")}</span>`;
+  const href = `https://www.wowhead.com/item=${encodeURIComponent(u.id)}${u.ilvl ? `?ilvl=${encodeURIComponent(u.ilvl)}` : ""}`;
+  return `<a class="lpill lp-${slotCat(u.slot)}" href="${href}" target="_blank" rel="noopener">${esc(u.name)}</a> <span style="color:var(--muted);font-size:.75rem">${esc(u.ilvl||"")}</span>`;
 }
 const blsCollapsed = new Set();
 function sheetSection(title, count, bodyHtml, extra, key){
@@ -2093,12 +2128,31 @@ function drawSheet(){
       host.innerHTML = `<p class="py-4 text-center" style="color:var(--muted)">${poolLabel ? `No ${poolLabel} Droptimizer imported yet` : "No sims imported yet"} — hit <b>Import Droptimizer</b> and paste your Raidbots report link.</p>`;
       return;
     }
+    // (tooltip refresh happens at each render exit below)
     const best = bestPerSlot(pool);
     const bt = bonusTarget(drops);
     const keys2 = Object.keys(best).sort((a,b)=>{
       const ia = SLOT_ORDER.indexOf(a), ib = SLOT_ORDER.indexOf(b);
       return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib);
     });
+    if(modeMe === "mplus" && mpGroup === "dungeon"){
+      rbInstanceNames();
+      const flat = Object.values(bestPerSlot(pool)).flat();
+      const byDun = {};
+      flat.forEach(u => { const k = String(u.dun ?? "null"); (byDun[k] = byDun[k] || []).push(u); });
+      const dks = Object.keys(byDun);
+      dks.forEach(k => byDun[k].sort((a,b)=>b.pct - a.pct));
+      dks.sort((a,b) => byDun[b][0].pct - byDun[a][0].pct);
+      const bt2 = bonusTarget(drops);
+      host.innerHTML = mpToggleHtml() + dks.map(k=>{
+        const rows = byDun[k];
+        return sheetSection(esc(dunLabel(k === "null" ? null : +k)), rows.length,
+          rows.map(u=>`<div class="bls-item"><span class="bls-iname">${itemPill(u)}${bt2 && u.id === bt2.id ? ` <span class="bc-mini" title="Current bonus roll target">🎲</span>` : ""}</span>
+            <span class="bls-wants"><span class="bls-chip text-legendary data-font">+${u.pct}%</span></span></div>`).join(""), "", "me-mpdun-" + k);
+      }).join("");
+      whRefresh();
+      return;
+    }
     const callout = bt ? `<div class="bonus-callout">
       <span class="bc-dice">🎲</span>
       <span class="bc-label data-font">Bonus Roll Target</span>
@@ -2107,12 +2161,13 @@ function drawSheet(){
       <span class="bls-chip text-legendary data-font">+${bt.pct}%</span>
       <span class="bls-chip" style="color:var(--muted);font-size:.7rem">roll grants the ${esc(bt.ilvl||"")} version</span>
     </div>` : "";
-    host.innerHTML = callout + keys2.map(k=>{
+    host.innerHTML = (modeMe === "mplus" ? mpToggleHtml() : "") + callout + keys2.map(k=>{
       const rows = best[k];
       return sheetSection(esc(SLOT_LABELS[k] || (k ? k[0].toUpperCase()+k.slice(1) : "Other")), rows.length,
         rows.map(u=>`<div class="bls-item"><span class="bls-iname">${itemPill(u)}${bt && u.id === bt.id ? ` <span class="bc-mini" title="${bt.ilvl && u.ilvl && bt.ilvl !== u.ilvl ? `Bonus roll target — the roll grants ilvl ${esc(bt.ilvl)} (+${bt.pct}%) vs +${u.pct}% for this ${esc(u.ilvl)} version` : "Current bonus roll target"}">🎲</span>` : ""}</span>
           <span class="bls-wants"><span class="bls-chip" style="color:var(--muted)">${esc(encLabel(u.enc ?? null))}</span><span class="bls-chip text-legendary data-font">+${u.pct}%</span></span></div>`).join(""), "", "me-" + modeMe + "-" + k);
     }).join("");
+    whRefresh();
     return;
   }
   // team scope
@@ -2163,6 +2218,10 @@ function drawSheet(){
           <span class="bls-wants">${it.wants.map(x=>`<span class="bls-chip"><b>${esc(x.raider)}</b> <span class="text-legendary data-font">+${x.pct}%</span></span>`).join("")}</span></div>`), "", "team-boss-" + e);
     }).join("");
   }
+  whRefresh();
+}
+function whRefresh(){
+  try{ window.$WowheadPower?.refreshLinks?.(); }catch(e){}
 }
 
 /* ---- wiring ---- */
@@ -2191,6 +2250,7 @@ document.addEventListener("click", async e=>{
     }
   }
   if(e.target.dataset.blsscope){ viewScope = e.target.dataset.blsscope; drawSheet(); }
+  if(e.target.dataset.mpgroup){ mpGroup = e.target.dataset.mpgroup; drawSheet(); }
   if(e.target.dataset.blsmode){
     if(viewScope === "me") modeMe = e.target.dataset.blsmode; else modeTeam = e.target.dataset.blsmode;
     drawSheet();
