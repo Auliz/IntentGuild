@@ -2105,11 +2105,12 @@ function drawSheet(){
       <span class="bls-iname">${itemPill(bt)}</span>
       <span class="bls-chip" style="color:var(--muted)">${esc(encLabel(bt.enc ?? null))}</span>
       <span class="bls-chip text-legendary data-font">+${bt.pct}%</span>
+      <span class="bls-chip" style="color:var(--muted);font-size:.7rem">roll grants the ${esc(bt.ilvl||"")} version</span>
     </div>` : "";
     host.innerHTML = callout + keys2.map(k=>{
       const rows = best[k];
       return sheetSection(esc(SLOT_LABELS[k] || (k ? k[0].toUpperCase()+k.slice(1) : "Other")), rows.length,
-        rows.map(u=>`<div class="bls-item"><span class="bls-iname">${itemPill(u)}${bt && u.id === bt.id ? ` <span class="bc-mini" title="Current bonus roll target">🎲</span>` : ""}</span>
+        rows.map(u=>`<div class="bls-item"><span class="bls-iname">${itemPill(u)}${bt && u.id === bt.id ? ` <span class="bc-mini" title="${bt.ilvl && u.ilvl && bt.ilvl !== u.ilvl ? `Bonus roll target — the roll grants ilvl ${esc(bt.ilvl)} (+${bt.pct}%) vs +${u.pct}% for this ${esc(u.ilvl)} version` : "Current bonus roll target"}">🎲</span>` : ""}</span>
           <span class="bls-wants"><span class="bls-chip" style="color:var(--muted)">${esc(encLabel(u.enc ?? null))}</span><span class="bls-chip text-legendary data-font">+${u.pct}%</span></span></div>`).join(""), "", "me-" + modeMe + "-" + k);
     }).join("");
     return;
