@@ -134,7 +134,8 @@ a:hover{color:var(--legendary-soft)}
 .re-note{font-size:.85rem;color:#D5D2C6;margin:.5rem 0 0}
 .re-roster{margin-top:.7rem}
 .dt-slot{font-family:var(--font-data);font-size:.62rem;letter-spacing:.18em;text-transform:uppercase;color:var(--legendary-soft);margin:.6rem 0 .1rem;border-bottom:1px solid rgba(240,194,75,.25);padding-bottom:.15rem}
-.lpill{display:inline-flex;align-items:center;gap:.32rem;padding:.06rem .55rem;border-radius:20px;font-size:.8rem;border:1px solid;line-height:1.4;text-decoration:none}
+.lpill{display:inline-flex;align-items:center;gap:.34rem;padding:.09rem .55rem .09rem .28rem;border-radius:7px;font-size:.8rem;border:1px solid;line-height:1.4;text-decoration:none}
+.lpill:not(:has(ins)){padding-left:.55rem}
 a.lpill:hover{filter:brightness(1.2);text-decoration:none}
 .lpill ins{border-radius:3px;overflow:hidden}
 .lp-tier{color:#FFDF8A;border-color:rgba(240,194,75,.5);background:rgba(240,194,75,.09)}
@@ -1872,6 +1873,7 @@ function unionUpgrades(drops){
   return Object.values(best);
 }
 let RB_INSTANCES = null;
+let RB_ENC_NAMES = {};   // encounter id -> boss name, from Raidbots static data
 let RB_INSTANCES_LOADING = false;
 function rbInstanceNames(){
   if(RB_INSTANCES || RB_INSTANCES_LOADING) return;
@@ -1882,7 +1884,10 @@ function rbInstanceNames(){
       RB_INSTANCES = {};
       (Array.isArray(arr) ? arr : []).forEach(inst => {
         if(inst.id && inst.name) RB_INSTANCES[inst.id] = inst.name;
-        (inst.encounters || []).forEach(e => { if(e.id && inst.name) RB_INSTANCES[e.id] = inst.name; });
+        (inst.encounters || []).forEach(e => {
+          if(e.id && inst.name) RB_INSTANCES[e.id] = inst.name;
+          if(e.id && e.name) RB_ENC_NAMES[e.id] = e.name;
+        });
       });
       drawSheet();
     })
@@ -2062,7 +2067,10 @@ function renderDtMeta(){
   host.innerHTML = keys.length
     ? keys.map(k => `<div class="d-flex justify-content-between align-items-center mb-1">
         <span class="data-font" style="font-size:.66rem;letter-spacing:.14em;color:var(--legendary-soft)">${SRC_LABELS[k].toUpperCase()}: ${esc(drops[k].character).toUpperCase()} · ${esc(drops[k].imported)} · ${drops[k].upgrades.length} ITEMS</span>
-        <button class="award-x" data-dtclear="${k}" title="Remove this import">✕</button>
+        <span class="d-flex align-items-center gap-2">
+          <button class="btn btn-outline-epic btn-sm" data-dtupdate="${k}" style="font-size:.62rem;padding:.1rem .5rem">Update</button>
+          <button class="award-x" data-dtclear="${k}" title="Remove this import">✕</button>
+        </span>
       </div>`).join("")
     : `<span class="data-font" style="font-size:.66rem;letter-spacing:.14em;color:var(--muted)">NO IMPORTS YET</span>`;
 }
@@ -2085,7 +2093,7 @@ function encLabel(enc){
   if(enc === "mplus") return "Mythic+ / Dungeons";
   const n = +enc;
   if(!Number.isFinite(n)) return "Other Sources";
-  return WCL_ENC_NAMES[n] || ("Boss #" + n);
+  return WCL_ENC_NAMES[n] || RB_ENC_NAMES[n] || ("Boss #" + n);
 }
 function encOrder(k){
   if(k === "null") return 4e9;
@@ -2125,6 +2133,7 @@ function groupRowsBySlot(list, rowFn){
 function drawSheet(){
   const host = lootEl("bsSections");
   if(!host) return;
+  rbInstanceNames();   // boss/dungeon names from Raidbots — cached; repaints when loaded
   // secondary toggle reflects scope
   const mg = lootEl("blsModeGroup");
   const modes = viewScope === "me" ? [["raid","Best · Raid"],["mplus","Best · M+"],["all","Best Overall"]] : [["boss","By Boss"],["raider","By Raider"]];
@@ -2190,7 +2199,7 @@ function drawSheet(){
     const byRaider = {};
     lootWishlists.forEach(w=>{
       const drops = normDrops(w);
-      const ups = unionUpgrades(drops);
+      const ups = Object.values(bestPerSlot(unionUpgrades(drops))).flat();
       if(!ups.length) return;
       const raider = Object.values(drops)[0]?.character || w.character || "?";
       const rec = byRaider[raider] = byRaider[raider] || { uid: w._uid, ups: [] };
@@ -2210,7 +2219,7 @@ function drawSheet(){
     const byEnc = {};
     lootWishlists.forEach(w=>{
       const drops = normDrops(w);
-      const ups = unionUpgrades(drops);
+      const ups = Object.values(bestPerSlot(unionUpgrades(drops))).flat();
       if(!ups.length) return;
       const raider = Object.values(drops)[0]?.character || w.character || "?";
       ups.forEach(u=>{
@@ -2245,6 +2254,15 @@ document.addEventListener("click", async e=>{
     lootEl("dtStatus").textContent = "";
     renderDtMeta();
     dtModalObj.show();
+  }
+  if(e.target.dataset.dtupdate){
+    const k = e.target.dataset.dtupdate;
+    const sel = document.getElementById("dtSource");
+    if(sel) sel.value = k;
+    const url = document.getElementById("dtUrl");
+    if(url){ url.value = ""; url.focus(); }
+    const st = lootEl("dtStatus");
+    if(st) st.textContent = `Paste your new report link and press Import — it replaces your ${SRC_LABELS[k]} list.`;
   }
   if(e.target.dataset.dtclear){
     const k = e.target.dataset.dtclear;
