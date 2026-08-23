@@ -840,6 +840,7 @@ footer{border-top:1px solid var(--line);padding:2.5rem 0;color:var(--muted);font
               <button class="bls-mode" data-blsscope="team">Team</button>
             </div>
             <div class="bls-toggle" role="group" id="blsModeGroup"></div>
+            <button class="btn btn-outline-epic btn-sm d-none" id="blsBulk">Collapse All</button>
             <button class="btn btn-apply btn-sm" id="dtOpen">Import Droptimizer</button>
           </div>
         </div>
@@ -2245,6 +2246,15 @@ function drawSheet(){
 }
 function whRefresh(){
   try{ window.$WowheadPower?.refreshLinks?.(); }catch(e){}
+  updateBulkBtn();   // every sheet paint also refreshes the Collapse/Expand All state
+}
+function sheetSections(){ return [...document.querySelectorAll("#bsSections [data-blskey]")]; }
+function updateBulkBtn(){
+  const btn = document.getElementById("blsBulk");
+  if(!btn) return;
+  const secs = sheetSections();
+  btn.classList.toggle("d-none", !secs.length);
+  if(secs.length) btn.textContent = secs.every(s => s.classList.contains("collapsed")) ? "Expand All" : "Collapse All";
 }
 
 /* ---- wiring ---- */
@@ -2272,6 +2282,16 @@ document.addEventListener("click", async e=>{
     await persistWishlist();
     renderDtMeta(); loadLootData();
   }
+  if(e.target.id === "blsBulk"){
+    const secs = sheetSections();
+    const collapse = !secs.every(s => s.classList.contains("collapsed"));
+    secs.forEach(s => {
+      const k = s.dataset.blskey;
+      if(collapse){ blsCollapsed.add(k); s.classList.add("collapsed"); }
+      else { blsCollapsed.delete(k); s.classList.remove("collapsed"); }
+    });
+    updateBulkBtn();
+  }
   const blsHead = e.target.closest(".bls-head");
   if(blsHead && !e.target.closest("button")){
     const sec = blsHead.closest("[data-blskey]");
@@ -2279,6 +2299,7 @@ document.addEventListener("click", async e=>{
       const k = sec.dataset.blskey;
       blsCollapsed.has(k) ? blsCollapsed.delete(k) : blsCollapsed.add(k);
       sec.classList.toggle("collapsed");
+      updateBulkBtn();
     }
   }
   if(e.target.dataset.blsscope){ viewScope = e.target.dataset.blsscope; drawSheet(); }
