@@ -622,9 +622,9 @@ async function loadMembers(){
   body.innerHTML = data.map(m=>`
     <tr>
       <td><b>${esc(m.username)}</b></td>
-      <td><select class="form-select form-select-sm" style="max-width:130px" data-role="${m.id}">
+      <td class="d-flex gap-2 align-items-center"><select class="form-select form-select-sm" style="max-width:130px" data-role="${m.id}">
         ${["member","officer","admin"].map(r=>`<option ${m.role===r?"selected":""}>${r}</option>`).join("")}
-      </select></td>
+      </select><button class="btn btn-outline-epic btn-sm" data-forcepw="${m.id}" title="Require a new password on their next login" style="font-size:.62rem;white-space:nowrap">Force PW</button></td>
       <td><span class="pill ${m.active?"pill-member":"pill-inactive"}">${m.active?"ACTIVE":"INACTIVE"}</span></td>
       <td class="note data-font">${new Date(m.created_at).toLocaleDateString()}</td>
       <td><button class="btn btn-outline-epic btn-sm" data-flip="${m.id}:${m.active?0:1}">${m.active?"Deactivate":"Activate"}</button></td>
@@ -639,6 +639,13 @@ document.addEventListener("click", async e=>{
   }
 });
 document.addEventListener("change", async e=>{
+  if(e.target.dataset.forcepw){
+    if(!confirm("Require this member to set a new password on their next login?")) return;
+    const { error } = await sb.from("profiles").update({ must_change: true }).eq("id", e.target.dataset.forcepw);
+    e.target.textContent = error ? "Failed" : "✓ Queued";
+    if(error) alert(error.message + "\n(Have you run must-change.sql?)");
+    return;
+  }
   if(e.target.dataset.role){
     const { error } = await sb.from("profiles").update({ role: e.target.value }).eq("id", e.target.dataset.role);
     if(error) toast(error.message,false); else toast("Role updated");
@@ -654,7 +661,7 @@ $("nuBtn").addEventListener("click", async ()=>{
   // activate + set role using the admin session
   const uid = data.user?.id;
   if(uid){
-    const { error: e2 } = await sb.from("profiles").update({ active:true, role }).eq("id", uid);
+    const { error: e2 } = await sb.from("profiles").update({ active:true, role, must_change: true }).eq("id", uid);
     if(e2) return st.textContent = "Account created, but activation failed: " + e2.message;
   }
   st.textContent = `✅ ${u} created and activated. DM them the temp password — they will be required to replace it on first login.`;
