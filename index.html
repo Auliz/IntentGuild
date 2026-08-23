@@ -1718,7 +1718,7 @@ async function doLogin(u, p, statusEl){
   return establishSession(data.user, statusEl);
 }
 async function establishSession(user, statusEl){
-  const { data: prof, error } = await sb.from("profiles").select("username, role, active").eq("id", user.id).single();
+  const { data: prof, error } = await sb.from("profiles").select("username, role, active, must_change").eq("id", user.id).single();
   if(error || !prof || !prof.active){
     if(statusEl) statusEl.textContent = "⛔ This account isn't active yet — poke an officer on Discord.";
     await sb.auth.signOut(); return false;
@@ -1726,7 +1726,7 @@ async function establishSession(user, statusEl){
   me = { id: user.id, username: prof.username, role: prof.role };
   if(me.role === "admin") loadDeckLink();
   if(loginModalObj) loginModalObj.hide();
-  if(user.user_metadata?.must_change){
+  if(user.user_metadata?.must_change || prof.must_change){
     refreshAuthUI(true);   // skip forum-home render; the pw gate takes over
     history.pushState(null, "", "#forums"); showPage("forums");
     showPwGate(true);
@@ -1830,6 +1830,7 @@ el("pwSave").addEventListener("click", async ()=>{
   if(p1 !== p2)     return st.textContent = "⚠ Passwords don't match.";
   st.textContent = "Saving…";
   const { error } = await sb.auth.updateUser({ password: p1, data: { must_change: false } });
+  try{ await sb.rpc("clear_my_must_change"); }catch(e){ /* column not migrated yet — metadata alone still clears new accounts */ }
   if(error) return st.textContent = "❌ " + error.message;
   st.textContent = "✅ Password updated.";
   setTimeout(openForumHome, 600);
