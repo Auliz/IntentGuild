@@ -450,6 +450,8 @@ a.lpill:hover{filter:brightness(1.2);text-decoration:none}
 .demand{font-family:var(--font-data);font-size:.7rem;letter-spacing:.2em;text-transform:uppercase;color:var(--epic-soft)}
 
 /* ---------- FORUMS ---------- */
+.pw-veil{position:fixed;inset:0;z-index:3000;background:rgba(5,8,6,.94);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;padding:1rem}
+.pw-panel{width:100%;max-width:420px;background:linear-gradient(160deg,rgba(13,20,16,.98),rgba(5,8,6,.98));border:1px solid rgba(240,194,75,.4);border-radius:14px;padding:1.6rem;box-shadow:0 20px 60px rgba(0,0,0,.6)}
 .forum-gate{max-width:420px;margin:0 auto;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:2rem;text-align:center}
 .forum-cat{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:1rem 1.3rem;margin-bottom:.8rem;display:flex;justify-content:space-between;align-items:center;cursor:pointer;transition:border-color .2s}
 .forum-cat:hover{border-color:var(--epic)}
@@ -893,16 +895,6 @@ footer{border-top:1px solid var(--line);padding:2.5rem 0;color:var(--muted);font
       <p class="mb-0" style="font-size:.78rem;color:var(--muted)">No account? Accounts are issued by officers once your trial begins — ask on Discord.</p>
     </div>
 
-    <div id="pwGate" class="forum-gate d-none">
-      <div class="display-font mb-1" style="font-size:1.2rem">Set Your Password</div>
-      <p style="font-size:.85rem;color:var(--muted)" id="pwGateMsg"></p>
-      <input class="form-control mb-2" id="pwNew" type="password" placeholder="New password (6+ characters)" autocomplete="new-password">
-      <input class="form-control mb-3" id="pwNew2" type="password" placeholder="Confirm new password" autocomplete="new-password">
-      <button class="btn btn-apply w-100 mb-2" id="pwSave">Save Password</button>
-      <button class="btn btn-outline-epic w-100" id="pwAlt">Cancel</button>
-      <div class="data-font mt-2" id="pwStatus" style="font-size:.75rem;color:var(--muted)"></div>
-    </div>
-
     <div id="forumHome" class="d-none">
       <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
         <span class="data-font" style="color:var(--muted);font-size:.85rem">Logged in as <b id="forumWho" class="text-legendary"></b></span>
@@ -948,6 +940,18 @@ footer{border-top:1px solid var(--line);padding:2.5rem 0;color:var(--muted);font
 </main>
 
 <!-- ============ UNIVERSAL LOGIN MODAL ============ -->
+<div id="pwGate" class="pw-veil d-none">
+  <div class="pw-panel">
+    <div class="display-font mb-1" style="font-size:1.2rem">Set Your Password</div>
+    <p style="font-size:.85rem;color:var(--muted)" id="pwGateMsg"></p>
+    <input class="form-control mb-2" id="pwNew" type="password" placeholder="New password (6+ characters)" autocomplete="new-password">
+    <input class="form-control mb-3" id="pwNew2" type="password" placeholder="Confirm new password" autocomplete="new-password">
+    <button class="btn btn-apply w-100 mb-2" id="pwSave">Save Password</button>
+    <button class="btn btn-outline-epic w-100" id="pwAlt">Cancel</button>
+    <div class="data-font mt-2" id="pwStatus" style="font-size:.75rem;color:var(--muted)"></div>
+  </div>
+</div>
+
 <div class="modal fade" id="loginModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered" style="max-width:390px">
     <div class="modal-content" style="background:var(--panel);border:1px solid var(--line);border-radius:16px">
@@ -1727,8 +1731,7 @@ async function establishSession(user, statusEl){
   if(me.role === "admin") loadDeckLink();
   if(loginModalObj) loginModalObj.hide();
   if(user.user_metadata?.must_change || prof.must_change){
-    refreshAuthUI(true);   // skip forum-home render; the pw gate takes over
-    history.pushState(null, "", "#forums"); showPage("forums");
+    refreshAuthUI(true);   // pw gate overlays whatever page they're on — no routing, no bounce
     showPwGate(true);
     return true;
   }
@@ -1815,8 +1818,8 @@ addPwToggles(["mPass","loginPass","pwNew","pwNew2"]);
 function openForumHome(){ refreshAuthUI(); }
 function showPwGate(forced){
   pwForced = forced;
-  el("forumLogin").classList.add("d-none");
-  el("forumHome").classList.add("d-none");
+  el("forumLogin")?.classList.add("d-none");
+  el("forumHome")?.classList.add("d-none");
   el("pwGate").classList.remove("d-none");
   el("pwGateMsg").textContent = forced
     ? "First login detected — replace your temp password with one only you know before entering."
@@ -1833,9 +1836,14 @@ el("pwSave").addEventListener("click", async ()=>{
   try{ await sb.rpc("clear_my_must_change"); }catch(e){ /* column not migrated yet — metadata alone still clears new accounts */ }
   if(error) return st.textContent = "❌ " + error.message;
   st.textContent = "✅ Password updated.";
-  setTimeout(openForumHome, 600);
+  setTimeout(()=>{
+    el("pwGate").classList.add("d-none");
+    if(pwForced){ refreshAuthUI(); }
+    else openForumHome();
+  }, 600);
 });
 el("pwAlt").addEventListener("click", async ()=>{
+  el("pwGate").classList.add("d-none");
   if(pwForced) logoutAll();
   else openForumHome();
 });
