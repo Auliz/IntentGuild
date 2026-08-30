@@ -2499,7 +2499,10 @@ document.addEventListener("click", async e=>{
     lootEl("dtStatus").textContent = "";
     const cs = lootEl("dtChar");
     if(cs && cs.options.length <= 1 && typeof rosterCache !== "undefined" && rosterCache?.length){
-      rosterCache.slice().sort((a,b)=>a.rank - b.rank || a.name.localeCompare(b.name))
+      rosterCache
+        .map(m => ({ name: m?.character?.name || m?.name, rank: m?.rank ?? 99 }))
+        .filter(m => m.name)
+        .sort((a,b) => a.rank - b.rank || a.name.localeCompare(b.name))
         .forEach(m => { const o = document.createElement("option"); o.value = o.textContent = m.name; cs.appendChild(o); });
     }
     renderDtMeta();
