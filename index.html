@@ -1924,12 +1924,30 @@ function invTypeToSlot(v){
   if(typeof v === "number" || /^\d+$/.test(String(v))) return INV_SLOTS[+v] || "";
   return String(v).toLowerCase();
 }
+function realInstId(iid){
+  if(iid == null || !RB_INSTANCES || !RB_INSTANCES[iid]) return false;
+  const nm = RB_INSTANCES[iid];
+  if(/bonus|vault|catalyst|delve/i.test(nm)) return false;         // pseudo-instances never label dungeons
+  return (RB_INST_ENCS[nm] || []).length > 0;
+}
+function bestInstOf(info){
+  const s = (info?.srcs || []).find(s => realInstId(s.i));
+  return s ? s.i : null;
+}
+function bestEncOf(info){
+  const s = (info?.srcs || []).find(s => s.e != null && RB_ENC_NAMES[s.e] && realInstId(s.i));
+  return s ? s.e : (info?.enc ?? null);
+}
 function hyd(u){
   const i = RB_ITEMDB && RB_ITEMDB[u.id];
   if(u.slot && /^\d+$/.test(String(u.slot))) u.slot = invTypeToSlot(u.slot);
   if(i){
     if(!u.name || /^Item \d/.test(u.name)) u.name = i.n || u.name;
     if(!u.slot) u.slot = i.slot || "";
+    if(u.enc === "mplus" && u.dun != null && RB_INSTANCES && !realInstId(u.dun)){
+      const fix = bestInstOf(i);
+      u.dun = fix != null ? fix : null;
+    }
   }
   return u;
 }
@@ -2090,15 +2108,7 @@ async function qeImport(code, st){
     const qePlayer = findPlayer(data, 0) || {};
     const db = await rbItemNames();
     try{ await rbInstanceNames(); }catch(e){}
-    const realInst = iid => iid != null && RB_INSTANCES && RB_INSTANCES[iid] && (RB_INST_ENCS[RB_INSTANCES[iid]] || []).length > 0;
-    const bestEnc = info => {
-      const s = (info.srcs || []).find(s => s.e != null && RB_ENC_NAMES[s.e] && realInst(s.i));
-      return s ? s.e : (info.enc ?? null);
-    };
-    const bestInst = info => {
-      const s = (info.srcs || []).find(s => realInst(s.i));
-      return s ? s.i : (info.inst ?? null);
-    };
+    const bestEnc = bestEncOf, bestInst = bestInstOf;
     const charSel = document.getElementById("dtChar")?.value || "auto";
     const character = charSel !== "auto" ? charSel : (qePlayer.name || "Healer");
     const spec = qePlayer.spec || "";
@@ -2233,8 +2243,11 @@ async function dtImport(){
     st.textContent = "Crunching results…";
     const parsed = dtParse(json);
     const names = await rbItemNames();
+    try{ await rbInstanceNames(); }catch(e){}
     const upgrades = parsed.ups.map(u => ({
-      id: u.id, ilvl: u.ilvl, enc: u.enc || null, dun: u.dun || null, slot: u.slot || "",
+      id: u.id, ilvl: u.ilvl, enc: u.enc || null,
+      dun: u.dun != null && realInstId(u.dun) ? u.dun : (u.enc === "mplus" ? bestInstOf(names[u.id]) : (u.dun || null)),
+      slot: u.slot || "",
       name: (names[u.id]?.n ?? names[u.id]) || ("Item " + u.id),
       pct: +((u.gain / parsed.baseline) * 100).toFixed(2)
     }));
