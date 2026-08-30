@@ -164,6 +164,9 @@ a.lpill:hover{filter:brightness(1.2);text-decoration:none}
 .bls-panel{min-width:0}
 .bls-panel-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:.75rem;padding-bottom:.55rem;border-bottom:1px solid var(--line)}
 .bls-panel-title{font-family:var(--font-display);font-weight:700;font-size:1.12rem;color:var(--legendary)}
+@media (min-width: 768px){
+  .bls-nav{position:sticky;top:16px}
+}
 @media (max-width: 767px){
   .bls-master{grid-template-columns:1fr}
   .bls-nav{display:flex;gap:.3rem;overflow-x:auto;max-height:none;padding:.35rem}
@@ -1947,6 +1950,16 @@ function rbInstanceNames(){
     })
     .catch(() => { RB_INSTANCES = {}; });
 }
+function normInstName(s){ return String(s || "").toLowerCase().replace(/^the\s+/, "").replace(/[^a-z0-9]/g, ""); }
+function rbTierName(){
+  const cfgName = ((CONFIG.tiers || []).find(t => t.current) || (CONFIG.tiers || [])[0] || {}).name || "";
+  if(!cfgName || !RB_INST_ENCS) return null;
+  const t = normInstName(cfgName);
+  const names = Object.keys(RB_INST_ENCS);
+  return names.find(n => normInstName(n) === t)
+      || names.find(n => normInstName(n).includes(t) || t.includes(normInstName(n)))
+      || null;
+}
 function dunLabel(dun){
   if(dun == null) return "Other Dungeons";
   return (RB_INSTANCES && RB_INSTANCES[dun]) || ("Dungeon #" + dun);
@@ -2040,12 +2053,20 @@ async function qeImport(code, st){
     const db = await rbItemNames();
     const character = qePlayer.name || "Healer";
     const spec = qePlayer.spec || "";
-    const mk = d => {
-      const info = db[d.item] || {};
-      const p = d.percDiff ?? (Math.abs(d.score ?? 0) <= 100 ? d.score : 0);
-      return { id: +d.item, ilvl: d.level, pct: Math.round((p || 0) * 100) / 100, gain: d.rawDiff || 0, slot: info.slot || "" };
+    const idOf = d => {
+      const raw = d.item ?? d.itemID ?? d.id;
+      if(raw && typeof raw === "object") return +(raw.id ?? raw.item ?? raw.itemID) || 0;
+      return +raw || 0;
     };
-    const pos = diffs.filter(d => d && ((d.percDiff ?? d.score ?? 0) > 0));
+    const mk = d => {
+      const id = idOf(d);
+      const info = db[id] || {};
+      const p = d.percDiff ?? (Math.abs(d.score ?? 0) <= 100 ? d.score : 0);
+      const lvl = d.level ?? (d.item && typeof d.item === "object" ? d.item.level : null);
+      return { id, ilvl: lvl, pct: Math.round((p || 0) * 100) / 100, gain: d.rawDiff || 0, slot: info.slot || "" };
+    };
+    const pos = diffs.filter(d => d && idOf(d) && ((d.percDiff ?? d.score ?? 0) > 0));
+    if(!pos.length && diffs.length) console.warn("[qe] rows found but none yielded item ids — sample row:", diffs[0]);
     const sets = {
       raid:  pos.filter(d => d.dropLoc === "Raid" && d.dropType === "drop").map(d => ({ ...mk(d), enc: (db[d.item]||{}).enc ?? null })),
       mplus: pos.filter(d => d.dropLoc === "Dungeon" && d.dropType === "drop").map(d => ({ ...mk(d), enc: "mplus", dun: (db[d.item]||{}).inst ?? null })),
@@ -2361,7 +2382,7 @@ function drawSheet(){
     renderMaster(host, "team-raider", secs, "");
   } else {
     const byEnc = {};
-    const tierNameNorm = ((CONFIG.tiers || []).find(t => t.current) || (CONFIG.tiers || [])[0] || {}).name || "";
+    const rbTier = rbTierName();   // null = unknown → no rerouting, never worse than raw
     lootWishlists.forEach(w=>{
       const drops = normDrops(w);
       const ups = Object.values(bestPerSlot(unionUpgrades(drops))).flat();
@@ -2371,15 +2392,15 @@ function drawSheet(){
       ups.forEach(u=>{
         let encV = u.enc;
         const encN = +encV;
-        if(Number.isFinite(encN) && RB_INSTANCES && RB_INSTANCES[encN] && tierNameNorm && RB_INSTANCES[encN] !== tierNameNorm) encV = "mplus";
+        if(rbTier && Number.isFinite(encN) && RB_INSTANCES && RB_INSTANCES[encN] && RB_INSTANCES[encN] !== rbTier) encV = "mplus";
         const k = String(encV ?? "null");
         const sec = byEnc[k] = byEnc[k] || { items: {} };
-        const it = sec.items[u.name] = sec.items[u.name] || { id: u.id, name: u.name, ilvl: u.ilvl, slot: u.slot, wants: [] };
+        const ik = String(u.id || u.name);
+        const it = sec.items[ik] = sec.items[ik] || { id: u.id, name: u.name, ilvl: u.ilvl, slot: u.slot, wants: [] };
         it.wants.push({ raider, pct: u.pct, role: rrole });
       });
     });
-    const tierName = ((CONFIG.tiers || []).find(t => t.current) || (CONFIG.tiers || [])[0] || {}).name || "";
-    const roster = (RB_INST_ENCS[tierName] || []).map(String);
+    const roster = ((rbTier && RB_INST_ENCS[rbTier]) || []).map(String);
     const extras = Object.keys(byEnc).filter(k => !roster.includes(k)).sort((a,b) => encOrder(a) - encOrder(b));
     const encs = roster.concat(extras);
     const secs = encs.map(e=>{
