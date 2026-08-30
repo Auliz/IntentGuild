@@ -152,6 +152,7 @@ a.lpill:hover{filter:brightness(1.2);text-decoration:none}
 .bc-dice{font-size:1.05rem}
 .bc-label{font-size:.64rem;letter-spacing:.2em;text-transform:uppercase;color:var(--legendary-soft)}
 .bc-mini{font-size:.8rem;cursor:default}
+.role-ico{font-size:.78rem;margin-right:.15rem;cursor:default;filter:saturate(.85)}
 .bls-toggle{display:flex;border:1px solid var(--line);border-radius:7px;overflow:hidden}
 .bls-mode{border:none;background:none;color:var(--muted);font-family:var(--font-data);font-size:.66rem;letter-spacing:.14em;text-transform:uppercase;padding:.35rem .8rem}
 .bls-mode.on{background:rgba(240,194,75,.14);color:var(--legendary)}
@@ -859,6 +860,7 @@ footer{border-top:1px solid var(--line);padding:2.5rem 0;color:var(--muted);font
             <div class="modal-body p-4">
               <div class="display-font mb-1" style="font-size:1.15rem">Droptimizer Import</div>
               <p style="font-size:.8rem;color:var(--muted)">Run a Droptimizer on <a href="https://www.raidbots.com" target="_blank" rel="noopener">Raidbots</a>, then paste the report link. Re-import any time — the newest sim replaces the old.</p>
+              <p class="note mb-2" style="font-size:.72rem"><b>Healers:</b> paste a QE Live report link (…/upgradereport/xyz) — one paste fills Raid, M+, and Bonus Rolls with HPS gains. Free Raidbots? Sim dungeons <b>one at a time</b> — each import merges in, replacing only that dungeon's results. Premium all-dungeon reports work in one paste.</p>
               <div id="dtMeta" class="mb-2"></div>
               <div class="d-flex gap-2">
                 <select class="form-select form-select-sm flex-shrink-0" id="dtSource" style="max-width:130px">
@@ -866,6 +868,12 @@ footer{border-top:1px solid var(--line);padding:2.5rem 0;color:var(--muted);font
                   <option value="raid">Raid</option>
                   <option value="mplus">Mythic+</option>
                   <option value="bonus">Bonus Rolls</option>
+                </select>
+                <select class="form-select form-select-sm flex-shrink-0" id="dtRole" style="max-width:110px" title="Role — auto-detects from your sim's spec">
+                  <option value="auto">Role: Auto</option>
+                  <option value="tank">🛡️ Tank</option>
+                  <option value="healer">✚ Healer</option>
+                  <option value="dps">⚔️ DPS</option>
                 </select>
                 <input class="form-control form-control-sm" id="dtUrl" placeholder="https://www.raidbots.com/simbot/report/…">
                 <button class="btn btn-apply btn-sm flex-shrink-0" id="dtImport">Import</button>
@@ -1859,6 +1867,16 @@ function lootEl(id){ return document.getElementById(id); }
 let lootWishlists = [], myWishlistExtra = {}, RB_ITEMDB = null, dtModalObj = null;
 let viewScope = "me", modeMe = "all", modeTeam = "boss", mpGroup = "slot";
 const SRC_LABELS = { raid: "Raid", mplus: "Mythic+", bonus: "Bonus Rolls" };
+const ROLE_ICONS = { tank: "🛡️", healer: "✚", dps: "⚔️" };
+function roleFromSpec(spec){
+  const s = String(spec || "").toLowerCase();
+  if(/blood|protection|guardian|brewmaster|vengeance/.test(s)) return "tank";
+  if(/restoration|holy|discipline|mistweaver|preservation/.test(s)) return "healer";
+  if(!s) return null;
+  return "dps";
+}
+function impRole(imp){ return imp?.role || roleFromSpec(imp?.spec); }
+function roleIcon(r){ return r && ROLE_ICONS[r] ? `<span class="role-ico" title="${r[0].toUpperCase()+r.slice(1)}">${ROLE_ICONS[r]}</span>` : ""; }
 function majoritySource(upgrades){
   const c = { raid: 0, mplus: 0, bonus: 0 };
   (upgrades || []).forEach(u=>{
@@ -1923,7 +1941,7 @@ function bestPerSlot(upgrades){
   (upgrades || []).forEach(u=>{ const k = slotKey(u.slot); (bySlot[k] = bySlot[k] || []).push(u); });
   const out = {};
   for(const k in bySlot){
-    const cap = (k === "finger" || k === "trinket") ? 2 : 1;
+    const cap = (!k || k === "other") ? 99 : (k === "finger" || k === "trinket") ? 2 : 1;
     const seen = new Set(), take = [];
     bySlot[k].sort((a,b)=>b.pct - a.pct).forEach(u=>{
       if(take.length >= cap || seen.has(u.id)) return;
@@ -1962,6 +1980,55 @@ async function persistWishlist(){
   return !error;
 }
 
+/* ---- QE Live import (healers) ---- */
+async function qeImport(code, st){
+  st.textContent = "Fetching QE Live report…";
+  try{
+    const r = await fetch("https://questionablyepic.com/api/getUpgradeReport.php?reportID=" + encodeURIComponent(code));
+    if(!r.ok) throw new Error("QE Live returned " + r.status);
+    let data = await r.json();
+    if(typeof data === "string") data = JSON.parse(data);
+    const diffs = data?.differentials;
+    if(!Array.isArray(diffs)) throw new Error("Report loaded but had no upgrade list — is it an Upgrade Finder report?");
+    const db = await rbItemNames();
+    const character = data.player?.name || "Healer";
+    const spec = data.player?.spec || "";
+    const mk = d => {
+      const info = db[d.item] || {};
+      return { id: +d.item, ilvl: d.level, pct: Math.round(d.percDiff * 100) / 100, gain: d.rawDiff || 0, slot: info.slot || "" };
+    };
+    const pos = diffs.filter(d => d && d.percDiff > 0);
+    const sets = {
+      raid:  pos.filter(d => d.dropLoc === "Raid" && d.dropType === "drop").map(d => ({ ...mk(d), enc: (db[d.item]||{}).enc ?? null })),
+      mplus: pos.filter(d => d.dropLoc === "Dungeon" && d.dropType === "drop").map(d => ({ ...mk(d), enc: "mplus", dun: (db[d.item]||{}).inst ?? null })),
+      bonus: pos.filter(d => d.dropType === "bonus").map(d => ({ ...mk(d), enc: (db[d.item]||{}).enc ?? "vault" }))
+    };
+    const chosen = document.getElementById("dtSource").value;
+    const keys = chosen === "auto" ? ["raid","mplus","bonus"] : [chosen];
+    myWishlistExtra.droptimizers = myWishlistExtra.droptimizers || {};
+    let total = 0;
+    keys.forEach(k => {
+      const ups = sets[k].sort((a,b)=>b.pct-a.pct).slice(0, 96);
+      if(!ups.length) return;
+      total += ups.length;
+      myWishlistExtra.droptimizers[k] = {
+        character, spec, role: "healer", hps: true, baseline: null,
+        imported: new Date().toISOString().slice(0,10), upgrades: ups
+      };
+    });
+    if(!total) throw new Error("No positive upgrades found in the report for the selected source.");
+    delete myWishlistExtra.droptimizer;
+    await persistWishlist();
+    lootEl("dtUrl").value = "";
+    st.textContent = `✅ QE Live import for ${character}: ` + keys.filter(k=>sets[k].length).map(k => `${SRC_LABELS[k]} ${sets[k].length}`).join(" · ") + " (HPS gains ✚).";
+    renderDtMeta(); loadLootData();
+  }catch(e){
+    st.textContent = (e instanceof TypeError)
+      ? "❌ QE Live blocked the cross-site request (CORS). Tell Fable — a small relay fixes this."
+      : "❌ " + e.message;
+  }
+}
+
 /* ---- droptimizer import ---- */
 async function rbItemNames(){
   if(RB_ITEMDB) return RB_ITEMDB;
@@ -1970,7 +2037,7 @@ async function rbItemNames(){
     if(!r.ok) throw 0;
     const arr = await r.json();
     RB_ITEMDB = {};
-    arr.forEach(i => { RB_ITEMDB[i.id] = i.name; });
+    arr.forEach(i => { RB_ITEMDB[i.id] = { n: i.name, enc: i.sources?.[0]?.encounterId, inst: i.sources?.[0]?.instanceId, slot: i.itemClass === 4 || i.itemClass === 2 ? (i.slot || i.inventoryType || "") : (i.slot || "") }; });
   }catch(e){ RB_ITEMDB = {}; }
   return RB_ITEMDB;
 }
@@ -2024,6 +2091,8 @@ async function dtImport(){
   const st = lootEl("dtStatus");
   const raw = lootEl("dtUrl").value.trim();
   const pasted = lootEl("dtPaste").value.trim();
+  const qeMatch = raw.match(/questionablyepic\.com\/(?:live|ptr)\/upgradereport\/([A-Za-z0-9]+)/i) || raw.match(/getUpgradeReport\.php\?reportID=([A-Za-z0-9]+)/i);
+  if(qeMatch && !pasted) return qeImport(qeMatch[1], st);
   try{
     let json;
     if(pasted){
@@ -2043,22 +2112,38 @@ async function dtImport(){
     const names = await rbItemNames();
     const upgrades = parsed.ups.map(u => ({
       id: u.id, ilvl: u.ilvl, enc: u.enc || null, dun: u.dun || null, slot: u.slot || "",
-      name: names[u.id] || ("Item " + u.id),
+      name: (names[u.id]?.n ?? names[u.id]) || ("Item " + u.id),
       pct: +((u.gain / parsed.baseline) * 100).toFixed(2)
     }));
     let srcKey = document.getElementById("dtSource").value;
     if(srcKey === "auto") srcKey = majoritySource(upgrades);
     myWishlistExtra.droptimizers = myWishlistExtra.droptimizers || {};
+    let finalUpgrades = upgrades, mergedDungeons = 0;
+    if(srcKey === "mplus" && myWishlistExtra.droptimizers.mplus){
+      // Single-dungeon sims (free Raidbots) merge in: replace only the
+      // dungeon(s) present in this report, keep the rest.
+      const newDuns = new Set(upgrades.map(u => u.dun ?? null));
+      const kept = (myWishlistExtra.droptimizers.mplus.upgrades || [])
+        .filter(u => !newDuns.has(u.dun ?? null));
+      const byId = {};
+      kept.concat(upgrades).forEach(u => { if(!byId[u.id] || u.pct > byId[u.id].pct) byId[u.id] = u; });
+      finalUpgrades = Object.values(byId).sort((a,b)=>b.pct-a.pct).slice(0, 96);
+    }
+    if(srcKey === "mplus") mergedDungeons = new Set(finalUpgrades.map(u=>u.dun).filter(d=>d!=null)).size;
+    let roleSel = document.getElementById("dtRole")?.value || "auto";
+    const role = roleSel === "auto" ? roleFromSpec(parsed.spec) : roleSel;
     myWishlistExtra.droptimizers[srcKey] = {
-      character: parsed.character, spec: parsed.spec,
+      character: parsed.character, spec: parsed.spec, role,
       baseline: Math.round(parsed.baseline),
       imported: new Date().toISOString().slice(0,10),
-      upgrades
+      upgrades: finalUpgrades
     };
     delete myWishlistExtra.droptimizer;
     await persistWishlist();
     lootEl("dtPaste").classList.add("d-none"); lootEl("dtPaste").value = ""; lootEl("dtUrl").value = "";
-    st.textContent = `✅ Imported ${upgrades.length} upgrades for ${parsed.character} → ${SRC_LABELS[srcKey]} (baseline ${Math.round(parsed.baseline).toLocaleString()} DPS).`;
+    st.textContent = srcKey === "mplus" && mergedDungeons > 1
+      ? `✅ Merged ${upgrades.length} upgrades for ${parsed.character} → Mythic+ now covers ${mergedDungeons} dungeons (${finalUpgrades.length} items).`
+      : `✅ Imported ${upgrades.length} upgrades for ${parsed.character} → ${SRC_LABELS[srcKey]} (baseline ${Math.round(parsed.baseline).toLocaleString()} DPS).`;
     loadLootData();
   }catch(e){
     if(e.message === "fetch-blocked"){
@@ -2076,7 +2161,7 @@ function renderDtMeta(){
   const keys = ["raid","mplus","bonus"].filter(k => drops[k]);
   host.innerHTML = keys.length
     ? keys.map(k => `<div class="d-flex justify-content-between align-items-center mb-1">
-        <span class="data-font" style="font-size:.66rem;letter-spacing:.14em;color:var(--legendary-soft)">${SRC_LABELS[k].toUpperCase()}: ${esc(drops[k].character).toUpperCase()} · ${esc(drops[k].imported)} · ${drops[k].upgrades.length} ITEMS</span>
+        <span class="data-font" style="font-size:.66rem;letter-spacing:.14em;color:var(--legendary-soft)">${roleIcon(impRole(drops[k]))} ${SRC_LABELS[k].toUpperCase()}: ${esc(drops[k].character).toUpperCase()} · ${esc(drops[k].imported)} · ${drops[k].upgrades.length} ITEMS${k === "mplus" ? (d => d > 0 ? ` · ${d} DUNGEONS` : "")(new Set((drops[k].upgrades||[]).map(u=>u.dun).filter(x=>x!=null)).size) : ""}</span>
         <span class="d-flex align-items-center gap-2">
           <button class="btn btn-outline-epic btn-sm" data-dtupdate="${k}" style="font-size:.62rem;padding:.1rem .5rem">Update</button>
           <button class="award-x" data-dtclear="${k}" title="Remove this import">✕</button>
@@ -2212,7 +2297,7 @@ function drawSheet(){
       const ups = Object.values(bestPerSlot(unionUpgrades(drops))).flat();
       if(!ups.length) return;
       const raider = Object.values(drops)[0]?.character || w.character || "?";
-      const rec = byRaider[raider] = byRaider[raider] || { uid: w._uid, ups: [] };
+      const rec = byRaider[raider] = byRaider[raider] || { uid: w._uid, ups: [], role: impRole(Object.values(drops)[0]) };
       rec.ups.push(...ups);
     });
     const names = Object.keys(byRaider).sort((a,b)=>a.localeCompare(b));
@@ -2221,7 +2306,7 @@ function drawSheet(){
       const rec = byRaider[n];
       const rows = [...rec.ups].sort((a,b)=>b.pct - a.pct);
       const x = officer && rec.uid ? `<button class="award-x" data-wldel="${rec.uid}" title="Remove this raider's wishlist">✕</button>` : "";
-      return sheetSection(esc(n), rows.length,
+      return sheetSection(roleIcon(rec.role) + " " + esc(n), rows.length,
         rows.map(u=>`<div class="bls-item"><span class="bls-iname">${itemPill(u)}</span>
           <span class="bls-wants"><span class="bls-chip" style="color:var(--muted)">${esc(encLabel(u.enc ?? null))}</span><span class="bls-chip text-legendary data-font">+${u.pct}%</span></span></div>`).join(""), x, "team-raider-" + n);
     }).join("");
@@ -2232,11 +2317,12 @@ function drawSheet(){
       const ups = Object.values(bestPerSlot(unionUpgrades(drops))).flat();
       if(!ups.length) return;
       const raider = Object.values(drops)[0]?.character || w.character || "?";
+      const rrole = impRole(Object.values(drops)[0]);
       ups.forEach(u=>{
         const k = String(u.enc ?? "null");
         const sec = byEnc[k] = byEnc[k] || { items: {} };
         const it = sec.items[u.name] = sec.items[u.name] || { id: u.id, name: u.name, ilvl: u.ilvl, slot: u.slot, wants: [] };
-        it.wants.push({ raider, pct: u.pct });
+        it.wants.push({ raider, pct: u.pct, role: rrole });
       });
     });
     const encs = Object.keys(byEnc).sort((a,b) => encOrder(a) - encOrder(b));
@@ -2248,7 +2334,7 @@ function drawSheet(){
       const wantCount = items.reduce((n,it)=>n + it.wants.length, 0);
       return sheetSection(esc(encLabel(e)), wantCount,
         groupRowsBySlot(items, it=>`<div class="bls-item"><span class="bls-iname">${itemPill(it)}</span>
-          <span class="bls-wants">${it.wants.map(x=>`<span class="bls-chip"><b>${esc(x.raider)}</b> <span class="text-legendary data-font">+${x.pct}%</span></span>`).join("")}</span></div>`), "", "team-boss-" + e);
+          <span class="bls-wants">${it.wants.map(x=>`<span class="bls-chip">${roleIcon(x.role)}<b>${esc(x.raider)}</b> <span class="text-legendary data-font">+${x.pct}%</span></span>`).join("")}</span></div>`), "", "team-boss-" + e);
     }).join("");
   }
   whRefresh();
