@@ -163,6 +163,7 @@ a.lpill:hover{filter:brightness(1.2);text-decoration:none}
 .bls-nav-name{flex:1;font-size:.84rem;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .bls-nav-item.on .bls-nav-name{color:var(--legendary-soft)}
 .bls-nav-count{font-size:.66rem;color:var(--muted)}
+.bls-nav-dice{font-size:.78rem;cursor:default;filter:drop-shadow(0 0 4px rgba(240,194,75,.5))}
 .bls-panel{min-width:0}
 .bls-panel-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:.75rem;padding-bottom:.55rem;border-bottom:1px solid var(--line)}
 .bls-panel-title{font-family:var(--font-display);font-weight:700;font-size:1.12rem;color:var(--legendary)}
@@ -1959,10 +1960,13 @@ function rioSeasonDuns(){
   })();
   return RIO_SEASON_PROMISE;
 }
+function pseudoInstName(nm){
+  return /\bbonus\b|\bgreat vault\b|\bcatalyst\b|\bdelves?\b|mythic\+|\bdungeons\b|\bseason\b|\bcrafted\b|\bprofessions?\b|\bpvp\b|\bworld\b/i.test(String(nm || ""));
+}
 function realInstId(iid){
   if(iid == null || !RB_INSTANCES || !RB_INSTANCES[iid]) return false;
   const nm = RB_INSTANCES[iid];
-  if(/\bbonus\b|\bgreat vault\b|\bcatalyst\b|\bdelves?\b|mythic\+|\bdungeons\b|\bseason\b|\bcrafted\b|\bprofessions?\b|\bpvp\b|\bworld\b/i.test(nm)) return false;  // pseudo/umbrella groupings (word-bounded: "The Stonevault" stays real)
+  if(pseudoInstName(nm)) return false;  // pseudo/umbrella groupings
   const n = (RB_INST_ENCS[nm] || []).length;
   return n > 0 && n <= 12;   // real instances have a handful of encounters; umbrellas have dozens
 }
@@ -2068,8 +2072,12 @@ function rbInstanceNames(){
         if(inst.id && inst.name) RB_INST_IDS[inst.name] = inst.id;
         if(inst.name && (inst.encounters || []).length) RB_INST_ENCS[inst.name] = (inst.encounters || []).filter(e => e.id).map(e => e.id);
         (inst.encounters || []).forEach(e => {
-          if(e.id && inst.name) RB_INSTANCES[e.id] = inst.name;
-          if(e.id && e.name) RB_ENC_NAMES[e.id] = e.name;
+          if(e.id && inst.name){
+            const cur = RB_INSTANCES[e.id];
+            // real instances own their encounters; pseudo groupings only fill gaps
+            if(!cur || (pseudoInstName(cur) && !pseudoInstName(inst.name))) RB_INSTANCES[e.id] = inst.name;
+          }
+          if(e.id && e.name && !RB_ENC_NAMES[e.id]) RB_ENC_NAMES[e.id] = e.name;
         });
       });
       drawSheet();
@@ -2539,12 +2547,12 @@ function drawSheet(){
     const bossSec = (e, allowEmpty) => {
       const rows = bossGroups[e] || [];
       if(!rows.length && !allowEmpty) return null;
-      return { key: "me-" + modeMe + "-b" + e, icon: navIconFor("boss", e), title: esc(encLabel(e)), count: rows.length, group: (RB_INSTANCES || {})[+e] || null,
+      return { key: "me-" + modeMe + "-b" + e, icon: navIconFor("boss", e), title: esc(encLabel(e)), count: rows.length, group: (RB_INSTANCES || {})[+e] || null, dice: !!(bt && rows.some(u => u.id === bt.id)),
         html: rows.length ? rows.map(row).join("") : `<p class="py-3" style="color:var(--muted);font-size:.85rem">No best-in-slot targets from this boss.</p>` };
     };
     const dunSec = k => {
       const rows = dunGroups[k];
-      return { key: "me-" + modeMe + "-d" + k, icon: navIconFor("dungeon", k), title: esc(dunLabel(k)), count: rows.length, group: "Mythic+ / Dungeons", html: rows.map(row).join("") };
+      return { key: "me-" + modeMe + "-d" + k, icon: navIconFor("dungeon", k), title: esc(dunLabel(k)), count: rows.length, group: "Mythic+ / Dungeons", dice: !!(bt && rows.some(u => u.id === bt.id)), html: rows.map(row).join("") };
     };
 
     let secs = [];
@@ -2675,7 +2683,7 @@ function renderMaster(host, ctx, secs, topHtml){
       if(useGroups && s.group && s.group !== lastGroup){ head = `<div class="bls-nav-group data-font">${esc(s.group)}</div>`; lastGroup = s.group; }
       return head + `
       <div class="bls-nav-item${s.key === sel.key ? " on" : ""}" data-navsec="${esc(s.key)}" data-navctx="${ctx}">
-        ${s.icon}<span class="bls-nav-name">${s.title}</span><span class="bls-nav-count data-font">${s.count}</span>
+        ${s.icon}<span class="bls-nav-name">${s.title}</span>${s.dice ? `<span class="bls-nav-dice" title="Your bonus roll target drops here">🎲</span>` : ""}<span class="bls-nav-count data-font">${s.count}</span>
       </div>`;
     }).join("") + `
     </div>
