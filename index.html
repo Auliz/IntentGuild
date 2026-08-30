@@ -894,6 +894,9 @@ footer{border-top:1px solid var(--line);padding:2.5rem 0;color:var(--muted);font
                   <option value="mplus">Mythic+</option>
                   <option value="bonus">Bonus Rolls</option>
                 </select>
+                <select class="form-select form-select-sm" id="dtChar" title="Which raider this import belongs to">
+                  <option value="auto">Character: Auto</option>
+                </select>
                 <select class="form-select form-select-sm" id="dtRole" title="Role — auto-detects from your sim's spec">
                   <option value="auto">Role: Auto</option>
                   <option value="tank">🛡️ Tank</option>
@@ -1913,11 +1916,20 @@ function majoritySource(upgrades){
   });
   return c.mplus > c.raid && c.mplus > c.bonus ? "mplus" : c.bonus > c.raid ? "bonus" : "raid";
 }
+function hyd(u){
+  const i = RB_ITEMDB && RB_ITEMDB[u.id];
+  if(i){
+    if(!u.name || /^Item \d/.test(u.name)) u.name = i.n || u.name;
+    if(!u.slot) u.slot = i.slot || "";
+  }
+  return u;
+}
 function normDrops(w){
-  if(!w) return {};
-  if(w.droptimizers) return w.droptimizers;
-  if(w.droptimizer) return { [majoritySource(w.droptimizer.upgrades)]: w.droptimizer };
-  return {};
+  let drops = {};
+  if(w && w.droptimizers) drops = w.droptimizers;
+  else if(w && w.droptimizer) drops = { [majoritySource(w.droptimizer.upgrades)]: w.droptimizer };
+  Object.values(drops).forEach(d => (d?.upgrades || []).forEach(hyd));
+  return drops;
 }
 function unionUpgrades(drops){
   // merge all sources; same item id keeps its best-gain instance
@@ -1961,6 +1973,15 @@ function rbTierName(){
       || names.find(n => normInstName(n).includes(t) || t.includes(normInstName(n)))
       || null;
 }
+function configBossEncIds(){
+  // Deck boss list (kill order, lair boss included wherever it's listed) → encounter ids
+  const cur = (CONFIG.tiers || []).find(t => t.current) || (CONFIG.tiers || [])[0] || {};
+  const lines = String(cur.bosses || "").split("\n").map(s => s.split("|")[0].trim()).filter(Boolean);
+  if(!lines.length || !Object.keys(RB_ENC_NAMES).length) return [];
+  const rev = {};
+  for(const id in RB_ENC_NAMES) rev[normInstName(RB_ENC_NAMES[id])] = id;
+  return lines.map(n => rev[normInstName(n)]).filter(Boolean);
+}
 function dunLabel(dun){
   if(dun == null) return "Other Dungeons";
   return (RB_INSTANCES && RB_INSTANCES[dun]) || ("Dungeon #" + dun);
@@ -2001,6 +2022,7 @@ async function lootRefresh(){
   await loadLootData();
 }
 async function loadLootData(){
+  rbItemNames().then(()=>drawSheet());   // item names/slots hydrate on arrival; cached afterwards
   try{
     const [mine, all] = await Promise.all([
       sb.from("loot_wishlists").select("data").eq("user_id", me.id).maybeSingle(),
@@ -2052,7 +2074,8 @@ async function qeImport(code, st){
     console.log("[qe] found", diffs.length, "differentials; sample:", diffs[0]);
     const qePlayer = findPlayer(data, 0) || {};
     const db = await rbItemNames();
-    const character = qePlayer.name || "Healer";
+    const charSel = document.getElementById("dtChar")?.value || "auto";
+    const character = charSel !== "auto" ? charSel : (qePlayer.name || "Healer");
     const spec = qePlayer.spec || "";
     const idOf = d => {
       const raw = d.item ?? d.itemID ?? d.id;
@@ -2202,6 +2225,8 @@ async function dtImport(){
     if(srcKey === "mplus") mergedDungeons = new Set(finalUpgrades.map(u=>u.dun).filter(d=>d!=null)).size;
     let roleSel = document.getElementById("dtRole")?.value || "auto";
     const role = roleSel === "auto" ? roleFromSpec(parsed.spec) : roleSel;
+    const charSel2 = document.getElementById("dtChar")?.value || "auto";
+    if(charSel2 !== "auto") parsed.character = charSel2;
     myWishlistExtra.droptimizers[srcKey] = {
       character: parsed.character, spec: parsed.spec, role,
       baseline: Math.round(parsed.baseline),
@@ -2385,7 +2410,10 @@ function drawSheet(){
   } else {
     const byEnc = {};
     const rbTier = rbTierName();
-    const rosterSet = new Set(((rbTier && RB_INST_ENCS[rbTier]) || []).map(String));
+    const cfgIds = configBossEncIds();
+    const instIds = ((rbTier && RB_INST_ENCS[rbTier]) || []).map(String);
+    const orderedRoster = cfgIds.concat(instIds.filter(i => !cfgIds.includes(i)));
+    const rosterSet = new Set(orderedRoster);
     lootWishlists.forEach(w=>{
       const drops = normDrops(w);
       const ups = Object.values(bestPerSlot(unionUpgrades(drops))).flat();
@@ -2403,9 +2431,7 @@ function drawSheet(){
         it.wants.push({ raider, pct: u.pct, role: rrole });
       });
     });
-    const roster = [...rosterSet];
-    const extras = roster.length ? [] : Object.keys(byEnc).sort((a,b) => encOrder(a) - encOrder(b));
-    const encs = roster.length ? roster : extras;
+    const encs = orderedRoster.length ? orderedRoster : Object.keys(byEnc).sort((a,b) => encOrder(a) - encOrder(b));
     const secs = encs.map(e=>{
       if(!byEnc[e]) return { key: "team-boss-" + e, icon: navIconFor("boss", e), title: esc(encLabel(e)), count: 0,
         html: `<p class="py-3" style="color:var(--muted);font-size:.85rem">No wanted items for this boss yet.</p>` };
@@ -2471,6 +2497,11 @@ document.addEventListener("click", async e=>{
   if(e.target.id === "dtOpen"){
     if(!dtModalObj) dtModalObj = new bootstrap.Modal(lootEl("dtModal"));
     lootEl("dtStatus").textContent = "";
+    const cs = lootEl("dtChar");
+    if(cs && cs.options.length <= 1 && typeof rosterCache !== "undefined" && rosterCache?.length){
+      rosterCache.slice().sort((a,b)=>a.rank - b.rank || a.name.localeCompare(b.name))
+        .forEach(m => { const o = document.createElement("option"); o.value = o.textContent = m.name; cs.appendChild(o); });
+    }
     renderDtMeta();
     dtModalObj.show();
   }
