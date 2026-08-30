@@ -1929,6 +1929,8 @@ function invTypeToSlot(v){
   return String(v).toLowerCase();
 }
 let RIO_SEASON_PROMISE = null, RIO_SEASON_DUNS = null;   // Set of normalized current-season dungeon names
+let RIO_DUN_LIST = [];    // [{key:"rio:slug", name}] — season dungeons as selectable identities
+let RIO_DUN_NAMES = {};   // "rio:slug" -> display name
 function rioSeasonDuns(){
   if(RIO_SEASON_PROMISE) return RIO_SEASON_PROMISE;
   RIO_SEASON_PROMISE = (async () => {
@@ -1940,9 +1942,12 @@ function rioSeasonDuns(){
         const season = (j.seasons || []).find(s => (s.dungeons || []).length && (!s.starts || Object.values(s.starts).some(d => new Date(d) <= new Date())));
         if(season){
           RIO_SEASON_DUNS = new Set();
+          RIO_DUN_LIST = []; RIO_DUN_NAMES = {};
           season.dungeons.forEach(d => {
             if(d.name) RIO_SEASON_DUNS.add(normInstName(d.name));
             if(d.short_name) RIO_SEASON_DUNS.add(normInstName(d.short_name));
+            const key = "rio:" + (d.slug || d.challenge_mode_id || d.id || normInstName(d.name));
+            if(d.name){ RIO_DUN_LIST.push({ key, name: d.name }); RIO_DUN_NAMES[key] = d.name; }
           });
           return RIO_SEASON_DUNS;
         }
@@ -1973,7 +1978,7 @@ function hyd(u){
   if(i){
     if(!u.name || /^Item \d/.test(u.name)) u.name = i.n || u.name;
     if(!u.slot) u.slot = i.slot || "";
-    if(u.enc === "mplus" && u.dun != null && RB_INSTANCES && !realInstId(u.dun)){
+    if(u.enc === "mplus" && u.dun != null && !String(u.dun).startsWith("rio:") && RB_INSTANCES && !realInstId(u.dun)){
       const fix = bestInstOf(i);
       u.dun = fix != null ? fix : null;
     }
@@ -2047,8 +2052,10 @@ function configBossEncIds(){
   return lines.map(n => rev[normInstName(n)]).filter(Boolean);
 }
 function dunLabel(dun){
-  if(dun == null) return "Other Dungeons";
-  return (RB_INSTANCES && RB_INSTANCES[dun]) || ("Dungeon #" + dun);
+  if(dun == null || dun === "null") return "Other Dungeons";
+  if(RIO_DUN_NAMES[dun]) return RIO_DUN_NAMES[dun];
+  const n = +dun;
+  return (Number.isFinite(n) && RB_INSTANCES && RB_INSTANCES[n]) || ("Dungeon #" + dun);
 }
 function bonusTarget(drops){
   const ups = drops.bonus?.upgrades || [];
@@ -2302,7 +2309,7 @@ async function dtImport(){
     const upgrades = parsed.ups.map(u => ({
       id: u.id, ilvl: u.ilvl, enc: u.enc || null,
       dun: document.getElementById("dtSource")?.value === "mplus_single" && (document.getElementById("dtDungeon")?.value || "auto") !== "auto" && u.enc === "mplus"
-        ? +document.getElementById("dtDungeon").value
+        ? document.getElementById("dtDungeon").value
         : (u.dun != null && realInstId(u.dun) ? u.dun : (u.enc === "mplus" ? bestInstOf(names[u.id]) : (u.dun || null))),
       slot: u.slot || "",
       name: (names[u.id]?.n ?? names[u.id]) || ("Item " + u.id),
@@ -2321,7 +2328,7 @@ async function dtImport(){
       const detectionFailed = newDuns.size === 1 && newDuns.has(null) && oldUps.some(u => u.dun != null);
       const kept = detectionFailed ? oldUps.slice() : oldUps.filter(u => !newDuns.has(u.dun ?? null));
       const byId = {};
-      kept.concat(upgrades).forEach(u => { if(!byId[u.id] || u.pct > byId[u.id].pct) byId[u.id] = u; });
+      kept.concat(upgrades).forEach(u => { if(!byId[u.id] || u.pct >= byId[u.id].pct) byId[u.id] = u; });   // ties → newest import wins (re-labels stale null-dungeon rows)
       finalUpgrades = Object.values(byId).sort((a,b)=>b.pct-a.pct).slice(0, 96);
     }
     if(srcKey === "mplus") mergedDungeons = new Set(finalUpgrades.map(u=>u.dun).filter(d=>d!=null)).size;
@@ -2340,7 +2347,7 @@ async function dtImport(){
     lootEl("dtPaste").classList.add("d-none"); lootEl("dtPaste").value = ""; lootEl("dtUrl").value = "";
     const dsel = document.getElementById("dtDungeon");
     if(dsel && dsel.value !== "auto" && lt === "mplus_single" && srcKey === "mplus"){
-      st.textContent = `✅ Imported ${upgrades.length} upgrades for ${parsed.character} → ${esc(RB_INSTANCES?.[+dsel.value] || "dungeon")} (Mythic+ now covers ${mergedDungeons} dungeon${mergedDungeons === 1 ? "" : "s"}).`;
+      st.textContent = `✅ Imported ${upgrades.length} upgrades for ${parsed.character} → ${esc(dunLabel(dsel.value))} (Mythic+ now covers ${mergedDungeons} dungeon${mergedDungeons === 1 ? "" : "s"}).`;
       dsel.value = "auto";
     }
     else st.textContent = srcKey === "mplus" && mergedDungeons > 1
@@ -2481,7 +2488,7 @@ function drawSheet(){
     };
     const dunSec = k => {
       const rows = dunGroups[k];
-      return { key: "me-" + modeMe + "-d" + k, icon: navIconFor("dungeon", k), title: esc(dunLabel(k === "null" ? null : +k)), count: rows.length, group: "Mythic+ / Dungeons", html: rows.map(row).join("") };
+      return { key: "me-" + modeMe + "-d" + k, icon: navIconFor("dungeon", k), title: esc(dunLabel(k)), count: rows.length, group: "Mythic+ / Dungeons", html: rows.map(row).join("") };
     };
 
     let secs = [];
@@ -2646,14 +2653,14 @@ document.addEventListener("click", async e=>{
     Promise.all([rbInstanceNames(), rioSeasonDuns()]).then(() => {
       const ds = lootEl("dtDungeon");
       if(!ds || ds.options.length > 1) return;
-      let names = Object.keys(RB_INST_IDS);
-      if(RIO_SEASON_DUNS && RIO_SEASON_DUNS.size){
-        names = names.filter(n => RIO_SEASON_DUNS.has(normInstName(n)));   // exactly this season's rotation
+      if(RIO_DUN_LIST.length){
+        RIO_DUN_LIST.forEach(d => { const o = document.createElement("option"); o.value = d.key; o.textContent = d.name; ds.appendChild(o); });
       } else {
-        names = names.filter(n => realInstId(RB_INST_IDS[n]) && !(RB_INST_ENCS[n] || []).some(e => tierRosterIds().includes(String(e))));
+        Object.keys(RB_INST_IDS)
+          .filter(n => realInstId(RB_INST_IDS[n]) && !(RB_INST_ENCS[n] || []).some(e => tierRosterIds().includes(String(e))))
+          .sort((a,b) => a.localeCompare(b))
+          .forEach(n => { const o = document.createElement("option"); o.value = RB_INST_IDS[n]; o.textContent = n; ds.appendChild(o); });
       }
-      names.sort((a,b) => a.localeCompare(b))
-        .forEach(n => { const o = document.createElement("option"); o.value = RB_INST_IDS[n]; o.textContent = n; ds.appendChild(o); });
     });
     const cs = lootEl("dtChar");
     if(cs && cs.options.length <= 1 && typeof rosterCache !== "undefined" && rosterCache?.length){
