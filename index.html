@@ -1927,8 +1927,9 @@ function invTypeToSlot(v){
 function realInstId(iid){
   if(iid == null || !RB_INSTANCES || !RB_INSTANCES[iid]) return false;
   const nm = RB_INSTANCES[iid];
-  if(/bonus|vault|catalyst|delve/i.test(nm)) return false;         // pseudo-instances never label dungeons
-  return (RB_INST_ENCS[nm] || []).length > 0;
+  if(/\bbonus\b|\bgreat vault\b|\bcatalyst\b|\bdelves?\b|mythic\+|\bdungeons\b|\bseason\b|\bcrafted\b|\bprofessions?\b|\bpvp\b/i.test(nm)) return false;  // pseudo/umbrella groupings (word-bounded: "The Stonevault" stays real)
+  const n = (RB_INST_ENCS[nm] || []).length;
+  return n > 0 && n <= 12;   // real instances have a handful of encounters; umbrellas have dozens
 }
 function bestInstOf(info){
   const s = (info?.srcs || []).find(s => realInstId(s.i));
