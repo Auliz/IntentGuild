@@ -154,6 +154,9 @@ a.lpill:hover{filter:brightness(1.2);text-decoration:none}
 .bls-nav-item:hover{background:rgba(240,194,75,.06)}
 .bls-nav-item.on{background:rgba(240,194,75,.1);border-left-color:var(--legendary)}
 .bls-nav-item img{width:30px;height:30px;border-radius:7px;object-fit:cover;border:1px solid var(--line);flex-shrink:0}
+.bls-nav-imgwrap{width:30px;height:30px;border-radius:7px;overflow:hidden;flex-shrink:0;border:1px solid var(--line);background:#0A0F0B}
+.bls-nav-imgwrap img{width:100%;height:100%;object-fit:cover;border:none;border-radius:0}
+.bls-nav-mono{display:inline-flex;align-items:center;justify-content:center;font-family:var(--font-display);font-weight:700;color:var(--legendary-soft);font-size:.9rem}
 .bls-nav-emoji{width:30px;height:30px;border-radius:7px;background:#0A0F0B;border:1px solid var(--line);display:inline-flex;align-items:center;justify-content:center;font-size:.95rem;flex-shrink:0}
 .bls-nav-name{flex:1;font-size:.84rem;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .bls-nav-item.on .bls-nav-name{color:var(--legendary-soft)}
@@ -875,27 +878,28 @@ footer{border-top:1px solid var(--line);padding:2.5rem 0;color:var(--muted);font
       </div>
 
       <div class="modal fade" id="dtModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered" style="max-width:440px">
+        <div class="modal-dialog modal-dialog-centered" style="max-width:640px">
           <div class="modal-content" style="background:var(--panel);border:1px solid var(--line);border-radius:16px">
             <div class="modal-body p-4">
               <div class="display-font mb-1" style="font-size:1.15rem">Droptimizer Import</div>
-              <p style="font-size:.8rem;color:var(--muted)">Run a Droptimizer on <a href="https://www.raidbots.com" target="_blank" rel="noopener">Raidbots</a>, then paste the report link. Re-import any time — the newest sim replaces the old.</p>
-              <p class="note mb-2" style="font-size:.72rem"><b>Healers:</b> paste a QE Live report link (…/upgradereport/xyz) — one paste fills Raid, M+, and Bonus Rolls with HPS gains. Free Raidbots? Sim dungeons <b>one at a time</b> — each import merges in, replacing only that dungeon's results. Premium all-dungeon reports work in one paste.</p>
+              <p style="font-size:.8rem;color:var(--muted)">Paste a <a href="https://www.raidbots.com" target="_blank" rel="noopener">Raidbots Droptimizer</a> report link (DPS &amp; tanks) or a <a href="https://questionablyepic.com/live/" target="_blank" rel="noopener">QE Live</a> report link (healers — one link fills Raid, M+, and Bonus Rolls with HPS gains). Re-import any time; M+ reports merge per dungeon, everything else replaces the previous list.</p>
               <div id="dtMeta" class="mb-2"></div>
-              <div class="d-flex gap-2">
-                <select class="form-select form-select-sm flex-shrink-0" id="dtSource" style="max-width:130px">
+              <div class="d-flex gap-2 mb-2">
+                <select class="form-select form-select-sm" id="dtSource">
                   <option value="auto">Auto-detect</option>
                   <option value="raid">Raid</option>
                   <option value="mplus">Mythic+</option>
                   <option value="bonus">Bonus Rolls</option>
                 </select>
-                <select class="form-select form-select-sm flex-shrink-0" id="dtRole" style="max-width:110px" title="Role — auto-detects from your sim's spec">
+                <select class="form-select form-select-sm" id="dtRole" title="Role — auto-detects from your sim's spec">
                   <option value="auto">Role: Auto</option>
                   <option value="tank">🛡️ Tank</option>
                   <option value="healer">✚ Healer</option>
                   <option value="dps">⚔️ DPS</option>
                 </select>
-                <input class="form-control form-control-sm" id="dtUrl" placeholder="https://www.raidbots.com/simbot/report/…">
+              </div>
+              <div class="d-flex gap-2">
+                <input class="form-control form-control-sm" id="dtUrl" placeholder="Paste a Raidbots or QE Live report link…">
                 <button class="btn btn-apply btn-sm flex-shrink-0" id="dtImport">Import</button>
               </div>
               <div class="data-font mt-2" id="dtStatus" style="font-size:.72rem;color:var(--muted)"></div>
@@ -1922,6 +1926,7 @@ function unionUpgrades(drops){
 }
 let RB_INSTANCES = null;
 let RB_ENC_NAMES = {};   // encounter id -> boss name, from Raidbots static data
+let RB_INST_ENCS = {};   // instance name -> ordered encounter ids
 let RB_INSTANCES_LOADING = false;
 function rbInstanceNames(){
   if(RB_INSTANCES || RB_INSTANCES_LOADING) return;
@@ -1932,6 +1937,7 @@ function rbInstanceNames(){
       RB_INSTANCES = {};
       (Array.isArray(arr) ? arr : []).forEach(inst => {
         if(inst.id && inst.name) RB_INSTANCES[inst.id] = inst.name;
+        if(inst.name && (inst.encounters || []).length) RB_INST_ENCS[inst.name] = (inst.encounters || []).filter(e => e.id).map(e => e.id);
         (inst.encounters || []).forEach(e => {
           if(e.id && inst.name) RB_INSTANCES[e.id] = inst.name;
           if(e.id && e.name) RB_ENC_NAMES[e.id] = e.name;
@@ -2007,17 +2013,39 @@ async function qeImport(code, st){
     const r = await fetch("https://questionablyepic.com/api/getUpgradeReport.php?reportID=" + encodeURIComponent(code));
     if(!r.ok) throw new Error("QE Live returned " + r.status);
     let data = await r.json();
-    if(typeof data === "string") data = JSON.parse(data);
-    const diffs = data?.differentials;
-    if(!Array.isArray(diffs)) throw new Error("Report loaded but had no upgrade list — is it an Upgrade Finder report?");
+    if(typeof data === "string"){ try{ data = JSON.parse(data); }catch(e){} }
+    const looksLikeDiff = a => Array.isArray(a) && a.length && a.every(x => x && typeof x === "object" && "item" in x && ("percDiff" in x || "score" in x || "rawDiff" in x));
+    const findDiffs = (o, depth) => {
+      if(depth > 5 || o == null) return null;
+      if(looksLikeDiff(o)) return o;
+      if(typeof o === "string" && o.length > 80){ try{ return findDiffs(JSON.parse(o), depth + 1); }catch(e){ return null; } }
+      if(Array.isArray(o)){ for(const v of o){ const r = findDiffs(v, depth + 1); if(r) return r; } return null; }
+      if(typeof o === "object"){ for(const k of Object.keys(o)){ const r = findDiffs(o[k], depth + 1); if(r) return r; } }
+      return null;
+    };
+    const findPlayer = (o, depth) => {
+      if(depth > 5 || o == null || typeof o !== "object") return null;
+      if(!Array.isArray(o) && o.spec && (o.name || o.charName)) return { name: o.name || o.charName, spec: o.spec };
+      const vals = Array.isArray(o) ? o : Object.values(o);
+      for(const v of vals){ const r = findPlayer(v, depth + 1); if(r) return r; }
+      return null;
+    };
+    const diffs = findDiffs(data, 0);
+    if(!diffs){
+      console.warn("[qe] unrecognized report shape — top-level keys:", data && typeof data === "object" ? Object.keys(data) : typeof data, data);
+      throw new Error("Report loaded but I couldn't find the upgrade list in it. Open the console (F12), screenshot the [qe] line, and send it to Fable.");
+    }
+    console.log("[qe] found", diffs.length, "differentials; sample:", diffs[0]);
+    const qePlayer = findPlayer(data, 0) || {};
     const db = await rbItemNames();
-    const character = data.player?.name || "Healer";
-    const spec = data.player?.spec || "";
+    const character = qePlayer.name || "Healer";
+    const spec = qePlayer.spec || "";
     const mk = d => {
       const info = db[d.item] || {};
-      return { id: +d.item, ilvl: d.level, pct: Math.round(d.percDiff * 100) / 100, gain: d.rawDiff || 0, slot: info.slot || "" };
+      const p = d.percDiff ?? (Math.abs(d.score ?? 0) <= 100 ? d.score : 0);
+      return { id: +d.item, ilvl: d.level, pct: Math.round((p || 0) * 100) / 100, gain: d.rawDiff || 0, slot: info.slot || "" };
     };
-    const pos = diffs.filter(d => d && d.percDiff > 0);
+    const pos = diffs.filter(d => d && ((d.percDiff ?? d.score ?? 0) > 0));
     const sets = {
       raid:  pos.filter(d => d.dropLoc === "Raid" && d.dropType === "drop").map(d => ({ ...mk(d), enc: (db[d.item]||{}).enc ?? null })),
       mplus: pos.filter(d => d.dropLoc === "Dungeon" && d.dropType === "drop").map(d => ({ ...mk(d), enc: "mplus", dun: (db[d.item]||{}).inst ?? null })),
@@ -2346,8 +2374,13 @@ function drawSheet(){
         it.wants.push({ raider, pct: u.pct, role: rrole });
       });
     });
-    const encs = Object.keys(byEnc).sort((a,b) => encOrder(a) - encOrder(b));
+    const tierName = ((CONFIG.tiers || []).find(t => t.current) || (CONFIG.tiers || [])[0] || {}).name || "";
+    const roster = (RB_INST_ENCS[tierName] || []).map(String);
+    const extras = Object.keys(byEnc).filter(k => !roster.includes(k)).sort((a,b) => encOrder(a) - encOrder(b));
+    const encs = roster.concat(extras);
     const secs = encs.map(e=>{
+      if(!byEnc[e]) return { key: "team-boss-" + e, icon: navIconFor("boss", e), title: esc(encLabel(e)), count: 0,
+        html: `<p class="py-3" style="color:var(--muted);font-size:.85rem">No wanted items for this boss yet.</p>` };
       const items = Object.values(byEnc[e].items);
       items.forEach(it => it.wants.sort((a,b)=>b.pct - a.pct));
       items.sort((a,b)=>b.wants[0].pct - a.wants[0].pct);
@@ -2364,7 +2397,10 @@ let masterSel = {};
 function navIconFor(kind, key, rec){
   if(kind === "boss"){
     const n = +key;
-    if(Number.isFinite(n)) return `<img src="https://assets.rpglogs.com/img/warcraft/bosses/${n}-icon.jpg" onerror="this.style.display='none'" alt="">`;
+    if(Number.isFinite(n)){
+      const initial = (encLabel(n) || "?").replace(/^The /i, "").charAt(0).toUpperCase();
+      return `<span class="bls-nav-imgwrap"><img src="https://assets.rpglogs.com/img/warcraft/bosses/${n}-icon.jpg" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.textContent='${initial}';this.parentNode.classList.add('bls-nav-mono')" alt=""></span>`;
+    }
     if(key === "mplus") return `<span class="bls-nav-emoji">🗝️</span>`;
     if(key === "vault") return `<span class="bls-nav-emoji">🎲</span>`;
     return `<span class="bls-nav-emoji">📦</span>`;
