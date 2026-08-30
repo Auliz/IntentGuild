@@ -889,21 +889,25 @@ footer{border-top:1px solid var(--line);padding:2.5rem 0;color:var(--muted);font
               <div class="display-font mb-1" style="font-size:1.15rem">Droptimizer Import</div>
               <p style="font-size:.8rem;color:var(--muted)">Paste a <a href="https://www.raidbots.com" target="_blank" rel="noopener">Raidbots Droptimizer</a> report link (DPS &amp; tanks) or a <a href="https://questionablyepic.com/live/" target="_blank" rel="noopener">QE Live</a> report link (healers — one link fills Raid, M+, and Bonus Rolls with HPS gains). Re-import any time; M+ reports merge per dungeon, everything else replaces the previous list.</p>
               <div id="dtMeta" class="mb-2"></div>
-              <div class="d-flex gap-2 mb-2">
-                <select class="form-select form-select-sm" id="dtSource">
-                  <option value="auto">Auto-detect</option>
-                  <option value="raid">Raid</option>
-                  <option value="mplus">Mythic+</option>
-                  <option value="bonus">Bonus Rolls</option>
+              <div class="d-flex gap-2 mb-2 flex-wrap">
+                <select class="form-select form-select-sm" id="dtChar" style="flex:1 1 45%" title="Which raider this import belongs to">
+                  <option value="auto">Character: Auto (from report)</option>
                 </select>
-                <select class="form-select form-select-sm" id="dtChar" title="Which raider this import belongs to">
-                  <option value="auto">Character: Auto</option>
-                </select>
-                <select class="form-select form-select-sm" id="dtRole" title="Role — auto-detects from your sim's spec">
-                  <option value="auto">Role: Auto</option>
+                <select class="form-select form-select-sm" id="dtRole" style="flex:1 1 45%" title="Healers import QE Live reports; tanks and DPS import Raidbots">
+                  <option value="" selected disabled>Select role…</option>
                   <option value="tank">🛡️ Tank</option>
                   <option value="healer">✚ Healer</option>
                   <option value="dps">⚔️ DPS</option>
+                </select>
+                <select class="form-select form-select-sm d-none" id="dtSource" style="flex:1 1 45%" title="What this Raidbots report covers">
+                  <option value="" selected disabled>Link type…</option>
+                  <option value="raid">Raid</option>
+                  <option value="mplus_full">Full M+ Season</option>
+                  <option value="mplus_single">Single Dungeon</option>
+                  <option value="bonus">Bonus Rolls</option>
+                </select>
+                <select class="form-select form-select-sm d-none" id="dtDungeon" style="flex:1 1 45%" title="Which dungeon this report covers">
+                  <option value="auto" selected disabled>Which dungeon…</option>
                 </select>
               </div>
               <div class="d-flex gap-2">
@@ -1971,6 +1975,7 @@ function unionUpgrades(drops){
 let RB_INSTANCES = null;
 let RB_ENC_NAMES = {};   // encounter id -> boss name, from Raidbots static data
 let RB_INST_ENCS = {};   // instance name -> ordered encounter ids
+let RB_INST_IDS = {};    // instance name -> instance id
 let RB_INST_PROMISE = null;
 function rbInstanceNames(){
   if(RB_INST_PROMISE) return RB_INST_PROMISE;
@@ -1980,6 +1985,7 @@ function rbInstanceNames(){
       RB_INSTANCES = {};
       (Array.isArray(arr) ? arr : []).forEach(inst => {
         if(inst.id && inst.name) RB_INSTANCES[inst.id] = inst.name;
+        if(inst.id && inst.name) RB_INST_IDS[inst.name] = inst.id;
         if(inst.name && (inst.encounters || []).length) RB_INST_ENCS[inst.name] = (inst.encounters || []).filter(e => e.id).map(e => e.id);
         (inst.encounters || []).forEach(e => {
           if(e.id && inst.name) RB_INSTANCES[e.id] = inst.name;
@@ -2076,6 +2082,20 @@ async function persistWishlist(){
   return !error;
 }
 
+function dtFlowUpdate(){
+  const role = document.getElementById("dtRole")?.value || "";
+  const src = document.getElementById("dtSource"), dun = document.getElementById("dtDungeon"), url = document.getElementById("dtUrl");
+  const isHealer = role === "healer", hasRole = !!role;
+  if(src) src.classList.toggle("d-none", !hasRole || isHealer);
+  if(dun) dun.classList.toggle("d-none", isHealer || !hasRole || src?.value !== "mplus_single");
+  if(url) url.placeholder = !hasRole ? "Select a role first…"
+    : isHealer ? "Paste your QE Live report link (…/upgradereport/xyz)"
+    : "Paste your Raidbots Droptimizer report link…";
+}
+document.addEventListener("change", e => {
+  if(e.target.id === "dtRole" || e.target.id === "dtSource") dtFlowUpdate();
+});
+
 /* ---- QE Live import (healers) ---- */
 async function qeImport(code, st){
   st.textContent = "Fetching QE Live report…";
@@ -2112,6 +2132,7 @@ async function qeImport(code, st){
     const bestEnc = bestEncOf, bestInst = bestInstOf;
     const charSel = document.getElementById("dtChar")?.value || "auto";
     const character = charSel !== "auto" ? charSel : (qePlayer.name || "Healer");
+    document.getElementById("dtRole") && (document.getElementById("dtRole").value = "healer");
     const spec = qePlayer.spec || "";
     const idOf = d => {
       const raw = d.item ?? d.itemID ?? d.id;
@@ -2132,8 +2153,7 @@ async function qeImport(code, st){
       mplus: pos.filter(d => d.dropLoc === "Dungeon" && d.dropType === "drop").map(d => ({ ...mk(d), enc: "mplus", dun: bestInst(db[idOf(d)] || {}) })),
       bonus: pos.filter(d => d.dropType === "bonus").map(d => ({ ...mk(d), enc: d.dropLoc === "Raid" ? (bestEnc(db[idOf(d)] || {}) ?? "vault") : "vault" }))
     };
-    const chosen = document.getElementById("dtSource").value;
-    const keys = chosen === "auto" ? ["raid","mplus","bonus"] : [chosen];
+    const keys = ["raid","mplus","bonus"];
     myWishlistExtra.droptimizers = myWishlistExtra.droptimizers || {};
     let total = 0;
     keys.forEach(k => {
@@ -2225,8 +2245,18 @@ async function dtImport(){
   const st = lootEl("dtStatus");
   const raw = lootEl("dtUrl").value.trim();
   const pasted = lootEl("dtPaste").value.trim();
+  const role = document.getElementById("dtRole")?.value || "";
   const qeMatch = raw.match(/questionablyepic\.com\/(?:live|ptr)\/upgradereport\/([A-Za-z0-9]+)/i) || raw.match(/getUpgradeReport\.php\?reportID=([A-Za-z0-9]+)/i);
-  if(qeMatch && !pasted) return qeImport(qeMatch[1], st);
+  if(!pasted && !role) return st.textContent = "⚠ Pick a role first — it decides whether this parses as QE Live (healers) or Raidbots.";
+  if(role === "healer" && !pasted){
+    if(!qeMatch) return st.textContent = "⚠ Healers import via QE Live — paste the …/upgradereport/ link (Raidbots doesn't model healing).";
+    return qeImport(qeMatch[1], st);
+  }
+  if(qeMatch && !pasted) return st.textContent = "⚠ That's a QE Live link — switch Role to ✚ Healer to import it.";
+  const linkType = document.getElementById("dtSource")?.value || "";
+  if(!pasted && !linkType) return st.textContent = "⚠ Pick the link type — Raid, Full M+ Season, Single Dungeon, or Bonus Rolls.";
+  if(!pasted && linkType === "mplus_single" && (document.getElementById("dtDungeon")?.value || "auto") === "auto")
+    return st.textContent = "⚠ Single Dungeon needs the dungeon picked — that's what labels the import correctly.";
   try{
     let json;
     if(pasted){
@@ -2247,21 +2277,25 @@ async function dtImport(){
     try{ await rbInstanceNames(); }catch(e){}
     const upgrades = parsed.ups.map(u => ({
       id: u.id, ilvl: u.ilvl, enc: u.enc || null,
-      dun: u.dun != null && realInstId(u.dun) ? u.dun : (u.enc === "mplus" ? bestInstOf(names[u.id]) : (u.dun || null)),
+      dun: document.getElementById("dtSource")?.value === "mplus_single" && (document.getElementById("dtDungeon")?.value || "auto") !== "auto" && u.enc === "mplus"
+        ? +document.getElementById("dtDungeon").value
+        : (u.dun != null && realInstId(u.dun) ? u.dun : (u.enc === "mplus" ? bestInstOf(names[u.id]) : (u.dun || null))),
       slot: u.slot || "",
       name: (names[u.id]?.n ?? names[u.id]) || ("Item " + u.id),
       pct: +((u.gain / parsed.baseline) * 100).toFixed(2)
     }));
-    let srcKey = document.getElementById("dtSource").value;
-    if(srcKey === "auto") srcKey = majoritySource(upgrades);
+    const lt = document.getElementById("dtSource")?.value || "";
+    let srcKey = lt === "raid" ? "raid" : lt === "bonus" ? "bonus" : (lt === "mplus_full" || lt === "mplus_single") ? "mplus" : majoritySource(upgrades);
     myWishlistExtra.droptimizers = myWishlistExtra.droptimizers || {};
     let finalUpgrades = upgrades, mergedDungeons = 0;
     if(srcKey === "mplus" && myWishlistExtra.droptimizers.mplus){
-      // Single-dungeon sims (free Raidbots) merge in: replace only the
-      // dungeon(s) present in this report, keep the rest.
+      // Single-dungeon sims merge in: replace only the dungeon(s) present
+      // in this report, keep the rest. If detection failed (all-null duns)
+      // while existing rows HAVE dungeons, merge by item instead of nuking.
       const newDuns = new Set(upgrades.map(u => u.dun ?? null));
-      const kept = (myWishlistExtra.droptimizers.mplus.upgrades || [])
-        .filter(u => !newDuns.has(u.dun ?? null));
+      const oldUps = myWishlistExtra.droptimizers.mplus.upgrades || [];
+      const detectionFailed = newDuns.size === 1 && newDuns.has(null) && oldUps.some(u => u.dun != null);
+      const kept = detectionFailed ? oldUps.slice() : oldUps.filter(u => !newDuns.has(u.dun ?? null));
       const byId = {};
       kept.concat(upgrades).forEach(u => { if(!byId[u.id] || u.pct > byId[u.id].pct) byId[u.id] = u; });
       finalUpgrades = Object.values(byId).sort((a,b)=>b.pct-a.pct).slice(0, 96);
@@ -2280,7 +2314,12 @@ async function dtImport(){
     delete myWishlistExtra.droptimizer;
     await persistWishlist();
     lootEl("dtPaste").classList.add("d-none"); lootEl("dtPaste").value = ""; lootEl("dtUrl").value = "";
-    st.textContent = srcKey === "mplus" && mergedDungeons > 1
+    const dsel = document.getElementById("dtDungeon");
+    if(dsel && dsel.value !== "auto" && lt === "mplus_single" && srcKey === "mplus"){
+      st.textContent = `✅ Imported ${upgrades.length} upgrades for ${parsed.character} → ${esc(RB_INSTANCES?.[+dsel.value] || "dungeon")} (Mythic+ now covers ${mergedDungeons} dungeon${mergedDungeons === 1 ? "" : "s"}).`;
+      dsel.value = "auto";
+    }
+    else st.textContent = srcKey === "mplus" && mergedDungeons > 1
       ? `✅ Merged ${upgrades.length} upgrades for ${parsed.character} → Mythic+ now covers ${mergedDungeons} dungeons (${finalUpgrades.length} items).`
       : `✅ Imported ${upgrades.length} upgrades for ${parsed.character} → ${SRC_LABELS[srcKey]} (baseline ${Math.round(parsed.baseline).toLocaleString()} DPS).`;
     loadLootData();
@@ -2577,6 +2616,17 @@ document.addEventListener("click", async e=>{
   if(e.target.id === "dtOpen"){
     if(!dtModalObj) dtModalObj = new bootstrap.Modal(lootEl("dtModal"));
     lootEl("dtStatus").textContent = "";
+    const rl = lootEl("dtRole"); if(rl) rl.value = "";
+    const sl = lootEl("dtSource"); if(sl) sl.value = "";
+    dtFlowUpdate();
+    rbInstanceNames().then(() => {
+      const ds = lootEl("dtDungeon");
+      if(ds && ds.options.length <= 1){
+        Object.keys(RB_INST_IDS).filter(n => realInstId(RB_INST_IDS[n]) && !(RB_INST_ENCS[n] || []).some(e => tierRosterIds().includes(String(e))))
+          .sort((a,b) => a.localeCompare(b))
+          .forEach(n => { const o = document.createElement("option"); o.value = RB_INST_IDS[n]; o.textContent = n; ds.appendChild(o); });
+      }
+    });
     const cs = lootEl("dtChar");
     if(cs && cs.options.length <= 1 && typeof rosterCache !== "undefined" && rosterCache?.length){
       rosterCache
@@ -2591,7 +2641,8 @@ document.addEventListener("click", async e=>{
   if(e.target.dataset.dtupdate){
     const k = e.target.dataset.dtupdate;
     const sel = document.getElementById("dtSource");
-    if(sel) sel.value = k;
+    if(sel) sel.value = k === "raid" ? "raid" : k === "bonus" ? "bonus" : "mplus_full";
+    dtFlowUpdate();
     const url = document.getElementById("dtUrl");
     if(url){ url.value = ""; url.focus(); }
     const st = lootEl("dtStatus");
