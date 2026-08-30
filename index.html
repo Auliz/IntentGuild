@@ -2484,12 +2484,33 @@ function drawSheet(){
   whRefresh();
 }
 let masterSel = {};
+function cfgBossMeta(){
+  const cur = (CONFIG.tiers || []).find(t => t.current) || (CONFIG.tiers || [])[0] || {};
+  const map = {};
+  String(cur.bosses || "").split("\n").forEach(line => {
+    const parts = line.split("|").map(s => s.trim());
+    if(!parts[0]) return;
+    map[normInstName(parts[0])] = { img: parts[1] || null, wcl: parts[2] && /^\d+$/.test(parts[2]) ? parts[2] : null };
+  });
+  return map;
+}
+function wclIconId(enc){
+  // The icon CDN speaks WCL's encounter ids, which differ from Raidbots'.
+  // Resolve by boss NAME through the wcl_progress-fed map when available.
+  const label = normInstName(encLabel(enc));
+  for(const id in WCL_ENC_NAMES){
+    if(normInstName(WCL_ENC_NAMES[id]) === label) return id;
+  }
+  return enc;
+}
 function navIconFor(kind, key, rec){
   if(kind === "boss"){
     const n = +key;
     if(Number.isFinite(n)){
       const initial = (encLabel(n) || "?").replace(/^The /i, "").charAt(0).toUpperCase();
-      return `<span class="bls-nav-imgwrap"><img src="https://assets.rpglogs.com/img/warcraft/bosses/${n}-icon.jpg" loading="lazy" referrerpolicy="no-referrer" onerror="var p=this.parentNode;if(p){p.classList.add('bls-nav-mono');p.textContent='${initial}';}" alt=""></span>`;
+      const meta = cfgBossMeta()[normInstName(encLabel(n))] || {};
+      const src = meta.img || `https://assets.rpglogs.com/img/warcraft/bosses/${meta.wcl || wclIconId(n)}-icon.jpg`;
+      return `<span class="bls-nav-imgwrap"><img src="${esc(src)}" loading="lazy" referrerpolicy="no-referrer" onerror="var p=this.parentNode;if(p){p.classList.add('bls-nav-mono');p.textContent='${initial}';}" alt=""></span>`;
     }
     if(key === "mplus") return `<span class="bls-nav-emoji">🗝️</span>`;
     if(key === "vault") return `<span class="bls-nav-emoji">🎲</span>`;
