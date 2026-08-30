@@ -1916,8 +1916,15 @@ function majoritySource(upgrades){
   });
   return c.mplus > c.raid && c.mplus > c.bonus ? "mplus" : c.bonus > c.raid ? "bonus" : "raid";
 }
+const INV_SLOTS = { 1:"head", 2:"neck", 3:"shoulder", 5:"chest", 20:"chest", 6:"waist", 7:"legs", 8:"feet", 9:"wrist", 10:"hands", 11:"finger", 12:"trinket", 16:"back", 13:"main_hand", 21:"main_hand", 17:"main_hand", 14:"off_hand", 22:"off_hand", 23:"off_hand", 15:"main_hand", 26:"main_hand" };
+function invTypeToSlot(v){
+  if(v == null || v === "") return "";
+  if(typeof v === "number" || /^\d+$/.test(String(v))) return INV_SLOTS[+v] || "";
+  return String(v).toLowerCase();
+}
 function hyd(u){
   const i = RB_ITEMDB && RB_ITEMDB[u.id];
+  if(u.slot && /^\d+$/.test(String(u.slot))) u.slot = invTypeToSlot(u.slot);
   if(i){
     if(!u.name || /^Item \d/.test(u.name)) u.name = i.n || u.name;
     if(!u.slot) u.slot = i.slot || "";
@@ -1943,11 +1950,10 @@ function unionUpgrades(drops){
 let RB_INSTANCES = null;
 let RB_ENC_NAMES = {};   // encounter id -> boss name, from Raidbots static data
 let RB_INST_ENCS = {};   // instance name -> ordered encounter ids
-let RB_INSTANCES_LOADING = false;
+let RB_INST_PROMISE = null;
 function rbInstanceNames(){
-  if(RB_INSTANCES || RB_INSTANCES_LOADING) return;
-  RB_INSTANCES_LOADING = true;
-  fetch("https://www.raidbots.com/static/data/live/instances.json")
+  if(RB_INST_PROMISE) return RB_INST_PROMISE;
+  RB_INST_PROMISE = fetch("https://www.raidbots.com/static/data/live/instances.json")
     .then(r => r.ok ? r.json() : Promise.reject())
     .then(arr => {
       RB_INSTANCES = {};
@@ -1962,6 +1968,7 @@ function rbInstanceNames(){
       drawSheet();
     })
     .catch(() => { RB_INSTANCES = {}; });
+  return RB_INST_PROMISE;
 }
 function normInstName(s){ return String(s || "").toLowerCase().replace(/^the\s+/, "").replace(/[^a-z0-9]/g, ""); }
 function rbTierName(){
@@ -2080,6 +2087,16 @@ async function qeImport(code, st){
     console.log("[qe] found", diffs.length, "differentials; sample:", diffs[0]);
     const qePlayer = findPlayer(data, 0) || {};
     const db = await rbItemNames();
+    try{ await rbInstanceNames(); }catch(e){}
+    const realInst = iid => iid != null && RB_INSTANCES && RB_INSTANCES[iid] && (RB_INST_ENCS[RB_INSTANCES[iid]] || []).length > 0;
+    const bestEnc = info => {
+      const s = (info.srcs || []).find(s => s.e != null && RB_ENC_NAMES[s.e] && realInst(s.i));
+      return s ? s.e : (info.enc ?? null);
+    };
+    const bestInst = info => {
+      const s = (info.srcs || []).find(s => realInst(s.i));
+      return s ? s.i : (info.inst ?? null);
+    };
     const charSel = document.getElementById("dtChar")?.value || "auto";
     const character = charSel !== "auto" ? charSel : (qePlayer.name || "Healer");
     const spec = qePlayer.spec || "";
@@ -2098,9 +2115,9 @@ async function qeImport(code, st){
     const pos = diffs.filter(d => d && idOf(d) && ((d.percDiff ?? d.score ?? 0) > 0));
     if(!pos.length && diffs.length) console.warn("[qe] rows found but none yielded item ids — sample row:", diffs[0]);
     const sets = {
-      raid:  pos.filter(d => d.dropLoc === "Raid" && d.dropType === "drop").map(d => ({ ...mk(d), enc: (db[d.item]||{}).enc ?? null })),
-      mplus: pos.filter(d => d.dropLoc === "Dungeon" && d.dropType === "drop").map(d => ({ ...mk(d), enc: "mplus", dun: (db[d.item]||{}).inst ?? null })),
-      bonus: pos.filter(d => d.dropType === "bonus").map(d => ({ ...mk(d), enc: d.dropLoc === "Raid" ? ((db[d.item]||{}).enc ?? "vault") : "vault" }))
+      raid:  pos.filter(d => d.dropLoc === "Raid" && d.dropType === "drop").map(d => ({ ...mk(d), enc: bestEnc(db[idOf(d)] || {}) })),
+      mplus: pos.filter(d => d.dropLoc === "Dungeon" && d.dropType === "drop").map(d => ({ ...mk(d), enc: "mplus", dun: bestInst(db[idOf(d)] || {}) })),
+      bonus: pos.filter(d => d.dropType === "bonus").map(d => ({ ...mk(d), enc: d.dropLoc === "Raid" ? (bestEnc(db[idOf(d)] || {}) ?? "vault") : "vault" }))
     };
     const chosen = document.getElementById("dtSource").value;
     const keys = chosen === "auto" ? ["raid","mplus","bonus"] : [chosen];
@@ -2136,7 +2153,12 @@ async function rbItemNames(){
     if(!r.ok) throw 0;
     const arr = await r.json();
     RB_ITEMDB = {};
-    arr.forEach(i => { RB_ITEMDB[i.id] = { n: i.name, enc: i.sources?.[0]?.encounterId, inst: i.sources?.[0]?.instanceId, slot: i.itemClass === 4 || i.itemClass === 2 ? (i.slot || i.inventoryType || "") : (i.slot || "") }; });
+    arr.forEach(i => { RB_ITEMDB[i.id] = {
+      n: i.name,
+      enc: i.sources?.[0]?.encounterId, inst: i.sources?.[0]?.instanceId,
+      srcs: (i.sources || []).slice(0, 6).map(s => ({ e: s.encounterId, i: s.instanceId })),
+      slot: invTypeToSlot(i.inventoryType ?? i.slot)
+    }; });
   }catch(e){ RB_ITEMDB = {}; }
   return RB_ITEMDB;
 }
