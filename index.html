@@ -2049,7 +2049,7 @@ async function qeImport(code, st){
     const sets = {
       raid:  pos.filter(d => d.dropLoc === "Raid" && d.dropType === "drop").map(d => ({ ...mk(d), enc: (db[d.item]||{}).enc ?? null })),
       mplus: pos.filter(d => d.dropLoc === "Dungeon" && d.dropType === "drop").map(d => ({ ...mk(d), enc: "mplus", dun: (db[d.item]||{}).inst ?? null })),
-      bonus: pos.filter(d => d.dropType === "bonus").map(d => ({ ...mk(d), enc: (db[d.item]||{}).enc ?? "vault" }))
+      bonus: pos.filter(d => d.dropType === "bonus").map(d => ({ ...mk(d), enc: d.dropLoc === "Raid" ? ((db[d.item]||{}).enc ?? "vault") : "vault" }))
     };
     const chosen = document.getElementById("dtSource").value;
     const keys = chosen === "auto" ? ["raid","mplus","bonus"] : [chosen];
@@ -2361,6 +2361,7 @@ function drawSheet(){
     renderMaster(host, "team-raider", secs, "");
   } else {
     const byEnc = {};
+    const tierNameNorm = ((CONFIG.tiers || []).find(t => t.current) || (CONFIG.tiers || [])[0] || {}).name || "";
     lootWishlists.forEach(w=>{
       const drops = normDrops(w);
       const ups = Object.values(bestPerSlot(unionUpgrades(drops))).flat();
@@ -2368,7 +2369,10 @@ function drawSheet(){
       const raider = Object.values(drops)[0]?.character || w.character || "?";
       const rrole = impRole(Object.values(drops)[0]);
       ups.forEach(u=>{
-        const k = String(u.enc ?? "null");
+        let encV = u.enc;
+        const encN = +encV;
+        if(Number.isFinite(encN) && RB_INSTANCES && RB_INSTANCES[encN] && tierNameNorm && RB_INSTANCES[encN] !== tierNameNorm) encV = "mplus";
+        const k = String(encV ?? "null");
         const sec = byEnc[k] = byEnc[k] || { items: {} };
         const it = sec.items[u.name] = sec.items[u.name] || { id: u.id, name: u.name, ilvl: u.ilvl, slot: u.slot, wants: [] };
         it.wants.push({ raider, pct: u.pct, role: rrole });
