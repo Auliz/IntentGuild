@@ -1923,6 +1923,7 @@ function unionUpgrades(drops){
   // merge all sources; same item id keeps its best-gain instance
   const best = {};
   Object.values(drops).forEach(d=>(d?.upgrades||[]).forEach(u=>{
+    if(!u.id) return;
     if(!best[u.id] || u.pct > best[u.id].pct) best[u.id] = u;
   }));
   return Object.values(best);
@@ -2063,7 +2064,7 @@ async function qeImport(code, st){
       const info = db[id] || {};
       const p = d.percDiff ?? (Math.abs(d.score ?? 0) <= 100 ? d.score : 0);
       const lvl = d.level ?? (d.item && typeof d.item === "object" ? d.item.level : null);
-      return { id, ilvl: lvl, pct: Math.round((p || 0) * 100) / 100, gain: d.rawDiff || 0, slot: info.slot || "" };
+      return { id, ilvl: lvl, name: info.n || ("Item " + id), pct: Math.round((p || 0) * 100) / 100, gain: d.rawDiff || 0, slot: info.slot || "" };
     };
     const pos = diffs.filter(d => d && idOf(d) && ((d.percDiff ?? d.score ?? 0) > 0));
     if(!pos.length && diffs.length) console.warn("[qe] rows found but none yielded item ids — sample row:", diffs[0]);
@@ -2266,8 +2267,9 @@ function encOrder(k){
   return +k;
 }
 function itemPill(u){
+  const nm = u.name || ("Item " + (u.id || "?"));
   const href = `https://www.wowhead.com/item=${encodeURIComponent(u.id)}${u.ilvl ? `?ilvl=${encodeURIComponent(u.ilvl)}` : ""}`;
-  return `<a class="lpill lp-${slotCat(u.slot)}" href="${href}" target="_blank" rel="noopener">${esc(u.name)}</a> <span style="color:var(--muted);font-size:.75rem">${esc(u.ilvl||"")}</span>`;
+  return `<a class="lpill lp-${slotCat(u.slot)}" href="${href}" target="_blank" rel="noopener">${esc(nm)}</a> <span style="color:var(--muted);font-size:.75rem">${esc(u.ilvl||"")}</span>`;
 }
 const blsCollapsed = new Set();
 function sheetSection(title, count, bodyHtml, extra, key){
@@ -2382,7 +2384,8 @@ function drawSheet(){
     renderMaster(host, "team-raider", secs, "");
   } else {
     const byEnc = {};
-    const rbTier = rbTierName();   // null = unknown → no rerouting, never worse than raw
+    const rbTier = rbTierName();
+    const rosterSet = new Set(((rbTier && RB_INST_ENCS[rbTier]) || []).map(String));
     lootWishlists.forEach(w=>{
       const drops = normDrops(w);
       const ups = Object.values(bestPerSlot(unionUpgrades(drops))).flat();
@@ -2390,19 +2393,19 @@ function drawSheet(){
       const raider = Object.values(drops)[0]?.character || w.character || "?";
       const rrole = impRole(Object.values(drops)[0]);
       ups.forEach(u=>{
-        let encV = u.enc;
-        const encN = +encV;
-        if(rbTier && Number.isFinite(encN) && RB_INSTANCES && RB_INSTANCES[encN] && RB_INSTANCES[encN] !== rbTier) encV = "mplus";
-        const k = String(encV ?? "null");
+        const encN = +u.enc;
+        if(!Number.isFinite(encN)) return;                                   // team tab = raid loot only
+        if(rosterSet.size && !rosterSet.has(String(encN))) return;           // and only this tier's bosses
+        const k = String(encN);
         const sec = byEnc[k] = byEnc[k] || { items: {} };
         const ik = String(u.id || u.name);
         const it = sec.items[ik] = sec.items[ik] || { id: u.id, name: u.name, ilvl: u.ilvl, slot: u.slot, wants: [] };
         it.wants.push({ raider, pct: u.pct, role: rrole });
       });
     });
-    const roster = ((rbTier && RB_INST_ENCS[rbTier]) || []).map(String);
-    const extras = Object.keys(byEnc).filter(k => !roster.includes(k)).sort((a,b) => encOrder(a) - encOrder(b));
-    const encs = roster.concat(extras);
+    const roster = [...rosterSet];
+    const extras = roster.length ? [] : Object.keys(byEnc).sort((a,b) => encOrder(a) - encOrder(b));
+    const encs = roster.length ? roster : extras;
     const secs = encs.map(e=>{
       if(!byEnc[e]) return { key: "team-boss-" + e, icon: navIconFor("boss", e), title: esc(encLabel(e)), count: 0,
         html: `<p class="py-3" style="color:var(--muted);font-size:.85rem">No wanted items for this boss yet.</p>` };
