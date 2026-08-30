@@ -180,6 +180,8 @@ a.lpill:hover{filter:brightness(1.2);text-decoration:none}
 .bc-dice{font-size:1.05rem}
 .bc-label{font-size:.64rem;letter-spacing:.2em;text-transform:uppercase;color:var(--legendary-soft)}
 .bc-mini{font-size:.8rem;cursor:default}
+.eqp{color:#3DDC84;border:1px solid rgba(61,220,132,.4);background:rgba(61,220,132,.08)}
+.eqp-mini{color:#3DDC84;font-size:.72rem;margin-left:.25rem;cursor:default}
 .role-ico{font-size:.78rem;margin-right:.15rem;cursor:default;filter:saturate(.85)}
 .bls-toggle{display:flex;border:1px solid var(--line);border-radius:7px;overflow:hidden}
 .bls-mode{border:none;background:none;color:var(--muted);font-family:var(--font-data);font-size:.66rem;letter-spacing:.14em;text-transform:uppercase;padding:.35rem .8rem}
@@ -1972,6 +1974,55 @@ function bestEncOf(info){
   const s = (info?.srcs || []).find(s => s.e != null && RB_ENC_NAMES[s.e] && realInstId(s.i));
   return s ? s.e : (info?.enc ?? null);
 }
+let EQUIPPED = {};          // charname(lower) -> { itemId: ilvl }
+let EQUIPPED_PENDING = new Set();
+function realmSlug(r){
+  // roster entries carry realm as a string or an object; the API wants a slug
+  const nm = typeof r === "string" ? r : (r?.slug || r?.name || "");
+  return String(nm).toLowerCase().replace(/'/g, "").replace(/\s+/g, "-");
+}
+function rosterRealmMap(){
+  const map = {};
+  if(typeof rosterCache !== "undefined" && rosterCache?.length){
+    rosterCache.forEach(m => {
+      const nm = m?.character?.name || m?.name;
+      const rl = m?.character?.realm || m?.realm;
+      if(nm && rl) map[String(nm).toLowerCase()] = realmSlug(rl);
+    });
+  }
+  return map;
+}
+function loadEquipped(charNames){
+  const R = CONFIG.rio || {};
+  const realms = rosterRealmMap();
+  // Cross-realm roster: look a character up ONLY on their own realm (from the
+  // guild roster). No roster match → no lookup — absent chip beats a
+  // same-named stranger's gear.
+  const todo = [...new Set(charNames.map(c => String(c || "").toLowerCase()).filter(Boolean))]
+    .filter(c => realms[c] && !(c in EQUIPPED) && !EQUIPPED_PENDING.has(c));
+  if(!todo.length) return Promise.resolve();
+  todo.forEach(c => EQUIPPED_PENDING.add(c));
+  return Promise.allSettled(todo.map(async c => {
+    try{
+      const r = await fetch(`https://raider.io/api/v1/characters/profile?region=${R.region || "us"}&realm=${realms[c]}&name=${encodeURIComponent(c)}&fields=gear`);
+      if(!r.ok) throw 0;
+      const g = (await r.json())?.gear?.items || {};
+      const map = {};
+      Object.values(g).forEach(it => { if(it?.item_id) map[it.item_id] = it.item_level || 0; });
+      EQUIPPED[c] = map;
+    }catch(e){ EQUIPPED[c] = {}; }   // unknown char (other realm alt etc.) — chip simply absent
+    EQUIPPED_PENDING.delete(c);
+  }));
+}
+function equippedIlvl(charName, itemId){
+  const m = EQUIPPED[String(charName || "").toLowerCase()];
+  return m ? m[itemId] : undefined;
+}
+function eqChip(charName, u){
+  const lv = equippedIlvl(charName, u.id);
+  if(lv === undefined) return "";
+  return `<span class="bls-chip eqp" title="${esc(charName)} already wears this item${lv ? ` at ilvl ${lv}` : ""}${u.ilvl && lv && +u.ilvl > +lv ? " — the sim gain is for the higher version" : ""}">✓ Equipped${lv ? ` · ${lv}` : ""}</span>`;
+}
 function hyd(u){
   const i = RB_ITEMDB && RB_ITEMDB[u.id];
   if(u.slot && /^\d+$/.test(String(u.slot))) u.slot = invTypeToSlot(u.slot);
@@ -2104,6 +2155,9 @@ async function loadLootData(){
     if(mdata.droptimizers) myWishlistExtra.droptimizers = mdata.droptimizers;
     else if(mdata.droptimizer) myWishlistExtra.droptimizers = { [majoritySource(mdata.droptimizer.upgrades)]: mdata.droptimizer };
     lootWishlists = (all.data || []).map(r => ({ ...(r.data || {}), _uid: r.user_id }));
+    const allChars = [];
+    lootWishlists.concat([myWishlistExtra]).forEach(w => Object.values(normDrops(w)).forEach(d => { if(d?.character) allChars.push(d.character); }));
+    loadEquipped(allChars).then(() => drawSheet());
     drawSheet(); renderDtMeta();
   }catch(e){ console.warn("loot load", e); }
 }
@@ -2467,8 +2521,10 @@ function drawSheet(){
       <span class="bls-chip text-legendary data-font">+${bt.pct}%</span>
       <span class="bls-chip" style="color:var(--muted);font-size:.7rem">roll grants the ${esc(bt.ilvl||"")} version</span>
     </div>` : "";
+    const myChars = [...new Set(Object.values(drops).map(d => d?.character).filter(Boolean))];
+    const myEq = u => { for(const c of myChars){ const chip = eqChip(c, u); if(chip) return chip; } return ""; };
     const row = u => `<div class="bls-item"><span class="bls-iname">${itemPill(u)}${bt && u.id === bt.id ? ` <span class="bc-mini" title="${bt.ilvl && u.ilvl && bt.ilvl !== u.ilvl ? `Bonus roll target — the roll grants ilvl ${esc(bt.ilvl)} (+${bt.pct}%) vs +${u.pct}% for this ${esc(u.ilvl)} version` : "Current bonus roll target"}">🎲</span>` : ""}</span>
-      <span class="bls-wants"><span class="bls-chip" style="color:var(--muted)">${esc(SLOT_LABELS[slotKey(u.slot)] || "Other")}</span><span class="bls-chip text-legendary data-font">+${u.pct}%</span></span></div>`;
+      <span class="bls-wants">${myEq(u)}<span class="bls-chip" style="color:var(--muted)">${esc(SLOT_LABELS[slotKey(u.slot)] || "Other")}</span><span class="bls-chip text-legendary data-font">+${u.pct}%</span></span></div>`;
 
     const bossGroups = {}, dunGroups = {};
     flat.forEach(u => {
@@ -2529,7 +2585,7 @@ function drawSheet(){
       const x = officer && rec.uid ? `<button class="award-x" data-wldel="${rec.uid}" title="Remove this raider's wishlist">✕</button>` : "";
       return { key: "team-raider-" + n, icon: navIconFor("raider", n, rec), title: esc(n), count: rows.length, extra: x,
         html: rows.map(u=>`<div class="bls-item"><span class="bls-iname">${itemPill(u)}</span>
-          <span class="bls-wants"><span class="bls-chip" style="color:var(--muted)">${esc(encLabel(u.enc ?? null))}</span><span class="bls-chip text-legendary data-font">+${u.pct}%</span></span></div>`).join("") };
+          <span class="bls-wants">${eqChip(n, u)}<span class="bls-chip" style="color:var(--muted)">${esc(encLabel(u.enc ?? null))}</span><span class="bls-chip text-legendary data-font">+${u.pct}%</span></span></div>`).join("") };
     });
     renderMaster(host, "team-raider", secs, "");
   } else {
@@ -2563,7 +2619,7 @@ function drawSheet(){
       const wantCount = items.reduce((n,it)=>n + it.wants.length, 0);
       return { key: "team-boss-" + e, icon: navIconFor("boss", e), title: esc(encLabel(e)), count: wantCount, group: (RB_INSTANCES || {})[+e] || null,
         html: groupRowsBySlot(items, it=>`<div class="bls-item"><span class="bls-iname">${itemPill(it)}</span>
-          <span class="bls-wants">${it.wants.map(x=>`<span class="bls-chip">${roleIcon(x.role)}<b>${esc(x.raider)}</b> <span class="text-legendary data-font">+${x.pct}%</span></span>`).join("")}</span></div>`) };
+          <span class="bls-wants">${it.wants.map(x=>{const lv=equippedIlvl(x.raider,it.id);return `<span class="bls-chip">${roleIcon(x.role)}<b>${esc(x.raider)}</b> <span class="text-legendary data-font">+${x.pct}%</span>${lv!==undefined?`<span class="eqp-mini" title="Already wears it${lv?` at ${lv}`:""}">✓</span>`:""}</span>`;}).join("")}</span></div>`) };
     });
     renderMaster(host, "team-boss", secs, "");
   }
