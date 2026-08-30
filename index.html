@@ -1928,10 +1928,34 @@ function invTypeToSlot(v){
   if(typeof v === "number" || /^\d+$/.test(String(v))) return INV_SLOTS[+v] || "";
   return String(v).toLowerCase();
 }
+let RIO_SEASON_PROMISE = null, RIO_SEASON_DUNS = null;   // Set of normalized current-season dungeon names
+function rioSeasonDuns(){
+  if(RIO_SEASON_PROMISE) return RIO_SEASON_PROMISE;
+  RIO_SEASON_PROMISE = (async () => {
+    for(const exp of [12, 11, 10]){
+      try{
+        const r = await fetch(`https://raider.io/api/v1/mythic-plus/static-data?expansion_id=${exp}`);
+        if(!r.ok) continue;
+        const j = await r.json();
+        const season = (j.seasons || []).find(s => (s.dungeons || []).length && (!s.starts || Object.values(s.starts).some(d => new Date(d) <= new Date())));
+        if(season){
+          RIO_SEASON_DUNS = new Set();
+          season.dungeons.forEach(d => {
+            if(d.name) RIO_SEASON_DUNS.add(normInstName(d.name));
+            if(d.short_name) RIO_SEASON_DUNS.add(normInstName(d.short_name));
+          });
+          return RIO_SEASON_DUNS;
+        }
+      }catch(e){}
+    }
+    return null;   // rio unreachable — dropdown falls back to heuristics
+  })();
+  return RIO_SEASON_PROMISE;
+}
 function realInstId(iid){
   if(iid == null || !RB_INSTANCES || !RB_INSTANCES[iid]) return false;
   const nm = RB_INSTANCES[iid];
-  if(/\bbonus\b|\bgreat vault\b|\bcatalyst\b|\bdelves?\b|mythic\+|\bdungeons\b|\bseason\b|\bcrafted\b|\bprofessions?\b|\bpvp\b/i.test(nm)) return false;  // pseudo/umbrella groupings (word-bounded: "The Stonevault" stays real)
+  if(/\bbonus\b|\bgreat vault\b|\bcatalyst\b|\bdelves?\b|mythic\+|\bdungeons\b|\bseason\b|\bcrafted\b|\bprofessions?\b|\bpvp\b|\bworld\b/i.test(nm)) return false;  // pseudo/umbrella groupings (word-bounded: "The Stonevault" stays real)
   const n = (RB_INST_ENCS[nm] || []).length;
   return n > 0 && n <= 12;   // real instances have a handful of encounters; umbrellas have dozens
 }
@@ -2619,13 +2643,17 @@ document.addEventListener("click", async e=>{
     const rl = lootEl("dtRole"); if(rl) rl.value = "";
     const sl = lootEl("dtSource"); if(sl) sl.value = "";
     dtFlowUpdate();
-    rbInstanceNames().then(() => {
+    Promise.all([rbInstanceNames(), rioSeasonDuns()]).then(() => {
       const ds = lootEl("dtDungeon");
-      if(ds && ds.options.length <= 1){
-        Object.keys(RB_INST_IDS).filter(n => realInstId(RB_INST_IDS[n]) && !(RB_INST_ENCS[n] || []).some(e => tierRosterIds().includes(String(e))))
-          .sort((a,b) => a.localeCompare(b))
-          .forEach(n => { const o = document.createElement("option"); o.value = RB_INST_IDS[n]; o.textContent = n; ds.appendChild(o); });
+      if(!ds || ds.options.length > 1) return;
+      let names = Object.keys(RB_INST_IDS);
+      if(RIO_SEASON_DUNS && RIO_SEASON_DUNS.size){
+        names = names.filter(n => RIO_SEASON_DUNS.has(normInstName(n)));   // exactly this season's rotation
+      } else {
+        names = names.filter(n => realInstId(RB_INST_IDS[n]) && !(RB_INST_ENCS[n] || []).some(e => tierRosterIds().includes(String(e))));
       }
+      names.sort((a,b) => a.localeCompare(b))
+        .forEach(n => { const o = document.createElement("option"); o.value = RB_INST_IDS[n]; o.textContent = n; ds.appendChild(o); });
     });
     const cs = lootEl("dtChar");
     if(cs && cs.options.length <= 1 && typeof rosterCache !== "undefined" && rosterCache?.length){
