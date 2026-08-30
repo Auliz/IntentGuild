@@ -148,6 +148,26 @@ a.lpill:hover{filter:brightness(1.2);text-decoration:none}
 .bls-scroll{max-height:600px;overflow-y:auto;padding-right:.4rem}
 .bls-scroll::-webkit-scrollbar{width:6px}
 .bls-scroll::-webkit-scrollbar-thumb{background:var(--line);border-radius:3px}
+.bls-master{display:grid;grid-template-columns:236px 1fr;gap:14px;align-items:start}
+.bls-nav{background:rgba(5,8,6,.45);border:1px solid var(--line);border-radius:11px;padding:.45rem;max-height:640px;overflow-y:auto}
+.bls-nav-item{display:flex;align-items:center;gap:.55rem;padding:.42rem .55rem;border-radius:8px;cursor:pointer;border-left:3px solid transparent}
+.bls-nav-item:hover{background:rgba(240,194,75,.06)}
+.bls-nav-item.on{background:rgba(240,194,75,.1);border-left-color:var(--legendary)}
+.bls-nav-item img{width:30px;height:30px;border-radius:7px;object-fit:cover;border:1px solid var(--line);flex-shrink:0}
+.bls-nav-emoji{width:30px;height:30px;border-radius:7px;background:#0A0F0B;border:1px solid var(--line);display:inline-flex;align-items:center;justify-content:center;font-size:.95rem;flex-shrink:0}
+.bls-nav-name{flex:1;font-size:.84rem;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bls-nav-item.on .bls-nav-name{color:var(--legendary-soft)}
+.bls-nav-count{font-size:.66rem;color:var(--muted)}
+.bls-panel{min-width:0}
+.bls-panel-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:.75rem;padding-bottom:.55rem;border-bottom:1px solid var(--line)}
+.bls-panel-title{font-family:var(--font-display);font-weight:700;font-size:1.12rem;color:var(--legendary)}
+@media (max-width: 767px){
+  .bls-master{grid-template-columns:1fr}
+  .bls-nav{display:flex;gap:.3rem;overflow-x:auto;max-height:none;padding:.35rem}
+  .bls-nav-item{flex-shrink:0;border-left:none;border-bottom:3px solid transparent}
+  .bls-nav-item.on{border-bottom-color:var(--legendary)}
+  .bls-nav-name{max-width:110px}
+}
 .bonus-callout{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;background:linear-gradient(90deg,rgba(240,194,75,.1),rgba(240,194,75,.02));border:1px solid rgba(240,194,75,.45);border-left:3px solid var(--legendary);border-radius:9px;padding:.55rem .8rem;margin-bottom:1rem}
 .bc-dice{font-size:1.05rem}
 .bc-label{font-size:.64rem;letter-spacing:.2em;text-transform:uppercase;color:var(--legendary-soft)}
@@ -2262,12 +2282,13 @@ function drawSheet(){
       dks.forEach(k => byDun[k].sort((a,b)=>b.pct - a.pct));
       dks.sort((a,b) => byDun[b][0].pct - byDun[a][0].pct);
       const bt2 = bonusTarget(drops);
-      host.innerHTML = mpToggleHtml() + dks.map(k=>{
+      const secs = dks.map(k=>{
         const rows = byDun[k];
-        return sheetSection(esc(dunLabel(k === "null" ? null : +k)), rows.length,
-          rows.map(u=>`<div class="bls-item"><span class="bls-iname">${itemPill(u)}${bt2 && u.id === bt2.id ? ` <span class="bc-mini" title="Current bonus roll target">🎲</span>` : ""}</span>
-            <span class="bls-wants"><span class="bls-chip text-legendary data-font">+${u.pct}%</span></span></div>`).join(""), "", "me-mpdun-" + k);
-      }).join("");
+        return { key: "me-mpdun-" + k, icon: navIconFor("dungeon", k), title: esc(dunLabel(k === "null" ? null : +k)), count: rows.length,
+          html: rows.map(u=>`<div class="bls-item"><span class="bls-iname">${itemPill(u)}${bt2 && u.id === bt2.id ? ` <span class="bc-mini" title="Current bonus roll target">🎲</span>` : ""}</span>
+            <span class="bls-wants"><span class="bls-chip text-legendary data-font">+${u.pct}%</span></span></div>`).join("") };
+      });
+      renderMaster(host, "me-mpdun", secs, mpToggleHtml());
       whRefresh();
       return;
     }
@@ -2301,15 +2322,15 @@ function drawSheet(){
       rec.ups.push(...ups);
     });
     const names = Object.keys(byRaider).sort((a,b)=>a.localeCompare(b));
-    if(!names.length){ host.innerHTML = `<p class="py-4 text-center" style="color:var(--muted)">No imports on the team yet.</p>`; return; }
-    host.innerHTML = names.map(n=>{
+    const secs = names.map(n=>{
       const rec = byRaider[n];
       const rows = [...rec.ups].sort((a,b)=>b.pct - a.pct);
       const x = officer && rec.uid ? `<button class="award-x" data-wldel="${rec.uid}" title="Remove this raider's wishlist">✕</button>` : "";
-      return sheetSection(roleIcon(rec.role) + " " + esc(n), rows.length,
-        rows.map(u=>`<div class="bls-item"><span class="bls-iname">${itemPill(u)}</span>
-          <span class="bls-wants"><span class="bls-chip" style="color:var(--muted)">${esc(encLabel(u.enc ?? null))}</span><span class="bls-chip text-legendary data-font">+${u.pct}%</span></span></div>`).join(""), x, "team-raider-" + n);
-    }).join("");
+      return { key: "team-raider-" + n, icon: navIconFor("raider", n, rec), title: esc(n), count: rows.length, extra: x,
+        html: rows.map(u=>`<div class="bls-item"><span class="bls-iname">${itemPill(u)}</span>
+          <span class="bls-wants"><span class="bls-chip" style="color:var(--muted)">${esc(encLabel(u.enc ?? null))}</span><span class="bls-chip text-legendary data-font">+${u.pct}%</span></span></div>`).join("") };
+    });
+    renderMaster(host, "team-raider", secs, "");
   } else {
     const byEnc = {};
     lootWishlists.forEach(w=>{
@@ -2326,18 +2347,47 @@ function drawSheet(){
       });
     });
     const encs = Object.keys(byEnc).sort((a,b) => encOrder(a) - encOrder(b));
-    if(!encs.length){ host.innerHTML = `<p class="py-4 text-center" style="color:var(--muted)">No imports on the team yet.</p>`; return; }
-    host.innerHTML = encs.map(e=>{
+    const secs = encs.map(e=>{
       const items = Object.values(byEnc[e].items);
       items.forEach(it => it.wants.sort((a,b)=>b.pct - a.pct));
       items.sort((a,b)=>b.wants[0].pct - a.wants[0].pct);
       const wantCount = items.reduce((n,it)=>n + it.wants.length, 0);
-      return sheetSection(esc(encLabel(e)), wantCount,
-        groupRowsBySlot(items, it=>`<div class="bls-item"><span class="bls-iname">${itemPill(it)}</span>
-          <span class="bls-wants">${it.wants.map(x=>`<span class="bls-chip">${roleIcon(x.role)}<b>${esc(x.raider)}</b> <span class="text-legendary data-font">+${x.pct}%</span></span>`).join("")}</span></div>`), "", "team-boss-" + e);
-    }).join("");
+      return { key: "team-boss-" + e, icon: navIconFor("boss", e), title: esc(encLabel(e)), count: wantCount,
+        html: groupRowsBySlot(items, it=>`<div class="bls-item"><span class="bls-iname">${itemPill(it)}</span>
+          <span class="bls-wants">${it.wants.map(x=>`<span class="bls-chip">${roleIcon(x.role)}<b>${esc(x.raider)}</b> <span class="text-legendary data-font">+${x.pct}%</span></span>`).join("")}</span></div>`) };
+    });
+    renderMaster(host, "team-boss", secs, "");
   }
   whRefresh();
+}
+let masterSel = {};
+function navIconFor(kind, key, rec){
+  if(kind === "boss"){
+    const n = +key;
+    if(Number.isFinite(n)) return `<img src="https://assets.rpglogs.com/img/warcraft/bosses/${n}-icon.jpg" onerror="this.style.display='none'" alt="">`;
+    if(key === "mplus") return `<span class="bls-nav-emoji">🗝️</span>`;
+    if(key === "vault") return `<span class="bls-nav-emoji">🎲</span>`;
+    return `<span class="bls-nav-emoji">📦</span>`;
+  }
+  if(kind === "raider") return `<span class="bls-nav-emoji">${ROLE_ICONS[rec?.role] || "⚔️"}</span>`;
+  if(kind === "dungeon") return `<span class="bls-nav-emoji">🗝️</span>`;
+  return "";
+}
+function renderMaster(host, ctx, secs, topHtml){
+  if(!secs.length){ host.innerHTML = topHtml + `<p class="py-4 text-center" style="color:var(--muted)">No imports on the team yet.</p>`; return; }
+  if(!secs.some(s => s.key === masterSel[ctx])) masterSel[ctx] = secs[0].key;
+  const sel = secs.find(s => s.key === masterSel[ctx]);
+  host.innerHTML = topHtml + `<div class="bls-master">
+    <div class="bls-nav">` + secs.map(s => `
+      <div class="bls-nav-item${s.key === sel.key ? " on" : ""}" data-navsec="${esc(s.key)}" data-navctx="${ctx}">
+        ${s.icon}<span class="bls-nav-name">${s.title}</span><span class="bls-nav-count data-font">${s.count}</span>
+      </div>`).join("") + `
+    </div>
+    <div class="bls-panel">
+      <div class="bls-panel-head"><span class="bls-panel-title">${sel.title}</span>${sel.extra || ""}</div>
+      ${sel.html}
+    </div>
+  </div>`;
 }
 function whRefresh(){
   try{ window.$WowheadPower?.refreshLinks?.(); }catch(e){}
@@ -2398,6 +2448,8 @@ document.addEventListener("click", async e=>{
     }
   }
   if(e.target.dataset.blsscope){ viewScope = e.target.dataset.blsscope; drawSheet(); }
+  const navItem = e.target.closest("[data-navsec]");
+  if(navItem){ masterSel[navItem.dataset.navctx] = navItem.dataset.navsec; drawSheet(); }
   if(e.target.dataset.mpgroup){ mpGroup = e.target.dataset.mpgroup; drawSheet(); }
   if(e.target.dataset.blsmode){
     if(viewScope === "me") modeMe = e.target.dataset.blsmode; else modeTeam = e.target.dataset.blsmode;
