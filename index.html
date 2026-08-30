@@ -150,6 +150,8 @@ a.lpill:hover{filter:brightness(1.2);text-decoration:none}
 .bls-scroll::-webkit-scrollbar-thumb{background:var(--line);border-radius:3px}
 .bls-master{display:grid;grid-template-columns:236px 1fr;gap:14px;align-items:start}
 .bls-nav{background:rgba(5,8,6,.45);border:1px solid var(--line);border-radius:11px;padding:.45rem;max-height:640px;overflow-y:auto}
+.bls-nav-group{font-size:.6rem;letter-spacing:.18em;text-transform:uppercase;color:var(--legendary-soft);padding:.55rem .55rem .25rem;border-bottom:1px solid var(--line);margin-bottom:.25rem}
+.bls-nav-group:not(:first-child){margin-top:.45rem}
 .bls-nav-item{display:flex;align-items:center;gap:.55rem;padding:.42rem .55rem;border-radius:8px;cursor:pointer;border-left:3px solid transparent}
 .bls-nav-item:hover{background:rgba(240,194,75,.06)}
 .bls-nav-item.on{background:rgba(240,194,75,.1);border-left-color:var(--legendary)}
@@ -2397,12 +2399,12 @@ function drawSheet(){
     const bossSec = (e, allowEmpty) => {
       const rows = bossGroups[e] || [];
       if(!rows.length && !allowEmpty) return null;
-      return { key: "me-" + modeMe + "-b" + e, icon: navIconFor("boss", e), title: esc(encLabel(e)), count: rows.length,
+      return { key: "me-" + modeMe + "-b" + e, icon: navIconFor("boss", e), title: esc(encLabel(e)), count: rows.length, group: (RB_INSTANCES || {})[+e] || null,
         html: rows.length ? rows.map(row).join("") : `<p class="py-3" style="color:var(--muted);font-size:.85rem">No best-in-slot targets from this boss.</p>` };
     };
     const dunSec = k => {
       const rows = dunGroups[k];
-      return { key: "me-" + modeMe + "-d" + k, icon: navIconFor("dungeon", k), title: esc(dunLabel(k === "null" ? null : +k)), count: rows.length, html: rows.map(row).join("") };
+      return { key: "me-" + modeMe + "-d" + k, icon: navIconFor("dungeon", k), title: esc(dunLabel(k === "null" ? null : +k)), count: rows.length, group: "Mythic+ / Dungeons", html: rows.map(row).join("") };
     };
 
     let secs = [];
@@ -2469,13 +2471,13 @@ function drawSheet(){
     });
     const encs = orderedRoster.length ? orderedRoster : Object.keys(byEnc).sort((a,b) => encOrder(a) - encOrder(b));
     const secs = encs.map(e=>{
-      if(!byEnc[e]) return { key: "team-boss-" + e, icon: navIconFor("boss", e), title: esc(encLabel(e)), count: 0,
+      if(!byEnc[e]) return { key: "team-boss-" + e, icon: navIconFor("boss", e), title: esc(encLabel(e)), count: 0, group: (RB_INSTANCES || {})[+e] || null,
         html: `<p class="py-3" style="color:var(--muted);font-size:.85rem">No wanted items for this boss yet.</p>` };
       const items = Object.values(byEnc[e].items);
       items.forEach(it => it.wants.sort((a,b)=>b.pct - a.pct));
       items.sort((a,b)=>b.wants[0].pct - a.wants[0].pct);
       const wantCount = items.reduce((n,it)=>n + it.wants.length, 0);
-      return { key: "team-boss-" + e, icon: navIconFor("boss", e), title: esc(encLabel(e)), count: wantCount,
+      return { key: "team-boss-" + e, icon: navIconFor("boss", e), title: esc(encLabel(e)), count: wantCount, group: (RB_INSTANCES || {})[+e] || null,
         html: groupRowsBySlot(items, it=>`<div class="bls-item"><span class="bls-iname">${itemPill(it)}</span>
           <span class="bls-wants">${it.wants.map(x=>`<span class="bls-chip">${roleIcon(x.role)}<b>${esc(x.raider)}</b> <span class="text-legendary data-font">+${x.pct}%</span></span>`).join("")}</span></div>`) };
     });
@@ -2524,11 +2526,18 @@ function renderMaster(host, ctx, secs, topHtml){
   if(!secs.length){ host.innerHTML = topHtml + `<p class="py-4 text-center" style="color:var(--muted)">No imports on the team yet.</p>`; return; }
   if(!secs.some(s => s.key === masterSel[ctx])) masterSel[ctx] = secs[0].key;
   const sel = secs.find(s => s.key === masterSel[ctx]);
+  const groups = new Set(secs.map(s => s.group).filter(Boolean));
+  const useGroups = groups.size >= 2;
+  let lastGroup = null;
   host.innerHTML = topHtml + `<div class="bls-master">
-    <div class="bls-nav">` + secs.map(s => `
+    <div class="bls-nav">` + secs.map(s => {
+      let head = "";
+      if(useGroups && s.group && s.group !== lastGroup){ head = `<div class="bls-nav-group data-font">${esc(s.group)}</div>`; lastGroup = s.group; }
+      return head + `
       <div class="bls-nav-item${s.key === sel.key ? " on" : ""}" data-navsec="${esc(s.key)}" data-navctx="${ctx}">
         ${s.icon}<span class="bls-nav-name">${s.title}</span><span class="bls-nav-count data-font">${s.count}</span>
-      </div>`).join("") + `
+      </div>`;
+    }).join("") + `
     </div>
     <div class="bls-panel">
       <div class="bls-panel-head"><span class="bls-panel-title">${sel.title}</span>${sel.extra || ""}</div>
