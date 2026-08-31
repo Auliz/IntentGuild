@@ -825,7 +825,7 @@ footer{border-top:1px solid var(--line);padding:2.5rem 0;color:var(--muted);font
         <div class="row g-2 mb-2">
           <div class="col-md-4"><label class="form-label">Title *</label><input class="form-control form-control-sm" id="reTitle" placeholder="e.g. Mythic Prog — Week 4"></div>
           <div class="col-md-3"><label class="form-label">Date *</label><input class="form-control form-control-sm" id="reDate" type="date"></div>
-          <div class="col-md-2"><label class="form-label">Time</label><input class="form-control form-control-sm" id="reTime" placeholder="8:00 PM CT"></div>
+          <div class="col-md-2"><label class="form-label">Time <span class="note" style="font-size:.62rem">(your local — members see theirs)</span></label><input class="form-control form-control-sm" id="reTime" type="time"></div>
           <div class="col-md-3"><label class="form-label">Note</label><input class="form-control form-control-sm" id="reNote" placeholder="Flask up. Vaelgor dies tonight."></div>
         </div>
         <label class="form-label">Roster — tick from the live guild roster</label>
@@ -2886,10 +2886,12 @@ function resetBuilder(){
 }
 async function saveRaidEvent(){
   const st = el("reStatus");
+  const dateV = el("reDate").value, timeV = el("reTime").value.trim();
   const ev = {
     title: el("reTitle").value.trim(),
-    event_date: el("reDate").value,
-    event_time: el("reTime").value.trim(),
+    event_date: dateV,
+    event_time: timeV,
+    event_ts: dateV && timeV ? Math.floor(new Date(dateV + "T" + timeV).getTime() / 1000) : null,
     note: el("reNote").value.trim(),
     roster: pickedRoster(),
     created_by: me.username
@@ -2985,7 +2987,9 @@ function drawRaidEvents(){
       <div class="d-flex justify-content-between align-items-start gap-2 flex-wrap">
         <div>
           <div class="re-title">${esc(ev.title)}</div>
-          <div class="re-when data-font">${esc(ev.event_date)}${ev.event_time ? " · " + esc(ev.event_time) : ""}</div>
+          <div class="re-when data-font">${ev.event_ts
+            ? esc(new Date(ev.event_ts * 1000).toLocaleString([], { weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })) + " (your time)"
+            : esc(ev.event_date) + (ev.event_time ? " · " + esc(ev.event_time) : "")}</div>
         </div>
         <div class="d-flex gap-2 align-items-center flex-shrink-0">
           ${ev.post_at ? `<span class="re-posted data-font" style="color:var(--legendary);border-color:rgba(240,194,75,.4)" title="Scheduled Discord post">🕐 ${new Date(ev.post_at).toLocaleString([], {month:"short",day:"numeric",hour:"numeric",minute:"2-digit"})}</span>` : ev.post_requested ? `<span class="re-posted data-font" style="color:var(--legendary);border-color:rgba(240,194,75,.4)">QUEUED</span>` : ev.posted_at ? `<span class="re-posted data-font">POSTED</span>` : ""}
@@ -3027,7 +3031,7 @@ function buildSignupEmbed(ev){
     embeds: [{
       title: `⚔️ ${ev.title}`,
       color: 0xF0C24B,
-      description: `**${ev.event_date}**${ev.event_time ? ` · ${ev.event_time}` : ""}${ev.note ? "\n" + ev.note : ""}`,
+      description: `${ev.event_ts ? `<t:${ev.event_ts}:F> (<t:${ev.event_ts}:R>)` : `**${ev.event_date}**${ev.event_time ? ` · ${ev.event_time}` : ""}`}${ev.note ? "\n" + ev.note : ""}`,
       fields: fields.length ? fields : [{ name: "Roster", value: "Open signups — all welcome" }],
       footer: { text: `${total} expected · React: ✅ Attending · ❌ Absent · ❓ Tentative · 🕐 Late` }
     }]
